@@ -50,3 +50,4 @@ OPENAI_API_KEY="sk-proj-your-key-here..."
 *(Note: Playwright requires Chromium binaries. If you ever clone this to a new machine, you must run `playwright install chromium` inside your virtual environment).*
 # lead_magnet
 # lead_magnet
+# lead_magnet
