@@ -1,0 +1,11 @@
+fastapi
+uvicorn
+python-multipart
+langgraph
+langchain-openai
+pandas
+pydantic
+python-dotenv
+requests
+beautifulsoup4
+playwright
