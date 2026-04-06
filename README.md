@@ -52,3 +52,4 @@ OPENAI_API_KEY="sk-proj-your-key-here..."
 # lead_magnet
 # lead_magnet
 # lead_magnet
+# lead_magnet
