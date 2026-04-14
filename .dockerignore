@@ -1,0 +1,30 @@
+# Python cache
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+.Python
+
+# Virtual environment
+venv/
+env/
+.venv/
+
+# Environment secrets - NEVER include in image
+.env
+
+# Git
+.git/
+.gitignore
+
+# Frontend (built separately for Vercel)
+frontend/node_modules/
+frontend/dist/
+frontend/.env.production
+
+# Test files
+test_*.py
+
+# IDE
+.vscode/
+.idea/

@@ -1,6 +1,10 @@
 import axios from 'axios';
 
-const API_BASE_URL = 'http://localhost:8000/api/process';
+// In production, set VITE_API_BASE_URL in your Vercel project environment variables
+// e.g. https://your-backend.onrender.com/api/process
+const API_BASE_URL = import.meta.env.VITE_API_BASE_URL
+  ? `${import.meta.env.VITE_API_BASE_URL}/api/process`
+  : 'http://localhost:8000/api/process';
 
 export const processSingleLead = async (leadData) => {
   try {
