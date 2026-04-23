@@ -24,15 +24,13 @@ function App() {
         <p>AI-Powered Multi-Agent Lead Enrichment & Scoring</p>
       </header>
 
-      <div className="grid-layout">
-        <div style={{ display: 'grid', gap: '2rem', alignContent: 'start' }}>
-          <SingleLeadForm onResult={handleSingleResult} />
-          <CSVUpload onResult={handleBatchResults} />
-        </div>
-        
-        <div style={{ alignContent: 'start' }}>
-           <LeadResults leads={results} />
-        </div>
+      <div className="top-controls animate-fade-in" style={{ animationDelay: '0.1s' }}>
+        <SingleLeadForm onResult={handleSingleResult} />
+        <CSVUpload onResult={handleBatchResults} />
+      </div>
+      
+      <div className="results-container animate-fade-in" style={{ animationDelay: '0.2s' }}>
+         <LeadResults leads={results} />
       </div>
     </div>
   );
