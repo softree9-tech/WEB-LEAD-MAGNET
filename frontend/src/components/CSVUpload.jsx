@@ -1,5 +1,6 @@
 import React, { useState, useRef } from 'react';
 import { UploadCloud, File, Loader2 } from 'lucide-react';
+import { processCSV } from "../api/api"
 
 export default function CSVUpload({ onResult }) {
   const [file, setFile] = useState(null);
@@ -27,30 +28,43 @@ export default function CSVUpload({ onResult }) {
     const formData = new FormData();
     formData.append('file', file);
 
+    // try {
+    //   const res = await fetch('http://localhost:8000/api/process/csv', {
+    //     method: 'POST',
+    //     body: formData,
+    //     signal: controller.signal,
+    //   });
+
+    //   clearTimeout(timeoutId);
+
+    //   if (!res.ok) {
+    //     const errData = await res.json().catch(() => null);
+    //     const detail = errData?.detail || `Server error: ${res.status}`;
+    //     throw new Error(detail);
+    //   }
+
+    //   const data = await res.json();
+    //   onResult(data.processed_leads || []);
+    //   setFile(null);
+    // } catch (err) {
+    //   if (err.name === 'AbortError') {
+    //     setError('Request timed out. Try uploading fewer URLs at once.');
+    //   } else {
+    //     setError(err.message);
+    //   }
+    // } finally {
+    //   setLoading(false);
+    //   clearInterval(timerRef.current);
+    //   setElapsed(0);
+    //   if (fileInputRef.current) fileInputRef.current.value = '';
+    // }
+
     try {
-      const res = await fetch('http://localhost:8000/api/process/csv', {
-        method: 'POST',
-        body: formData,
-        signal: controller.signal,
-      });
-
-      clearTimeout(timeoutId);
-
-      if (!res.ok) {
-        const errData = await res.json().catch(() => null);
-        const detail = errData?.detail || `Server error: ${res.status}`;
-        throw new Error(detail);
-      }
-
-      const data = await res.json();
+      const data = await processCSV(file);
       onResult(data.processed_leads || []);
       setFile(null);
     } catch (err) {
-      if (err.name === 'AbortError') {
-        setError('Request timed out. Try uploading fewer URLs at once.');
-      } else {
-        setError(err.message);
-      }
+      setError(err.response?.data?.detail || err.message);
     } finally {
       setLoading(false);
       clearInterval(timerRef.current);
@@ -67,14 +81,14 @@ export default function CSVUpload({ onResult }) {
       </div>
 
       <div style={{ display: 'flex', gap: '0.5rem', flexGrow: 1, alignItems: 'center', background: 'rgba(15, 23, 42, 0.9)', padding: '0.25rem 0.5rem', borderRadius: '8px', border: '1px solid var(--border-color)' }}>
-        <input 
-          type="file" 
-          accept=".csv" 
+        <input
+          type="file"
+          accept=".csv"
           ref={fileInputRef}
-          onChange={(e) => setFile(e.target.files[0])} 
+          onChange={(e) => setFile(e.target.files[0])}
           style={{ fontSize: '0.8rem', flexGrow: 1, color: 'var(--text-secondary)' }}
         />
-        
+
         {file && (
           <span style={{ fontSize: '0.8rem', color: 'var(--accent-color)', display: 'flex', alignItems: 'center', gap: '4px', whiteSpace: 'nowrap' }}>
             <File size={14} /> {(file.size / 1024).toFixed(1)} KB
@@ -82,9 +96,9 @@ export default function CSVUpload({ onResult }) {
         )}
       </div>
 
-      <button 
-        onClick={handleUpload} 
-        className="primary-btn" 
+      <button
+        onClick={handleUpload}
+        className="primary-btn"
         style={{ opacity: loading || !file ? 0.5 : 1, padding: '0.5rem 1rem', whiteSpace: 'nowrap' }}
         disabled={loading || !file}
       >
