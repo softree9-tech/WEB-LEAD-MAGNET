@@ -20,7 +20,7 @@ function App() {
   return (
     <div className="app-container">
       <header className="header animate-fade-in">
-        <h1>Antigravity Lead Engine</h1>
+        <h1>Softree Lead Engine</h1>
         <p>AI-Powered Multi-Agent Lead Enrichment & Scoring</p>
       </header>
 
@@ -28,9 +28,9 @@ function App() {
         <SingleLeadForm onResult={handleSingleResult} />
         <CSVUpload onResult={handleBatchResults} />
       </div>
-      
+
       <div className="results-container animate-fade-in" style={{ animationDelay: '0.2s' }}>
-         <LeadResults leads={results} />
+        <LeadResults leads={results} />
       </div>
     </div>
   );

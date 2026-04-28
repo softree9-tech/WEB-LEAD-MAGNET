@@ -5,12 +5,24 @@ export default function CSVUpload({ onResult }) {
   const [file, setFile] = useState(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
+  const [elapsed, setElapsed] = useState(0);
   const fileInputRef = useRef(null);
+  const timerRef = useRef(null);
 
   const handleUpload = async () => {
     if (!file) return;
     setLoading(true);
     setError(null);
+    setElapsed(0);
+
+    // Start elapsed timer
+    timerRef.current = setInterval(() => {
+      setElapsed(prev => prev + 1);
+    }, 1000);
+
+    // 30 minute timeout — enough for 9 websites
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => controller.abort(), 30 * 60 * 1000);
 
     const formData = new FormData();
     formData.append('file', file);
@@ -18,18 +30,31 @@ export default function CSVUpload({ onResult }) {
     try {
       const res = await fetch('http://localhost:8000/api/process/csv', {
         method: 'POST',
-        body: formData
+        body: formData,
+        signal: controller.signal,
       });
 
-      if (!res.ok) throw new Error('CSV Processing failed');
+      clearTimeout(timeoutId);
+
+      if (!res.ok) {
+        const errData = await res.json().catch(() => null);
+        const detail = errData?.detail || `Server error: ${res.status}`;
+        throw new Error(detail);
+      }
 
       const data = await res.json();
-      onResult(data.results || []);
+      onResult(data.processed_leads || []);
       setFile(null);
     } catch (err) {
-      setError(err.message);
+      if (err.name === 'AbortError') {
+        setError('Request timed out. Try uploading fewer URLs at once.');
+      } else {
+        setError(err.message);
+      }
     } finally {
       setLoading(false);
+      clearInterval(timerRef.current);
+      setElapsed(0);
       if (fileInputRef.current) fileInputRef.current.value = '';
     }
   };
@@ -64,7 +89,7 @@ export default function CSVUpload({ onResult }) {
         disabled={loading || !file}
       >
         {loading ? <Loader2 className="spinning" size={16} /> : <UploadCloud size={16} />}
-        {loading ? ' Processing...' : ' Upload'}
+        {loading ? ` Analyzing... ${elapsed}s` : ' Upload'}
       </button>
 
       {error && <div style={{ position: 'absolute', top: '-20px', color: '#ef4444', fontSize: '0.8rem' }}>{error}</div>}

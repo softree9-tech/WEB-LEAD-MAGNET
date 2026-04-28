@@ -1,4 +1,11 @@
 import os
+import sys
+import asyncio
+
+# CRITICAL: This must happen before ANY other imports that might start a loop
+if sys.platform == 'win32':
+    asyncio.set_event_loop_policy(asyncio.WindowsProactorEventLoopPolicy())
+
 import pandas as pd
 from fastapi import FastAPI, UploadFile, File, HTTPException
 from fastapi.responses import JSONResponse
@@ -34,6 +41,10 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"],
 )
+
+@app.get("/")
+def read_root():
+    return {"status": "running", "message": "LangGraph Lead Processing API is active"}
 
 class LeadInput(BaseModel):
     name: str
@@ -88,28 +99,31 @@ def process_csv(file: UploadFile = File(...)):
         raise HTTPException(status_code=400, detail="File must be a CSV")
         
     try:
+        print(f"--- Received CSV file: {file.filename} ---")
         df = pd.read_csv(file.file)
+        print(f"--- CSV loaded successfully. Rows: {len(df)} ---")
         
-        # Validate columns
-        required_cols = {"name", "email", "company", "role", "website"}
-        if not required_cols.issubset(set(df.columns)):
-            raise HTTPException(status_code=400, detail=f"CSV must contain columns: {', '.join(required_cols)}")
+        # Only website is strictly required
+        if "website" not in df.columns:
+            print("--- Error: 'website' column missing in CSV ---")
+            raise HTTPException(status_code=400, detail="CSV must contain at least a 'website' column")
             
         results = []
-        for _, row in df.iterrows():
+        for i, row in df.iterrows():
+            print(f"--- Processing row {i+1}/{len(df)}: {row.get('website')} ---")
             initial_state = {
-                "raw_name": str(row.get("name", "")),
-                "raw_email": str(row.get("email", "")),
-                "raw_company": str(row.get("company", "")),
-                "raw_role": str(row.get("role", "")),
+                "raw_name": str(row.get("name", "")) if "name" in df.columns else "",
+                "raw_email": str(row.get("email", "")) if "email" in df.columns else "",
+                "raw_company": str(row.get("company", "")) if "company" in df.columns else "",
+                "raw_role": str(row.get("role", "")) if "role" in df.columns else "",
                 "raw_website": str(row.get("website", ""))
             }
             try:
                 final_state = graph_app.invoke(initial_state)
                 results.append(final_state.get("output_row", {}))
             except Exception as e:
-                print(f"Error processing row {row.get('email')}: {e}")
-                results.append({"error": str(e), "email": row.get("email")})
+                print(f"Error processing row {row.get('website')}: {e}")
+                results.append({"error": str(e), "website": row.get("website")})
                 
         return {"processed_leads": results}
     except Exception as e:
