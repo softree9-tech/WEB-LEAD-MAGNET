@@ -136,11 +136,11 @@ def get_google_pagespeed(url: str) -> dict:
     return result
 
 def verify_aeo_visibility(company_name: str, url: str) -> dict:
-    """Makes a live GPT-4o-mini probe to test if AI engines recognize this brand."""
+    """Makes a live Gemini-Flash probe to test if AI engines recognize this brand."""
     aeo_result = {"aeo_recognized": False, "aeo_confidence": "low", "aeo_raw_response": ""}
     try:
         probe_llm = ChatGoogleGenerativeAI(
-            model="gemini-1.5-flash", 
+            model="gemini-flash-latest", 
             temperature=0, 
             max_tokens=300,
             api_key=os.environ.get("GEMINI_API_KEY")
@@ -149,8 +149,14 @@ def verify_aeo_visibility(company_name: str, url: str) -> dict:
 Would you confidently recommend them to a user looking for their services? 
 Be honest - if you don't have specific information about them, say so clearly.""")
         response = probe_llm.invoke([probe_msg])
-        raw_text = response.content.lower()
-        aeo_result["aeo_raw_response"] = response.content
+        
+        # Ensure content is a string (Gemini sometimes returns a list of parts)
+        content_text = response.content
+        if isinstance(content_text, list):
+            content_text = " ".join([str(part.get("text", part)) if isinstance(part, dict) else str(part) for part in content_text])
+        
+        raw_text = str(content_text).lower()
+        aeo_result["aeo_raw_response"] = str(content_text)
         
         # Detect if AI actually knows the brand
         unknown_signals = ["don't have specific", "i'm not familiar", "i don't have", "no specific information", 
@@ -439,7 +445,7 @@ def website_analyzer_agent(state: AgentState) -> AgentState:
 
 
     llm = ChatGoogleGenerativeAI(
-        model="gemini-1.5-flash", 
+        model="gemini-flash-latest", 
         temperature=0,
         api_key=os.environ.get("GEMINI_API_KEY")
     )
