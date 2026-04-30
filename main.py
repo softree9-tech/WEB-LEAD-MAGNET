@@ -15,12 +15,12 @@ from dotenv import load_dotenv
 from graph import graph_app
 from fastapi.middleware.cors import CORSMiddleware
 
-# Load environment variables (e.g.., OPENAI_API_KEY)
+# Load environment variables (e.g., GEMINI_API_KEY)
 load_dotenv()
 
 app = FastAPI(
     title="LangGraph Lead Processing API",
-    description="API to process leads using LangGraph and OpenAI",
+    description="API to process leads using LangGraph and Gemini",
     version="1.0.0"
 )
 

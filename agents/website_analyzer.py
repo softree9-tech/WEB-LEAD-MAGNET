@@ -7,7 +7,8 @@ import concurrent.futures
 from urllib.parse import urljoin
 from bs4 import BeautifulSoup
 from playwright.sync_api import sync_playwright, TimeoutError as PlaywrightTimeoutError
-from langchain_openai import ChatOpenAI
+from core.llm import generate_response
+from langchain_google_genai import ChatGoogleGenerativeAI
 from langchain_core.messages import HumanMessage, SystemMessage
 from core.models import WebsiteAnalyzerOutput
 from core.state import AgentState
@@ -138,7 +139,12 @@ def verify_aeo_visibility(company_name: str, url: str) -> dict:
     """Makes a live GPT-4o-mini probe to test if AI engines recognize this brand."""
     aeo_result = {"aeo_recognized": False, "aeo_confidence": "low", "aeo_raw_response": ""}
     try:
-        probe_llm = ChatOpenAI(model="gpt-4o-mini", temperature=0, max_tokens=300)
+        probe_llm = ChatGoogleGenerativeAI(
+            model="gemini-1.5-flash", 
+            temperature=0, 
+            max_tokens=300,
+            api_key=os.environ.get("GEMINI_API_KEY")
+        )
         probe_msg = HumanMessage(content=f"""What do you know about the company "{company_name}" with the website {url}? 
 Would you confidently recommend them to a user looking for their services? 
 Be honest - if you don't have specific information about them, say so clearly.""")
@@ -432,7 +438,11 @@ def website_analyzer_agent(state: AgentState) -> AgentState:
         error_msg = "No URL provided."
 
 
-    llm = ChatOpenAI(model="gpt-4o", temperature=0)
+    llm = ChatGoogleGenerativeAI(
+        model="gemini-1.5-flash", 
+        temperature=0,
+        api_key=os.environ.get("GEMINI_API_KEY")
+    )
     structured_llm = llm.with_structured_output(WebsiteAnalyzerOutput)
 
     if error_msg or not b64_image:
