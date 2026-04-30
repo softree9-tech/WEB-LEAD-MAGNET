@@ -15,7 +15,7 @@ from dotenv import load_dotenv
 from graph import graph_app
 from fastapi.middleware.cors import CORSMiddleware
 
-# Load environment variables (e.g., OPENAI_API_KEY)
+# Load environment variables (e.g.., OPENAI_API_KEY)
 load_dotenv()
 
 app = FastAPI(
