@@ -2,8 +2,8 @@ fastapi==0.115.12
 uvicorn==0.34.2
 python-multipart==0.0.20
 langgraph
-pandas==2.2.3
-pydantic==2.11.3
+pandas
+pydantic
 python-dotenv==1.1.0
 requests==2.32.3
 beautifulsoup4==4.13.4
