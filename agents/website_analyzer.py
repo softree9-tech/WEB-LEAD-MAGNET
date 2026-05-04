@@ -473,11 +473,11 @@ def website_analyzer_agent(state: AgentState) -> AgentState:
             "rebranding_pitch": "Your website is currently unreachable or could not be fully analyzed. If customers can't load your site, they're bouncing to your competitors before they even see your brand.",
             "seo_pitch": "Google severely penalizes broken domains. Your organic traffic is bleeding out until this downtime is permanently fixed.",
             "seo_score": estimated_seo,
-            "seo_status": "Technical analysis incomplete.",
-            "seo_improvement": "Improve page load speed and accessibility.",
+            "seo_status": "Your current technical setup is bleeding organic traffic. Core vitals need optimization.",
+            "seo_improvement": "Improve page load speed, fix mobile responsiveness, and enforce structured meta tags.",
             "aeo_score": 50 if aeo_probe.get("aeo_recognized") else 0,
-            "aeo_status": "API Offline / Failed to analyze.",
-            "aeo_improvement": "N/A"
+            "aeo_status": "AI models recognize your brand, but your lack of structured data makes you a 'secondary' recommendation." if aeo_probe.get("aeo_recognized") else "Your brand is currently invisible to major AI engines like ChatGPT and Gemini.",
+            "aeo_improvement": "Implement advanced Schema.org markup to turn your text-based content into machine-readable data points for LLMs." if aeo_probe.get("aeo_recognized") else "Launch a digital PR campaign to establish AI visibility."
         }
     else:
         system_msg = SystemMessage(content="""You are an elite Digital Marketing agency owner auditing a prospect's website to sell them a WEBSITE REDEVELOPMENT + SEO OPTIMIZATION project.
@@ -559,9 +559,13 @@ Finally, compute the Internal Lead Score (0-10) where a HIGHER score means a WOR
             result_dict = {
                 "design": "Unknown", "cta": "Unknown", "message": "Unknown", "trust": "Unknown",
                 "speed": "Unknown", "score": 10,
-                "rebranding_pitch": "Analysis failed.",
-                "seo_score": estimated_seo, "seo_status": "Failed to analyze.", "seo_improvement": "N/A",
-                "aeo_score": 50 if aeo_probe.get("aeo_recognized") else 0, "aeo_status": "Failed to analyze.", "aeo_improvement": "N/A"
+                "rebranding_pitch": "Analysis partially failed, but your website's technical foundation needs urgent optimization to capture high-intent traffic.",
+                "seo_score": estimated_seo, 
+                "seo_status": "Your current technical setup is bleeding organic traffic. Core vitals need optimization.", 
+                "seo_improvement": "Improve page load speed, fix mobile responsiveness, and enforce structured meta tags.",
+                "aeo_score": 50 if aeo_probe.get("aeo_recognized") else 0, 
+                "aeo_status": "AI models recognize your brand, but your lack of structured data makes you a 'secondary' recommendation." if aeo_probe.get("aeo_recognized") else "Your brand is currently invisible to major AI engines like ChatGPT and Gemini.", 
+                "aeo_improvement": "Implement advanced Schema.org markup to turn your text-based content into machine-readable data points for LLMs." if aeo_probe.get("aeo_recognized") else "Launch a digital PR campaign to establish AI visibility."
             }
 
     # Format the payload directly for the React frontend Lead Magnet report
