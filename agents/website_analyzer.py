@@ -451,6 +451,17 @@ def website_analyzer_agent(state: AgentState) -> AgentState:
     )
     structured_llm = llm.with_structured_output(WebsiteAnalyzerOutput)
 
+    # Estimate SEO if Lighthouse failed
+    estimated_seo = lighthouse_seo
+    if estimated_seo == 0:
+        base_seo = 40
+        if seo_mobile: base_seo += 15
+        if seo_meta_desc: base_seo += 10
+        if seo_h1: base_seo += 10
+        if isinstance(seo_ssl, dict) and seo_ssl.get("valid"): base_seo += 15
+        if load_time < 3.0: base_seo += 10
+        estimated_seo = min(100, base_seo)
+
     if error_msg or not b64_image:
         result_dict = {
             "design": "Unknown",
@@ -461,7 +472,7 @@ def website_analyzer_agent(state: AgentState) -> AgentState:
             "score": 10,
             "rebranding_pitch": "Your website is currently unreachable or could not be fully analyzed. If customers can't load your site, they're bouncing to your competitors before they even see your brand.",
             "seo_pitch": "Google severely penalizes broken domains. Your organic traffic is bleeding out until this downtime is permanently fixed.",
-            "seo_score": lighthouse_seo,
+            "seo_score": estimated_seo,
             "seo_status": "Technical analysis incomplete.",
             "seo_improvement": "Improve page load speed and accessibility.",
             "aeo_score": 50 if aeo_probe.get("aeo_recognized") else 0,
@@ -549,7 +560,7 @@ Finally, compute the Internal Lead Score (0-10) where a HIGHER score means a WOR
                 "design": "Unknown", "cta": "Unknown", "message": "Unknown", "trust": "Unknown",
                 "speed": "Unknown", "score": 10,
                 "rebranding_pitch": "Analysis failed.",
-                "seo_score": lighthouse_seo, "seo_status": "Failed to analyze.", "seo_improvement": "N/A",
+                "seo_score": estimated_seo, "seo_status": "Failed to analyze.", "seo_improvement": "N/A",
                 "aeo_score": 50 if aeo_probe.get("aeo_recognized") else 0, "aeo_status": "Failed to analyze.", "aeo_improvement": "N/A"
             }
 
