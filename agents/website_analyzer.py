@@ -462,7 +462,8 @@ def website_analyzer_agent(state: AgentState) -> AgentState:
         if load_time < 3.0: base_seo += 10
         estimated_seo = min(100, base_seo)
 
-    if error_msg or not b64_image:
+    # Only skip LLM entirely if we have NO data at all (no screenshot AND no text)
+    if error_msg and not text_content:
         result_dict = {
             "design": "Unknown",
             "cta": "Unknown",
@@ -470,8 +471,7 @@ def website_analyzer_agent(state: AgentState) -> AgentState:
             "trust": "Unknown",
             "speed": "Unknown",
             "score": 10,
-            "rebranding_pitch": "Your website is currently unreachable or could not be fully analyzed. If customers can't load your site, they're bouncing to your competitors before they even see your brand.",
-            "seo_pitch": "Google severely penalizes broken domains. Your organic traffic is bleeding out until this downtime is permanently fixed.",
+            "rebranding_pitch": "Your website is currently unreachable. If customers can't load your site, they're bouncing to your competitors before they even see your brand.",
             "seo_score": estimated_seo,
             "seo_status": "Your current technical setup is bleeding organic traffic. Core vitals need optimization.",
             "seo_improvement": "Improve page load speed, fix mobile responsiveness, and enforce structured meta tags.",
@@ -480,15 +480,27 @@ def website_analyzer_agent(state: AgentState) -> AgentState:
             "aeo_improvement": "Implement advanced Schema.org markup to turn your text-based content into machine-readable data points for LLMs." if aeo_probe.get("aeo_recognized") else "Launch a digital PR campaign to establish AI visibility."
         }
     else:
-        system_msg = SystemMessage(content="""You are an elite Digital Marketing agency owner auditing a prospect's website to sell them a WEBSITE REDEVELOPMENT + SEO OPTIMIZATION project.
-
-Tasks:
-Analyze the provided full-page website screenshot and text content to infer:
+        # Adjust system message based on whether we have screenshots or only text
+        has_screenshots = bool(b64_image)
+        
+        if has_screenshots:
+            visual_instruction = """Analyze the provided full-page website screenshot and text content to infer:
 - Design quality (Modern, Outdated, Clean, Cluttered)
 - CTA presence (Strong, Weak, Missing - based on visual prominence across the whole page)
 - Messaging Clarity (Clear, Confusing, Jargon-heavy)
 - Trust Signals (Strong, Weak, Missing - meticulously scan the entire page image and text specifically for Client Reviews, Testimonials, Case Studies, partner logos, or awards!)
-- Mobile vs Desktop UI (Observe both provided images. Does the mobile view appear broken or fundamentally unoptimized compared to the desktop view?)
+- Mobile vs Desktop UI (Observe both provided images. Does the mobile view appear broken or fundamentally unoptimized compared to the desktop view?)"""
+        else:
+            visual_instruction = """Analyze the provided text content and technical metrics to infer:
+- Design quality (Modern, Outdated, Clean, Cluttered) - infer from the tech stack, text structure, and meta tags
+- CTA presence (Strong, Weak, Missing - infer from the text content for call-to-action phrases)
+- Messaging Clarity (Clear, Confusing, Jargon-heavy)
+- Trust Signals (Strong, Weak, Missing - scan the text specifically for Client Reviews, Testimonials, Case Studies, partner mentions, or awards!)"""
+
+        system_msg = SystemMessage(content=f"""You are an elite Digital Marketing agency owner auditing a prospect's website to sell them a WEBSITE REDEVELOPMENT + SEO OPTIMIZATION project.
+
+Tasks:
+{visual_instruction}
 
 Then, based on the VERIFIED Google Lighthouse data provided below, generate comprehensive Search Visibility metrics:
 1. rebranding_pitch: Write 2-3 aggressive sentences. Reference SPECIFIC Lighthouse scores (Performance, Accessibility, Mobile) to expose how their website is technically failing. Tie each flaw to lost revenue. Example: 'Your site scores 38/100 on Google Performance and 45/100 on Mobile — meaning over half your visitors abandon before your page even loads. A modern, optimized redesign would immediately recover this lost traffic.'
@@ -518,17 +530,19 @@ Finally, compute the Internal Lead Score (0-10) where a HIGHER score means a WOR
                 - Dead/Template Social Links Found: {has_dead_socials}
                 - Images Missing Alt Text: {image_alt_data['percent_missing']}% ({image_alt_data['missing_alt']}/{image_alt_data['total']} images)
                 
-                LIVE AEO PROBE RESULTS (Verified by asking GPT-4o-mini about this brand):
+                LIVE AEO PROBE RESULTS (Verified by asking Gemini about this brand):
                 - AI Recognition: {aeo_probe['aeo_recognized']}
                 - AI Confidence Level: {aeo_probe['aeo_confidence']}
                 - Raw AI Response: \"{aeo_probe['aeo_raw_response'][:500]}\"
                 
                 VISIBLE TEXT (Top 8000 chars):
                 {text_content[:8000]}"""
-            },
-            {"type": "image_url", "image_url": {"url": f"data:image/jpeg;base64,{b64_image}"}}
+            }
         ]
         
+        # Attach screenshots only if available
+        if b64_image:
+            human_msg_content.append({"type": "image_url", "image_url": {"url": f"data:image/jpeg;base64,{b64_image}"}})
         if b64_image_mobile:
             human_msg_content.append({"type": "image_url", "image_url": {"url": f"data:image/jpeg;base64,{b64_image_mobile}"}})
             
