@@ -314,7 +314,7 @@ Best,
                     <div className="check-box">
                       <h3><Mail size={16} color="#a855f7" /> Lead Capture</h3>
                       <div className="check-item"><span>Contact Form</span> {lead.has_lead_capture ? <Check color="#10b981" size={16} /> : <X color="#ef4444" size={16} />}</div>
-                      <div className="check-item"><span>CTA Placement</span> {lead.cta === 'Strong' ? <Check color="#10b981" size={16} /> : <X color="#ef4444" size={16} />}</div>
+                      <div className="check-item"><span>CTA Placement</span> {lead.has_cta ? <Check color="#10b981" size={16} /> : <X color="#ef4444" size={16} />}</div>
                       <div className="check-item"><span>Newsletter Sign-up</span> {lead.has_newsletter ? <Check color="#10b981" size={16} /> : <X color="#ef4444" size={16} />}</div>
                       {(!lead.has_lead_capture || !lead.has_newsletter) && <div style={{ color: '#ef4444', fontSize: '0.7rem', textAlign: 'right' }}>(Needs attention)</div>}
                     </div>

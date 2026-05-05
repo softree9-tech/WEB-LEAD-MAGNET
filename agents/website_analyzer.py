@@ -279,11 +279,64 @@ def check_analytics(html: str) -> dict:
         "linkedin_tag": "snap.licdn.com" in html_lower
     }
 
-def check_lead_capture(soup: BeautifulSoup) -> bool:
+def check_lead_capture(soup: BeautifulSoup, html: str = "") -> bool:
+    """Check for contact forms, mailto/tel links, chat widgets, and popup/modal forms."""
     forms = soup.find_all("form")
     mailtos = soup.find_all("a", href=lambda href: href and href.startswith("mailto:"))
     tels = soup.find_all("a", href=lambda href: href and ("tel:" in href))
-    return bool(forms or mailtos or tels)
+    
+    if forms or mailtos or tels:
+        return True
+    
+    # Check for popup/modal form triggers and chat widgets in the raw HTML
+    html_lower = html.lower() if html else ""
+    popup_signals = [
+        "contact-form", "contact_form", "contactform",
+        "popup-form", "modal-form", "dialog",
+        "start a conversation", "send inquiry", "get in touch",
+        "request a quote", "book a demo", "schedule a call",
+        "tawk.to", "intercom", "drift", "hubspot", "crisp",
+        "livechat", "zendesk", "freshdesk", "tidio",
+        "calendly", "typeform",
+        "open-modal", "openmodal", "show-modal", "showmodal",
+    ]
+    if any(signal in html_lower for signal in popup_signals):
+        return True
+    
+    # Check for buttons/links that look like contact triggers
+    for btn in soup.find_all(["button", "a"]):
+        btn_text = btn.get_text().lower().strip()
+        btn_class = " ".join(btn.get("class", [])).lower()
+        if any(kw in btn_text for kw in ["contact", "get in touch", "inquiry", "enquiry", "talk to", "reach out", "book a", "schedule"]):
+            return True
+        if any(kw in btn_class for kw in ["contact", "cta", "inquiry", "modal-trigger"]):
+            return True
+    
+    return False
+
+def check_cta_presence(soup: BeautifulSoup, html: str = "") -> bool:
+    """Technical check for the presence of CTA buttons/links on the page."""
+    cta_keywords = [
+        "get started", "sign up", "start free", "try free", "buy now",
+        "learn more", "contact us", "request demo", "book a demo",
+        "schedule", "get a quote", "free trial", "download",
+        "subscribe", "join", "register", "apply now",
+        "send inquiry", "start a conversation", "talk to us",
+        "explore", "see pricing", "view plans",
+    ]
+    
+    for el in soup.find_all(["button", "a"]):
+        text = el.get_text().lower().strip()
+        el_class = " ".join(el.get("class", [])).lower()
+        
+        # Check text content for CTA keywords
+        if any(kw in text for kw in cta_keywords):
+            return True
+        # Check class names for CTA-like classes
+        if any(kw in el_class for kw in ["cta", "btn-primary", "btn-cta", "hero-btn", "action-btn"]):
+            return True
+    
+    return False
 
 def check_image_alt_tags(soup: BeautifulSoup) -> dict:
     images = soup.find_all("img")
@@ -333,6 +386,7 @@ def website_analyzer_agent(state: AgentState) -> AgentState:
     aeo_probe = {"aeo_recognized": False, "aeo_confidence": "low", "aeo_raw_response": ""}
     analytics_data = {"google_analytics": False, "tag_manager": False, "facebook_pixel": False, "linkedin_tag": False}
     has_lead_capture = False
+    has_cta = False
     image_alt_data = {"total": 0, "missing_alt": 0, "percent_missing": 0}
     has_dead_socials = False
     
@@ -364,7 +418,8 @@ def website_analyzer_agent(state: AgentState) -> AgentState:
                 analytics_data = check_analytics(html)
                 
                 soup = BeautifulSoup(html, "html.parser")
-                has_lead_capture = check_lead_capture(soup)
+                has_lead_capture = check_lead_capture(soup, html)
+                has_cta = check_cta_presence(soup, html)
                 has_newsletter = check_newsletter(soup)
                 image_alt_data = check_image_alt_tags(soup)
                 has_dead_socials = check_social_links(soup)
@@ -406,7 +461,8 @@ def website_analyzer_agent(state: AgentState) -> AgentState:
                 last_modified = extract_last_modified(headers, html)
                 analytics_data = check_analytics(html)
                 soup = BeautifulSoup(html, "html.parser")
-                has_lead_capture = check_lead_capture(soup)
+                has_lead_capture = check_lead_capture(soup, html)
+                has_cta = check_cta_presence(soup, html)
                 has_newsletter = check_newsletter(soup)
                 image_alt_data = check_image_alt_tags(soup)
                 has_dead_socials = check_social_links(soup)
@@ -628,6 +684,7 @@ Finally, compute the Internal Lead Score (0-10) where a HIGHER score means a WOR
         # Extracted parameters
         "has_analytics": analytics_data,
         "has_lead_capture": has_lead_capture,
+        "has_cta": has_cta,
         "has_dead_socials": has_dead_socials,
         "image_percent_missing_alt": image_alt_data.get("percent_missing", 0)
     }
