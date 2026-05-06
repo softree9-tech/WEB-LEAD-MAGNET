@@ -1,13 +1,13 @@
 import os
-import google.generativeai as genai
-
-# Configure Gemini API
-genai.configure(api_key=os.getenv("GEMINI_API_KEY"))
+from google import genai
 
 def generate_response(prompt: str) -> str:
     try:
-        model = genai.GenerativeModel("gemini-flash-latest")
-        response = model.generate_content(prompt)
+        client = genai.Client(api_key=os.getenv("GEMINI_API_KEY"))
+        response = client.models.generate_content(
+            model="gemini-3.1-flash-lite-preview",
+            contents=prompt
+        )
         return response.text
     except Exception as e:
         return f"Error: {str(e)}"

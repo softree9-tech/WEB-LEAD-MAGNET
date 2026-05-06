@@ -140,7 +140,7 @@ def verify_aeo_visibility(company_name: str, url: str) -> dict:
     aeo_result = {"aeo_recognized": False, "aeo_confidence": "low", "aeo_raw_response": ""}
     try:
         probe_llm = ChatGoogleGenerativeAI(
-            model="gemini-flash-latest", 
+            model="gemini-3.1-flash-lite-preview", 
             temperature=0, 
             max_tokens=300,
             api_key=os.environ.get("GEMINI_API_KEY")
@@ -387,6 +387,7 @@ def website_analyzer_agent(state: AgentState) -> AgentState:
     analytics_data = {"google_analytics": False, "tag_manager": False, "facebook_pixel": False, "linkedin_tag": False}
     has_lead_capture = False
     has_cta = False
+    has_newsletter = False
     image_alt_data = {"total": 0, "missing_alt": 0, "percent_missing": 0}
     has_dead_socials = False
     
@@ -479,10 +480,25 @@ def website_analyzer_agent(state: AgentState) -> AgentState:
             except Exception as e2:
                 print(f"HTTP fallback also failed for {url}: {e2}")
 
-        # ─── COLLECT INDEPENDENT API RESULTS (always succeeds) ────────────────
-        pagespeed_data = lighthouse_future.result(timeout=70)
-        aeo_probe = aeo_future.result(timeout=30)
-        seo_ssl = ssl_future.result(timeout=10)
+        # ─── COLLECT INDEPENDENT API RESULTS (with safety) ───────────────────
+        try:
+            pagespeed_data = lighthouse_future.result(timeout=70)
+        except Exception as e:
+            print(f"Lighthouse Future Error: {e}")
+            pagespeed_data = {"speed": 0.0, "lighthouse_seo": 0, "lighthouse_performance": 0, "lighthouse_accessibility": 0, "mobile_performance": 0, "issues": {}, "api_success": False}
+            
+        try:
+            aeo_probe = aeo_future.result(timeout=30)
+        except Exception as e:
+            print(f"AEO Future Error: {e}")
+            aeo_probe = {"aeo_recognized": False, "aeo_confidence": "low", "aeo_raw_response": "AI Probe failed."}
+            
+        try:
+            seo_ssl = ssl_future.result(timeout=10)
+        except Exception as e:
+            print(f"SSL Future Error: {e}")
+            seo_ssl = {"valid": False, "days_remaining": 0, "https_enforced": False}
+            
         executor.shutdown(wait=False)
 
         load_time = pagespeed_data["speed"]
@@ -501,7 +517,7 @@ def website_analyzer_agent(state: AgentState) -> AgentState:
 
 
     llm = ChatGoogleGenerativeAI(
-        model="gemini-flash-latest", 
+        model="gemini-3.1-flash-lite-preview", 
         temperature=0,
         api_key=os.environ.get("GEMINI_API_KEY")
     )
