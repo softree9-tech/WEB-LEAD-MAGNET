@@ -1,6 +1,6 @@
 FROM python:3.11-slim
 
-# Install system dependencies required by Playwright/Chromium
+# Install system dependencies (Playwright + Chromium)
 RUN apt-get update && apt-get install -y \
     wget \
     curl \
@@ -28,20 +28,24 @@ RUN apt-get update && apt-get install -y \
     libcairo2 \
     libatspi2.0-0 \
     fonts-liberation \
-    xvfb \
     && rm -rf /var/lib/apt/lists/*
 
+# Set working directory
 WORKDIR /app
 
-# Install Python dependencies first (layer caching)
-COPY requirements.txt .
-RUN pip install --no-cache-dir -r requirements.txt
-
-# Install Playwright Chromium browser
-RUN playwright install chromium
-
+# Copy all files
 COPY . .
 
-EXPOSE 8000
+# Install Python dependencies
+RUN pip install --upgrade pip
+RUN pip install -r requirements.txt
 
-CMD ["uvicorn", "main:app", "--host", "0.0.0.0", "--port", "8000"]
+# Install Playwright
+RUN pip install playwright
+RUN playwright install chromium
+
+# Expose port (Render uses 10000)
+EXPOSE 10000
+
+# Start FastAPI app
+CMD ["uvicorn", "main:app", "--host", "0.0.0.0", "--port", "10000"]
