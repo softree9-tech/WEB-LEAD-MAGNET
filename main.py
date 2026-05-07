@@ -8,7 +8,8 @@ if sys.platform == 'win32':
 
 import pandas as pd
 from fastapi import FastAPI, UploadFile, File, HTTPException
-from fastapi.responses import JSONResponse
+from fastapi.responses import JSONResponse, StreamingResponse
+import json
 from pydantic import BaseModel
 from typing import List
 from dotenv import load_dotenv
@@ -135,11 +136,20 @@ async def process_csv(file: UploadFile = File(...)):
             }
             tasks.append(_process_one_lead(initial_state, website))
 
-        results = await asyncio.gather(*tasks)
-        return {"processed_leads": list(results)}
+        async def stream_results():
+            try:
+                for coro in asyncio.as_completed(tasks):
+                    result = await coro
+                    yield json.dumps(result) + "\n"
+            except Exception as e:
+                print(f"--- Error in stream_results: {e} ---")
+                yield json.dumps({"error": str(e)}) + "\n"
+
+        return StreamingResponse(stream_results(), media_type="application/x-ndjson")
     except HTTPException:
         raise
     except Exception as e:
+        print(f"--- Fatal error in process_csv: {e} ---")
         raise HTTPException(status_code=500, detail=f"Failed to process CSV: {str(e)}")
 
 # To run the app use: uvicorn main:app --reload

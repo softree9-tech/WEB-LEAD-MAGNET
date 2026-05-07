@@ -6,75 +6,89 @@ export default function CSVUpload({ onResult }) {
   const [file, setFile] = useState(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
-  const [elapsed, setElapsed] = useState(0);
+  const [processedCount, setProcessedCount] = useState(0);
+  const [totalRows, setTotalRows] = useState(0);
   const fileInputRef = useRef(null);
-  const timerRef = useRef(null);
+
+  const API_BASE_URL = import.meta.env.VITE_API_BASE_URL
+    ? `${import.meta.env.VITE_API_BASE_URL}/api/process`
+    : 'http://localhost:8000/api/process';
+
+  const countRows = (file) => {
+    return new Promise((resolve) => {
+      const reader = new FileReader();
+      reader.onload = (e) => {
+        const text = e.target.result;
+        const lines = text.split(/\r?\n/).filter(line => line.trim() !== "");
+        resolve(Math.max(0, lines.length - 1));
+      };
+      reader.readAsText(file);
+    });
+  };
 
   const handleUpload = async () => {
     if (!file) return;
     setLoading(true);
     setError(null);
-    setElapsed(0);
-
-    // Start elapsed timer
-    timerRef.current = setInterval(() => {
-      setElapsed(prev => prev + 1);
-    }, 1000);
-
-    // 30 minute timeout — enough for 9 websites
-    const controller = new AbortController();
-    const timeoutId = setTimeout(() => controller.abort(), 30 * 60 * 1000);
-
-    const formData = new FormData();
-    formData.append('file', file);
-
-    // try {
-    //   const res = await fetch('http://localhost:8000/api/process/csv', {
-    //     method: 'POST',
-    //     body: formData,
-    //     signal: controller.signal,
-    //   });
-
-    //   clearTimeout(timeoutId);
-
-    //   if (!res.ok) {
-    //     const errData = await res.json().catch(() => null);
-    //     const detail = errData?.detail || `Server error: ${res.status}`;
-    //     throw new Error(detail);
-    //   }
-
-    //   const data = await res.json();
-    //   onResult(data.processed_leads || []);
-    //   setFile(null);
-    // } catch (err) {
-    //   if (err.name === 'AbortError') {
-    //     setError('Request timed out. Try uploading fewer URLs at once.');
-    //   } else {
-    //     setError(err.message);
-    //   }
-    // } finally {
-    //   setLoading(false);
-    //   clearInterval(timerRef.current);
-    //   setElapsed(0);
-    //   if (fileInputRef.current) fileInputRef.current.value = '';
-    // }
-
+    setProcessedCount(0);
+    
     try {
-      const data = await processCSV(file);
-      onResult(data.processed_leads || []);
+      const rows = await countRows(file);
+      setTotalRows(rows);
+
+      const formData = new FormData();
+      formData.append('file', file);
+
+      const response = await fetch(`${API_BASE_URL}/csv`, {
+        method: 'POST',
+        body: formData,
+      });
+
+      if (!response.ok) {
+        const errData = await response.json().catch(() => null);
+        throw new Error(errData?.detail || `Server error: ${response.status}`);
+      }
+
+      const reader = response.body.getReader();
+      const decoder = new TextDecoder();
+      let buffer = '';
+
+      while (true) {
+        const { done, value } = await reader.read();
+        if (done) break;
+
+        buffer += decoder.decode(value, { stream: true });
+        const lines = buffer.split('\n');
+        buffer = lines.pop(); // Keep partial line in buffer
+
+        for (const line of lines) {
+          if (line.trim()) {
+            try {
+              const result = JSON.parse(line);
+              if (result.error) {
+                console.error("Result error:", result.error);
+              } else {
+                onResult([result]); // App.jsx handleBatchResults expects an array
+                setProcessedCount(prev => prev + 1);
+              }
+            } catch (e) {
+              console.error("Failed to parse stream line:", e);
+            }
+          }
+        }
+      }
+
       setFile(null);
+      if (fileInputRef.current) fileInputRef.current.value = '';
     } catch (err) {
-      setError(err.response?.data?.detail || err.message);
+      setError(err.message);
     } finally {
       setLoading(false);
-      clearInterval(timerRef.current);
-      setElapsed(0);
-      if (fileInputRef.current) fileInputRef.current.value = '';
     }
   };
 
   return (
-    <div className="glass-panel animate-fade-in" style={{ padding: '0.75rem 1.25rem', display: 'flex', alignItems: 'center', gap: '1rem', height: '100%', animationDelay: '0.1s' }}>
+    <div className="glass-panel animate-fade-in" style={{ position: 'relative', padding: '0.75rem 1.25rem', display: 'flex', alignItems: 'center', gap: '1rem', height: '100%', animationDelay: '0.1s' }}>
       <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', whiteSpace: 'nowrap' }}>
         <UploadCloud size={18} color="var(--accent-color)" />
         <span style={{ fontWeight: 600, fontSize: '0.95rem' }}>Batch CSV</span>
@@ -99,14 +113,18 @@ export default function CSVUpload({ onResult }) {
       <button
         onClick={handleUpload}
         className="primary-btn"
-        style={{ opacity: loading || !file ? 0.5 : 1, padding: '0.5rem 1rem', whiteSpace: 'nowrap' }}
+        style={{ opacity: loading || !file ? 0.5 : 1, padding: '0.5rem 1rem', minWidth: '140px', whiteSpace: 'nowrap' }}
         disabled={loading || !file}
       >
         {loading ? <Loader2 className="spinning" size={16} /> : <UploadCloud size={16} />}
-        {loading ? ` Analyzing... ${elapsed}s` : ' Upload'}
+        {loading 
+          ? totalRows > 0 
+            ? ` Analyzing... ${processedCount}/${totalRows}` 
+            : ` Analyzing...`
+          : ' Upload'}
       </button>
 
-      {error && <div style={{ position: 'absolute', top: '-20px', color: '#ef4444', fontSize: '0.8rem' }}>{error}</div>}
+      {error && <div style={{ position: 'absolute', bottom: '-15px', left: '1.25rem', color: '#ef4444', fontSize: '0.75rem', maxWidth: '300px', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{error}</div>}
     </div>
   );
 }
