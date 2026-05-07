@@ -15,6 +15,11 @@ from dotenv import load_dotenv
 from graph import graph_app
 from fastapi.middleware.cors import CORSMiddleware
 
+# ─── Parallel Processing Config ─────────────────────────────────────────────
+# Max leads to process simultaneously. Keep low to avoid RAM/rate-limit issues.
+MAX_CONCURRENT_LEADS = 3
+_semaphore = asyncio.Semaphore(MAX_CONCURRENT_LEADS)
+
 # Load environment variables (e.g., GEMINI_API_KEY)
 load_dotenv()
 
@@ -73,9 +78,21 @@ def process_single_lead(lead: LeadInput):
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
 
+async def _process_one_lead(initial_state: dict, label: str) -> dict:
+    """Process a single lead inside the semaphore-limited thread pool."""
+    async with _semaphore:
+        try:
+            print(f"⚡ Starting parallel processing: {label}")
+            final_state = await asyncio.to_thread(graph_app.invoke, initial_state)
+            print(f"✅ Finished: {label}")
+            return final_state.get("output_row", {})
+        except Exception as e:
+            print(f"❌ Error processing {label}: {e}")
+            return {"error": str(e), "identifier": label}
+
 @app.post("/api/process/batch")
-def process_batch_leads(payload: LeadList):
-    results = []
+async def process_batch_leads(payload: LeadList):
+    tasks = []
     for lead in payload.leads:
         initial_state = {
             "raw_name": lead.name,
@@ -84,18 +101,13 @@ def process_batch_leads(payload: LeadList):
             "raw_role": lead.role,
             "raw_website": lead.website
         }
-        try:
-            final_state = graph_app.invoke(initial_state)
-            results.append(final_state.get("output_row", {}))
-        except Exception as e:
-            print(f"Error processing lead {lead.email}: {e}")
-            # Optionally continue or fail
-            results.append({"error": str(e), "email": lead.email})
-            
-    return {"processed_leads": results}
+        tasks.append(_process_one_lead(initial_state, lead.email or lead.website))
+
+    results = await asyncio.gather(*tasks)
+    return {"processed_leads": list(results)}
 
 @app.post("/api/process/csv")
-def process_csv(file: UploadFile = File(...)):
+async def process_csv(file: UploadFile = File(...)):
     if not file.filename.endswith('.csv'):
         raise HTTPException(status_code=400, detail="File must be a CSV")
         
@@ -103,30 +115,30 @@ def process_csv(file: UploadFile = File(...)):
         print(f"--- Received CSV file: {file.filename} ---")
         df = pd.read_csv(file.file)
         print(f"--- CSV loaded successfully. Rows: {len(df)} ---")
+        print(f"--- ⚡ Parallel processing enabled (max {MAX_CONCURRENT_LEADS} at a time) ---")
         
         # Only website is strictly required
         if "website" not in df.columns:
             print("--- Error: 'website' column missing in CSV ---")
             raise HTTPException(status_code=400, detail="CSV must contain at least a 'website' column")
             
-        results = []
+        tasks = []
         for i, row in df.iterrows():
-            print(f"--- Processing row {i+1}/{len(df)}: {row.get('website')} ---")
+            website = str(row.get("website", ""))
+            print(f"--- Queuing row {i+1}/{len(df)}: {website} ---")
             initial_state = {
                 "raw_name": str(row.get("name", "")) if "name" in df.columns else "",
                 "raw_email": str(row.get("email", "")) if "email" in df.columns else "",
                 "raw_company": str(row.get("company", "")) if "company" in df.columns else "",
                 "raw_role": str(row.get("role", "")) if "role" in df.columns else "",
-                "raw_website": str(row.get("website", ""))
+                "raw_website": website
             }
-            try:
-                final_state = graph_app.invoke(initial_state)
-                results.append(final_state.get("output_row", {}))
-            except Exception as e:
-                print(f"Error processing row {row.get('website')}: {e}")
-                results.append({"error": str(e), "website": row.get("website")})
-                
-        return {"processed_leads": results}
+            tasks.append(_process_one_lead(initial_state, website))
+
+        results = await asyncio.gather(*tasks)
+        return {"processed_leads": list(results)}
+    except HTTPException:
+        raise
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Failed to process CSV: {str(e)}")
 
