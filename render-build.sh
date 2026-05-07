@@ -1,36 +1,8 @@
 #!/usr/bin/env bash
-# exit on error
 set -o errexit
 
-# Install dependencies
+# Install Python dependencies
 pip install -r requirements.txt
 
-# Install system dependencies required by Playwright Chromium on Render/Ubuntu
-apt-get update && apt-get install -y \
-    libglib2.0-0 \
-    libnss3 \
-    libnspr4 \
-    libatk1.0-0 \
-    libatk-bridge2.0-0 \
-    libcups2 \
-    libdrm2 \
-    libdbus-1-3 \
-    libxcb1 \
-    libxkbcommon0 \
-    libx11-6 \
-    libxcomposite1 \
-    libxdamage1 \
-    libxext6 \
-    libxfixes3 \
-    libxrandr2 \
-    libgbm1 \
-    libasound2 \
-    libpango-1.0-0 \
-    libcairo2 \
-    libatspi2.0-0 \
-    fonts-liberation \
-    || true
-
-# Install Playwright browsers and their system dependencies
+# Install Playwright browser ONLY (allowed)
 playwright install chromium
-playwright install-deps chromium
