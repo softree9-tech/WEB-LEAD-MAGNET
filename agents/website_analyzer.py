@@ -329,7 +329,7 @@ def check_cta_presence(soup: BeautifulSoup, html: str = "") -> bool:
         text = el.get_text().lower().strip()
         el_class = " ".join(el.get("class", [])).lower()
         
-        # Check text content for CTA keywords
+        # Check text contents for CTA keywords
         if any(kw in text for kw in cta_keywords):
             return True
         # Check class names for CTA-like classes
