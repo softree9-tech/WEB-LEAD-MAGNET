@@ -5,4 +5,4 @@ set -o errexit
 pip install -r requirements.txt
 
 # Install Playwright browser ONLY (allowed)
-playwright install chromium
+#playwright install chromium
