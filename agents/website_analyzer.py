@@ -43,79 +43,45 @@ def check_ssl_certificate(url: str) -> dict:
 
 def check_newsletter(soup, html: str = "") -> bool:
     """
-    Detect newsletter/email subscription presence using keyword-based matching and form detection.
+    Fast newsletter/email signup detection.
+    Optimized for batch website analysis.
     """
-    # 1. Convert to lowercase
+
     html_lower = html.lower()
-    
-    # 2. Define keywords and exclusions
-    keywords = [
-        "newsletter", "subscribe", "subscribe now", "subscribe today", 
-        "sign up for updates", "join our mailing list", "email updates", 
-        "get updates", "stay updated", "weekly updates", 
-        "latest news in your inbox", "enter your email", "join newsletter", 
-        "receive updates", "mailing list", "email subscription", 
-        "subscribe for news", "signup for newsletter", "sign up", 
-        "notify me", "get notified", "join our community", 
-        "receive our newsletter", "subscribe button", "email alerts", 
-        "news updates"
+
+    newsletter_keywords = [
+        "newsletter",
+        "subscribe",
+        "join our mailing list",
+        "email updates",
+        "stay updated",
+        "enter your email",
+        "mailing list",
+        "email subscription",
+        "get updates",
+        "receive updates",
+        "sign up for updates",
+        "join newsletter",
+        "email alerts",
+        "weekly updates"
     ]
-    
-    exclusions = ["newsroom", "blog", "press release", "media page", "article listing"]
-    
-    newsletter_present = False
-    
-    # 3. Keyword-based matching
-    # Check if ANY keyword exists in lowercase HTML
-    if any(kw in html_lower for kw in keywords):
-        newsletter_present = True
-        
-    # 4. Form detection
-    # - input type="email"
-    # - placeholder containing "email"
-    # - buttons with: subscribe, join, sign up
-    if not newsletter_present:
-        # Check for input type="email"
-        if soup.find("input", {"type": "email"}):
-            newsletter_present = True
-        
-        # Check for placeholders containing "email"
-        if not newsletter_present:
-            for inp in soup.find_all("input"):
-                if "email" in (inp.get("placeholder") or "").lower():
-                    newsletter_present = True
-                    break
-        
-        # Check for buttons with: subscribe, join, sign up
-        if not newsletter_present:
-            for btn in soup.find_all(["button", "input"]):
-                btn_text = ""
-                if btn.name == "button":
-                    btn_text = btn.get_text().lower()
-                elif btn.get("type") in ["submit", "button"]:
-                    btn_text = (btn.get("value") or "").lower()
-                
-                if any(kw in btn_text for kw in ["subscribe", "join", "sign up"]):
-                    newsletter_present = True
-                    break
 
-    # 5. Exclusion Logic: Do NOT mark true for exclusions
-    # If the only "matches" are actually just the exclusion words or in that context.
-    if newsletter_present:
-        # If the page title or a significant portion suggests it's just one of the exclusions
-        # we might want to be careful. But the requirement is likely: 
-        # "Don't trigger for these words". Since they aren't in the list, we are mostly safe.
-        # However, we'll ensure that if the keyword found is "news updates", it's not just "newsroom".
-        
-        # Actually, I'll add a check: if the match is found, but the overall content 
-        # is just a link to a blog or newsroom without other indicators, we could skip.
-        # But for now, the simplest interpretation is to just avoid the words themselves.
-        
-        # Let's ensure we don't return True if the match is purely one of the exclusions.
-        # (Though none of the keywords match the exclusions directly).
-        pass
+    # Fast keyword detection
+    if any(keyword in html_lower for keyword in newsletter_keywords):
+        return True
 
-    return newsletter_present
+    # Lightweight email form detection
+    if (
+        'type="email"' in html_lower
+        and (
+            "subscribe" in html_lower
+            or "sign up" in html_lower
+            or "join" in html_lower
+        )
+    ):
+        return True
+
+    return False
 
 def extract_last_modified(headers: dict, html: str) -> str:
     if headers and 'last-modified' in headers:
