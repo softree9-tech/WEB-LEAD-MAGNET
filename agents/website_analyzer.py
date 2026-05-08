@@ -41,45 +41,27 @@ def check_ssl_certificate(url: str) -> dict:
     except Exception:
         return {"valid": False, "days_remaining": 0, "https_enforced": False}
 
-def check_newsletter(soup, html: str = "") -> bool:
-    """
-    Fast newsletter/email signup detection.
-    Optimized for batch website analysis.
-    """
+def check_newsletter(soup) -> bool:
+    forms = soup.find_all("form")
 
-    html_lower = html.lower()
-
-    newsletter_keywords = [
-        "newsletter",
+    keywords = [
         "subscribe",
-        "join our mailing list",
+        "newsletter",
+        "sign up",
+        "join",
         "email updates",
-        "stay updated",
-        "enter your email",
         "mailing list",
-        "email subscription",
+        "stay updated",
         "get updates",
-        "receive updates",
-        "sign up for updates",
-        "join newsletter",
         "email alerts",
         "weekly updates"
     ]
 
-    # Fast keyword detection
-    if any(keyword in html_lower for keyword in newsletter_keywords):
-        return True
+    for f in forms:
+        text = f.get_text().lower()
 
-    # Lightweight email form detection
-    if (
-        'type="email"' in html_lower
-        and (
-            "subscribe" in html_lower
-            or "sign up" in html_lower
-            or "join" in html_lower
-        )
-    ):
-        return True
+        if any(k in text for k in keywords):
+            return True
 
     return False
 
@@ -473,7 +455,7 @@ def website_analyzer_agent(state: AgentState) -> AgentState:
                 soup = BeautifulSoup(html, "html.parser")
                 has_lead_capture = check_lead_capture(soup, html)
                 has_cta = check_cta_presence(soup, html)
-                has_newsletter = check_newsletter(soup, html)
+                has_newsletter = check_newsletter(soup)
                 image_alt_data = check_image_alt_tags(soup)
                 has_dead_socials = check_social_links(soup)
                 
@@ -484,6 +466,9 @@ def website_analyzer_agent(state: AgentState) -> AgentState:
                 seo_title = bool(soup.find("title"))
                 seo_canonical = bool(soup.find("link", attrs={"rel": "canonical"}))
                 seo_og = bool(soup.find("meta", attrs={"property": "og:title"}))
+                
+                # Check for duplicate meta tags
+                has_duplicate_meta = len(soup.find_all("title")) > 1 or len(soup.find_all("meta", attrs={"name": "description"})) > 1
                 
                 # Clean for LLM
                 for script in soup(["script", "style", "nav", "footer"]):
@@ -516,7 +501,7 @@ def website_analyzer_agent(state: AgentState) -> AgentState:
                 soup = BeautifulSoup(html, "html.parser")
                 has_lead_capture = check_lead_capture(soup, html)
                 has_cta = check_cta_presence(soup, html)
-                has_newsletter = check_newsletter(soup, html)
+                has_newsletter = check_newsletter(soup)
                 image_alt_data = check_image_alt_tags(soup)
                 has_dead_socials = check_social_links(soup)
                 seo_mobile = bool(soup.find("meta", attrs={"name": "viewport"}))
@@ -525,6 +510,7 @@ def website_analyzer_agent(state: AgentState) -> AgentState:
                 seo_title = bool(soup.find("title"))
                 seo_canonical = bool(soup.find("link", attrs={"rel": "canonical"}))
                 seo_og = bool(soup.find("meta", attrs={"property": "og:title"}))
+                has_duplicate_meta = len(soup.find_all("title")) > 1 or len(soup.find_all("meta", attrs={"name": "description"})) > 1
                 for script in soup(["script", "style", "nav", "footer"]):
                     script.extract()
                 text_content = f"--- RAW TEXT CONTENT (HTTP fallback) ---\n{soup.get_text(separator=' ', strip=True)}"
@@ -753,6 +739,7 @@ Finally, compute the Internal Lead Score (0-10) where a HIGHER score means a WOR
         "has_analytics": analytics_data,
         "has_lead_capture": has_lead_capture,
         "has_cta": has_cta,
+        "has_duplicate_meta": locals().get('has_duplicate_meta', False),
         "has_dead_socials": has_dead_socials,
         "image_percent_missing_alt": image_alt_data.get("percent_missing", 0)
     }

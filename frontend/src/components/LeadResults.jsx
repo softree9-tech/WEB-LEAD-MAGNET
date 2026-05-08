@@ -45,10 +45,21 @@ export default function LeadResults({ leads }) {
                 ].filter(Boolean).join(' | ') || 'No critical issues found';
 
                 const seoIssues = [
+                  !lead.seo_title && 'Missing title tag',
+                  !lead.seo_meta_desc && 'Missing meta description',
+                  !lead.seo_h1 && 'Missing H1 tag',
+                  !lead.seo_canonical && 'Missing canonical tag',
+                  !lead.seo_og && 'Missing Open Graph tags',
+                  !lead.seo_mobile && 'Poor mobile optimization',
+                  lead.has_duplicate_meta && 'Duplicate meta tags',
+                  !lead.has_cta && 'Weak CTA placement',
+                  !lead.has_newsletter && 'Missing newsletter signup',
+                  parseFloat(lead.load_time) > 3.0 && `Slow page load (${lead.load_time}s)`,
+                  (lead.broken_links?.length > 0) && `${lead.broken_links.length} broken links`,
+                  (lead.image_percent_missing_alt > 0) && 'Missing alt text',
                   ...((lead.lighthouse_issues?.performance || []).slice(0, 1).map(i => `Perf: ${i}`)),
                   ...((lead.lighthouse_issues?.seo || []).slice(0, 1).map(i => `SEO: ${i}`)),
-                  ...((lead.lighthouse_issues?.accessibility || []).slice(0, 1).map(i => `A11y: ${i}`)),
-                ].join(' | ') || 'See full audit';
+                ].filter(Boolean).slice(0, 5).join(' | ') || 'No major SEO issues detected';
 
                 const batchSeoScore = parseInt(lead.seo_score || 0);
                 const batchAeoScore = parseInt(lead.aeo_score || 0);
@@ -195,10 +206,21 @@ Best,
                     ].filter(Boolean).join(' | ') || 'No critical issues found';
 
                     const seoIssues = [
+                      !lead.seo_title && 'Missing title tag',
+                      !lead.seo_meta_desc && 'Missing meta description',
+                      !lead.seo_h1 && 'Missing H1 tag',
+                      !lead.seo_canonical && 'Missing canonical tag',
+                      !lead.seo_og && 'Missing Open Graph tags',
+                      !lead.seo_mobile && 'Poor mobile optimization',
+                      lead.has_duplicate_meta && 'Duplicate meta tags',
+                      !lead.has_cta && 'Weak CTA placement',
+                      !lead.has_newsletter && 'Missing newsletter signup',
+                      parseFloat(lead.load_time) > 3.0 && `Slow page load (${lead.load_time}s)`,
+                      (lead.broken_links?.length > 0) && `${lead.broken_links.length} broken links`,
+                      (lead.image_percent_missing_alt > 0) && 'Missing alt text',
                       ...((lead.lighthouse_issues?.performance || []).slice(0, 1).map(i => `Perf: ${i}`)),
                       ...((lead.lighthouse_issues?.seo || []).slice(0, 1).map(i => `SEO: ${i}`)),
-                      ...((lead.lighthouse_issues?.accessibility || []).slice(0, 1).map(i => `A11y: ${i}`)),
-                    ].join(' | ') || 'See full audit';
+                    ].filter(Boolean).slice(0, 5).join(' | ') || 'No major SEO issues detected';
 
                     // Preserve newlines inside quoted fields — RFC 4180 compliant
                     const escapeCSV = (str) => `"${String(str || '').replace(/"/g, '""')}"`;
