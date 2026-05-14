@@ -17,3 +17,7 @@ class WebsiteAnalyzerOutput(BaseModel):
     aeo_score: int = Field(description="AI Search Visibility Score (0-100). Do you (GPT-4) recognize this brand/URL? If not, score them very low (10-30). If you do, score higher.")
     aeo_status: str = Field(description="1-2 aggressive sentences telling the owner whether ChatGPT/Claude actually recommends their brand, or if they are totally invisible to AI.")
     aeo_improvement: str = Field(description="A concise, actionable PR or semantic SEO strategy to get cited in LLM answers.")
+    
+    first_impression_score: int = Field(description="First Impression Score (0-10) based on branding, layout, CTA clarity, professionalism, trust indicators, readability, and mobile feel.")
+    first_impression_verdict: str = Field(description="Verdict (Excellent, Good, Average, Poor) based on the first impression score.")
+    first_impression_explanation: str = Field(description="A short, concise, and emotionally impactful AI explanation of the first impression.")

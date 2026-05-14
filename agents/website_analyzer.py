@@ -658,7 +658,10 @@ def website_analyzer_agent(state: AgentState) -> AgentState:
             "seo_improvement": "Improve page load speed, fix mobile responsiveness, and enforce structured meta tags.",
             "aeo_score": 50 if aeo_probe.get("aeo_recognized") else 0,
             "aeo_status": "AI models recognize your brand, but your lack of structured data makes you a 'secondary' recommendation." if aeo_probe.get("aeo_recognized") else "Your brand is currently invisible to major AI engines like ChatGPT and Gemini.",
-            "aeo_improvement": "Implement advanced Schema.org markup to turn your text-based content into machine-readable data points for LLMs." if aeo_probe.get("aeo_recognized") else "Launch a digital PR campaign to establish AI visibility."
+            "aeo_improvement": "Implement advanced Schema.org markup to turn your text-based content into machine-readable data points for LLMs." if aeo_probe.get("aeo_recognized") else "Launch a digital PR campaign to establish AI visibility.",
+            "first_impression_score": 3,
+            "first_impression_verdict": "Poor",
+            "first_impression_explanation": "Website is unreachable — visitors see nothing, killing trust instantly."
         }
     else:
         # Adjust system message based on whether we have screenshots or only text
@@ -689,6 +692,19 @@ Then, based on the VERIFIED Google Lighthouse data provided below, generate comp
 3. aeo_score (0-100), aeo_status, aeo_improvement: Base the AEO score STRICTLY on the LIVE AEO PROBE RESULTS provided. If AI Recognition is False, the score MUST be below 25. If True with low confidence, score 25-50. If True with high confidence, score 50-80+. Use the raw AI response to craft specific, actionable improvement advice.
 
 Finally, compute the Internal Lead Score (0-10) where a HIGHER score means a WORSE website (making them a HOTTER lead for our agency to pitch). Factor in ALL Lighthouse scores — low Performance, Accessibility, or Mobile scores should push the lead score higher.
+
+Additionally, generate a 'First Impression Score' (0-10) from the perspective of a first-time visitor.
+Analyze:
+- Branding (Modern vs Outdated)
+- Layout (Professional vs Cluttered)
+- CTA Clarity (Obvious vs Hidden)
+- Professionalism (Trustworthy vs Amateur)
+- Trust Indicators (Reviews/Logos/Social proof)
+- Readability (Contrast/Font size)
+- Mobile Feel (Fluid vs Broken)
+
+Assign a verdict: Excellent (9-10), Good (7-8), Average (5-6), Poor (0-4).
+Provide a short, concise, and emotionally impactful AI explanation (e.g., "Website feels outdated and lacks strong trust signals.").
 """)
 
         human_msg_content = [
@@ -747,7 +763,10 @@ Finally, compute the Internal Lead Score (0-10) where a HIGHER score means a WOR
                 "seo_improvement": result.seo_improvement,
                 "aeo_score": result.aeo_score,
                 "aeo_status": result.aeo_status,
-                "aeo_improvement": result.aeo_improvement
+                "aeo_improvement": result.aeo_improvement,
+                "first_impression_score": result.first_impression_score,
+                "first_impression_verdict": result.first_impression_verdict,
+                "first_impression_explanation": result.first_impression_explanation
             }
         except Exception as e:
             print("LLM Error:", e)
@@ -760,7 +779,10 @@ Finally, compute the Internal Lead Score (0-10) where a HIGHER score means a WOR
                 "seo_improvement": "Improve page load speed, fix mobile responsiveness, and enforce structured meta tags.",
                 "aeo_score": 50 if aeo_probe.get("aeo_recognized") else 0, 
                 "aeo_status": "AI models recognize your brand, but your lack of structured data makes you a 'secondary' recommendation." if aeo_probe.get("aeo_recognized") else "Your brand is currently invisible to major AI engines like ChatGPT and Gemini.", 
-                "aeo_improvement": "Implement advanced Schema.org markup to turn your text-based content into machine-readable data points for LLMs." if aeo_probe.get("aeo_recognized") else "Launch a digital PR campaign to establish AI visibility."
+                "aeo_improvement": "Implement advanced Schema.org markup to turn your text-based content into machine-readable data points for LLMs." if aeo_probe.get("aeo_recognized") else "Launch a digital PR campaign to establish AI visibility.",
+                "first_impression_score": 5,
+                "first_impression_verdict": "Average",
+                "first_impression_explanation": "Analysis partially failed — initial signals suggest the site lacks polish and professional trust cues."
             }
 
     # Format the payload directly for the React frontend Lead Magnet report
@@ -798,6 +820,9 @@ Finally, compute the Internal Lead Score (0-10) where a HIGHER score means a WOR
         "image_percent_missing_alt": locals().get('image_alt_data', {}).get('percent_missing', 0),
         "has_dead_socials": locals().get('has_dead_socials', False),
         "rebranding_pitch": result_dict.get("rebranding_pitch", ""),
+        "first_impression_score": result_dict.get("first_impression_score", 0),
+        "first_impression_verdict": result_dict.get("first_impression_verdict", "Unknown"),
+        "first_impression_explanation": result_dict.get("first_impression_explanation", ""),
         "seo_score": result_dict.get("seo_score", 0),
         "seo_status": result_dict.get("seo_status", ""),
         "seo_improvement": result_dict.get("seo_improvement", ""),
@@ -805,14 +830,8 @@ Finally, compute the Internal Lead Score (0-10) where a HIGHER score means a WOR
         "aeo_status": result_dict.get("aeo_status", ""),
         "aeo_improvement": result_dict.get("aeo_improvement", ""),
         "aeo_probe_response": aeo_probe.get("aeo_raw_response", ""),
-        
-        # Extracted parameters
-        "has_analytics": analytics_data,
-        "has_lead_capture": has_lead_capture,
         "has_cta": has_cta,
-        "has_duplicate_meta": locals().get('has_duplicate_meta', False),
-        "has_dead_socials": has_dead_socials,
-        "image_percent_missing_alt": image_alt_data.get("percent_missing", 0)
+        "has_duplicate_meta": locals().get('has_duplicate_meta', False)
     }
 
     # ─── REVENUE LEAK CALCULATION ──────────────────────────────────────────
