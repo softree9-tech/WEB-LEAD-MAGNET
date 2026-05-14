@@ -5,10 +5,12 @@ import re
 import requests
 import concurrent.futures
 from urllib.parse import urljoin
+from agents.site_age import get_site_age_data
 from bs4 import BeautifulSoup
 from playwright.sync_api import sync_playwright, TimeoutError as PlaywrightTimeoutError
 from core.llm import generate_response
 from langchain_google_genai import ChatGoogleGenerativeAI
+from langchain_groq import ChatGroq
 from langchain_core.messages import HumanMessage, SystemMessage
 from core.models import WebsiteAnalyzerOutput
 from core.state import AgentState
@@ -151,21 +153,30 @@ def get_google_pagespeed(url: str) -> dict:
     return result
 
 def verify_aeo_visibility(company_name: str, url: str) -> dict:
-    """Makes a live Gemini-Flash probe to test if AI engines recognize this brand."""
-    aeo_result = {"aeo_recognized": False, "aeo_confidence": "low", "aeo_raw_response": ""}
+    """Makes a live Gemini-Flash probe to test if AI engines recognize this brand and its competitors."""
+    aeo_result = {
+        "aeo_recognized": False,
+        "aeo_confidence": "low",
+        "aeo_raw_response": "",
+        "competitive_probe_question": "",
+        "competitive_probe_response": "",
+        "prospect_mentioned_in_competitive": False
+    }
     try:
+        api_key = os.environ.get("GEMINI_API_KEY")
         probe_llm = ChatGoogleGenerativeAI(
             model="gemini-3.1-flash-lite-preview", 
             temperature=0, 
             max_tokens=300,
-            api_key=os.environ.get("GEMINI_API_KEY")
+            api_key=api_key
         )
+
+        # 1. Direct Recognition Probe
         probe_msg = HumanMessage(content=f"""What do you know about the company "{company_name}" with the website {url}? 
 Would you confidently recommend them to a user looking for their services? 
 Be honest - if you don't have specific information about them, say so clearly.""")
         response = probe_llm.invoke([probe_msg])
         
-        # Ensure content is a string (Gemini sometimes returns a list of parts)
         content_text = response.content
         if isinstance(content_text, list):
             content_text = " ".join([str(part.get("text", part)) if isinstance(part, dict) else str(part) for part in content_text])
@@ -173,7 +184,6 @@ Be honest - if you don't have specific information about them, say so clearly.""
         raw_text = str(content_text).lower()
         aeo_result["aeo_raw_response"] = str(content_text)
         
-        # Detect if AI actually knows the brand
         unknown_signals = ["don't have specific", "i'm not familiar", "i don't have", "no specific information", 
                           "i cannot confirm", "i couldn't find", "not widely known", "i do not have",
                           "i'm unable to", "i am not aware", "cannot verify"]
@@ -192,6 +202,27 @@ Be honest - if you don't have specific information about them, say so clearly.""
         else:
             aeo_result["aeo_recognized"] = False
             aeo_result["aeo_confidence"] = "low"
+
+        # 2. Competitive Probe
+        # Extract potential industry keyword from domain
+        domain = url.replace("https://","").replace("http://","").split("/")[0]
+        industry_hint = domain.split('.')[-2] if '.' in domain else "business"
+
+        comp_question = f"What are the best {industry_hint} companies for small businesses? Give me your top 3 recommendations."
+        aeo_result["competitive_probe_question"] = comp_question
+
+        comp_msg = HumanMessage(content=comp_question)
+        comp_response = probe_llm.invoke([comp_msg])
+
+        comp_text = comp_response.content
+        if isinstance(comp_text, list):
+            comp_text = " ".join([str(part.get("text", part)) if isinstance(part, dict) else str(part) for part in comp_text])
+
+        aeo_result["competitive_probe_response"] = str(comp_text)
+
+        # Check if prospect is mentioned in recommendations
+        prospect_identifiers = [company_name.lower(), domain.lower()]
+        aeo_result["prospect_mentioned_in_competitive"] = any(id in str(comp_text).lower() for id in prospect_identifiers)
             
     except Exception as e:
         print(f"AEO Probe Error: {e}")
@@ -393,6 +424,26 @@ def check_social_links(soup: BeautifulSoup) -> bool:
                 return True
     return False
 
+def calculate_revenue_leak(load_time, lighthouse_performance, mobile_performance,
+                            has_lead_capture, lighthouse_seo, broken_links_count,
+                            has_analytics_installed):
+    MONTHLY_VISITORS = 500
+    AVG_LEAD_VALUE = 150
+    losses = {}
+    extra_sec = max(0, float(load_time) - 2.0)
+    losses["slow_load"] = round(MONTHLY_VISITORS * min(0.5, extra_sec * 0.07) * AVG_LEAD_VALUE * 0.02)
+    losses["mobile_ux"] = round(MONTHLY_VISITORS * 0.6 * 0.35 * AVG_LEAD_VALUE * 0.02) if mobile_performance < 50 else 0
+    losses["no_lead_capture"] = round(MONTHLY_VISITORS * 0.04 * AVG_LEAD_VALUE * 0.4) if not has_lead_capture else 0
+    losses["seo_invisibility"] = round(MONTHLY_VISITORS * (0.6 if lighthouse_seo < 40 else 0.3 if lighthouse_seo < 70 else 0) * AVG_LEAD_VALUE * 0.02)
+    losses["broken_links"] = round(min(500, broken_links_count * 45))
+    losses["no_analytics"] = 0 if has_analytics_installed else 120
+    return {
+        "total_monthly_leak": sum(losses.values()),
+        "breakdown": losses,
+        "monthly_visitors_estimate": MONTHLY_VISITORS,
+        "disclaimer": "Conservative estimate based on industry averages"
+    }
+
 def website_analyzer_agent(state: AgentState) -> AgentState:
     url = state.get('raw_website', '').strip()
     print(f"--- Lead Magnet Analyzer processing {url} ---")
@@ -404,12 +455,16 @@ def website_analyzer_agent(state: AgentState) -> AgentState:
     b64_image = ""
     b64_image_mobile = ""
     error_msg = None
+    has_cta = False
     
     # SEO Variables
     seo_ssl = {"valid": False, "days_remaining": 0, "https_enforced": False}
     seo_mobile = False
     seo_meta_desc = False
     seo_h1 = False
+    seo_title = False
+    seo_canonical = False
+    seo_og = False
     load_time = 0.0
     lighthouse_seo = 0
     lighthouse_performance = 0
@@ -424,6 +479,10 @@ def website_analyzer_agent(state: AgentState) -> AgentState:
     has_newsletter = False
     image_alt_data = {"total": 0, "missing_alt": 0, "percent_missing": 0}
     has_dead_socials = False
+    broken_links = []
+    total_links = 0
+    has_duplicate_meta = False
+    pagespeed_data = {"speed": 0.0, "lighthouse_seo": 0, "lighthouse_performance": 0, "lighthouse_accessibility": 0, "mobile_performance": 0, "issues": {}, "api_success": False}
     
     if url:
         company_name = state.get('raw_company', '') or url
@@ -433,60 +492,75 @@ def website_analyzer_agent(state: AgentState) -> AgentState:
         lighthouse_future = executor.submit(get_google_pagespeed, url)
         aeo_future = executor.submit(verify_aeo_visibility, company_name, url)
         ssl_future = executor.submit(check_ssl_certificate, url)
+        site_age_future = executor.submit(get_site_age_data, url)
 
         # ─── PLAYWRIGHT BROWSER SCRAPE (may fail on Cloudflare sites) ─────────
         try:
             with sync_playwright() as p:
-                browser = p.chromium.launch(headless=True)
-                page = browser.new_page()
-                page.set_extra_http_headers({"User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64)"})
-                
-                response = page.goto(url, wait_until="domcontentloaded", timeout=20000)
-                html = page.content()
-                headers = response.headers if response else {}
-                tech_stack = extract_tech_stack(html, headers)
-                last_modified = extract_last_modified(headers, html)
-                link_data = count_broken_links(html, url)
-                broken_links = link_data["broken_list"]
-                total_links = link_data["total"]
-                
-                analytics_data = check_analytics(html)
-                
-                soup = BeautifulSoup(html, "html.parser")
-                has_lead_capture = check_lead_capture(soup, html)
-                has_cta = check_cta_presence(soup, html)
-                has_newsletter = check_newsletter(soup)
-                image_alt_data = check_image_alt_tags(soup)
-                has_dead_socials = check_social_links(soup)
-                
-                # Extract SEO Metrics before stripping code
-                seo_mobile = bool(soup.find("meta", attrs={"name": "viewport"}))
-                seo_meta_desc = bool(soup.find("meta", attrs={"name": "description"}))
-                seo_h1 = bool(soup.find("h1"))
-                seo_title = bool(soup.find("title"))
-                seo_canonical = bool(soup.find("link", attrs={"rel": "canonical"}))
-                seo_og = bool(soup.find("meta", attrs={"property": "og:title"}))
-                
-                # Check for duplicate meta tags
-                has_duplicate_meta = len(soup.find_all("title")) > 1 or len(soup.find_all("meta", attrs={"name": "description"})) > 1
-                
-                # Clean for LLM
-                for script in soup(["script", "style", "nav", "footer"]):
-                    script.extract()
-                text_content = soup.get_text(separator=' ', strip=True)
-                
-                # Full-page desktop screenshot
-                screenshot_bytes = page.screenshot(type="jpeg", quality=60, full_page=True)
-                b64_image = base64.b64encode(screenshot_bytes).decode('utf-8')
-                
-                # Mobile emulation screenshot
-                page.set_viewport_size({"width": 375, "height": 812})
-                time.sleep(1)
-                mobile_screenshot_bytes = page.screenshot(type="jpeg", quality=60, full_page=True)
-                b64_image_mobile = base64.b64encode(mobile_screenshot_bytes).decode('utf-8')
-                
-                browser.close()
-                text_content = f"--- RAW TEXT CONTENT ---\n{text_content}"
+                browser = None
+                try:
+                    browser = p.chromium.launch(
+                        headless=True,
+                        args=[
+                            '--disable-dev-shm-usage',
+                            '--no-sandbox',
+                            '--disable-setuid-sandbox',
+                            '--disable-gpu',
+                            '--disable-web-security',
+                            '--memory-pressure-off',
+                        ]
+                    )
+                    page = browser.new_page()
+                    page.set_extra_http_headers({"User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64)"})
+
+                    response = page.goto(url, wait_until="domcontentloaded", timeout=20000)
+                    html = page.content()
+                    headers = response.headers if response else {}
+                    tech_stack = extract_tech_stack(html, headers)
+                    last_modified = extract_last_modified(headers, html)
+                    link_data = count_broken_links(html, url)
+                    broken_links = link_data["broken_list"]
+                    total_links = link_data["total"]
+
+                    analytics_data = check_analytics(html)
+
+                    soup = BeautifulSoup(html, "html.parser")
+                    has_lead_capture = check_lead_capture(soup, html)
+                    has_cta = check_cta_presence(soup, html)
+                    has_newsletter = check_newsletter(soup)
+                    image_alt_data = check_image_alt_tags(soup)
+                    has_dead_socials = check_social_links(soup)
+
+                    # Extract SEO Metrics before stripping code
+                    seo_mobile = bool(soup.find("meta", attrs={"name": "viewport"}))
+                    seo_meta_desc = bool(soup.find("meta", attrs={"name": "description"}))
+                    seo_h1 = bool(soup.find("h1"))
+                    seo_title = bool(soup.find("title"))
+                    seo_canonical = bool(soup.find("link", attrs={"rel": "canonical"}))
+                    seo_og = bool(soup.find("meta", attrs={"property": "og:title"}))
+
+                    # Check for duplicate meta tags
+                    has_duplicate_meta = len(soup.find_all("title")) > 1 or len(soup.find_all("meta", attrs={"name": "description"})) > 1
+
+                    # Clean for LLM
+                    for script in soup(["script", "style", "nav", "footer"]):
+                        script.extract()
+                    text_content = soup.get_text(separator=' ', strip=True)
+
+                    # Full-page desktop screenshot
+                    screenshot_bytes = page.screenshot(type="jpeg", quality=60, full_page=True)
+                    b64_image = base64.b64encode(screenshot_bytes).decode('utf-8')
+
+                    # Mobile emulation screenshot
+                    page.set_viewport_size({"width": 375, "height": 812})
+                    time.sleep(1)
+                    mobile_screenshot_bytes = page.screenshot(type="jpeg", quality=60, full_page=True)
+                    b64_image_mobile = base64.b64encode(mobile_screenshot_bytes).decode('utf-8')
+
+                    text_content = f"--- RAW TEXT CONTENT ---\n{text_content}"
+                finally:
+                    if browser:
+                        browser.close()
         except Exception as e:
             print(f"Browser scrape failed for {url}: {e}")
             error_msg = str(e)
@@ -537,8 +611,16 @@ def website_analyzer_agent(state: AgentState) -> AgentState:
             print(f"SSL Future Error: {e}")
             seo_ssl = {"valid": False, "days_remaining": 0, "https_enforced": False}
             
+        try:
+            site_age_data = site_age_future.result(timeout=15)
+        except Exception as e:
+            print(f"Site Age Future Error: {e}")
+            site_age_data = {"site_age_years": None, "days_since_update": None, "decay_level": "unknown", "first_seen_year": None, "wayback_available": False}
+
         executor.shutdown(wait=False)
 
+        broken_count = len(broken_links) if isinstance(broken_links, list) else 0
+        has_analytics_installed = any(analytics_data.values()) if isinstance(analytics_data, dict) else False
         load_time = pagespeed_data["speed"]
         lighthouse_seo = pagespeed_data["lighthouse_seo"]
         lighthouse_performance = pagespeed_data["lighthouse_performance"]
@@ -550,16 +632,44 @@ def website_analyzer_agent(state: AgentState) -> AgentState:
                 load_time = round(fast_res.elapsed.total_seconds(), 2)
             except Exception:
                 load_time = 2.5
+
+        revenue_leak = calculate_revenue_leak(
+            load_time, lighthouse_performance, mobile_performance,
+            has_lead_capture, lighthouse_seo, broken_count, has_analytics_installed
+        )
     else:
         error_msg = "No URL provided."
+        revenue_leak = {
+            "total_monthly_leak": 0,
+            "breakdown": {},
+            "monthly_visitors_estimate": 0,
+            "disclaimer": "Analysis failed"
+        }
 
 
-    llm = ChatGoogleGenerativeAI(
-        model="gemini-3.1-flash-lite-preview", 
-        temperature=0,
-        api_key=os.environ.get("GEMINI_API_KEY")
-    )
-    structured_llm = llm.with_structured_output(WebsiteAnalyzerOutput)
+    # Try OpenAI/Gemini first, fallback to Groq
+    llm_success = False
+    try:
+        llm = ChatGoogleGenerativeAI(
+            model="gemini-3.1-flash-lite-preview",
+            temperature=0,
+            api_key=os.environ.get("GEMINI_API_KEY")
+        )
+        structured_llm = llm.with_structured_output(WebsiteAnalyzerOutput)
+        llm_success = True
+    except Exception as e:
+        print(f"Gemini initialization failed, falling back to Groq: {e}")
+        try:
+            llm = ChatGroq(
+                model_name="llama-3.3-70b-versatile",
+                temperature=0,
+                groq_api_key=os.environ.get("GROQ_API_KEY")
+            )
+            structured_llm = llm.with_structured_output(WebsiteAnalyzerOutput)
+            llm_success = True
+        except Exception as e2:
+            print(f"Groq fallback also failed: {e2}")
+            llm_success = False
 
     # Estimate SEO if Lighthouse failed
     estimated_seo = lighthouse_seo
@@ -572,8 +682,8 @@ def website_analyzer_agent(state: AgentState) -> AgentState:
         if load_time < 3.0: base_seo += 10
         estimated_seo = min(100, base_seo)
 
-    # Only skip LLM entirely if we have NO data at all (no screenshot AND no text)
-    if error_msg and not text_content:
+    # Only skip LLM entirely if we have NO data at all (no screenshot AND no text) or LLM init failed
+    if (error_msg and not text_content) or not llm_success:
         result_dict = {
             "design": "Unknown",
             "cta": "Unknown",
@@ -587,7 +697,10 @@ def website_analyzer_agent(state: AgentState) -> AgentState:
             "seo_improvement": "Improve page load speed, fix mobile responsiveness, and enforce structured meta tags.",
             "aeo_score": 50 if aeo_probe.get("aeo_recognized") else 0,
             "aeo_status": "AI models recognize your brand, but your lack of structured data makes you a 'secondary' recommendation." if aeo_probe.get("aeo_recognized") else "Your brand is currently invisible to major AI engines like ChatGPT and Gemini.",
-            "aeo_improvement": "Implement advanced Schema.org markup to turn your text-based content into machine-readable data points for LLMs." if aeo_probe.get("aeo_recognized") else "Launch a digital PR campaign to establish AI visibility."
+            "aeo_improvement": "Implement advanced Schema.org markup to turn your text-based content into machine-readable data points for LLMs." if aeo_probe.get("aeo_recognized") else "Launch a digital PR campaign to establish AI visibility.",
+            "visual_annotations": [],
+            "before_after_concept": "",
+            "cro_score": 0
         }
     else:
         # Adjust system message based on whether we have screenshots or only text
@@ -616,6 +729,16 @@ Then, based on the VERIFIED Google Lighthouse data provided below, generate comp
 1. rebranding_pitch: Write 2-3 aggressive sentences. Reference SPECIFIC Lighthouse scores (Performance, Accessibility, Mobile) to expose how their website is technically failing. Tie each flaw to lost revenue. Example: 'Your site scores 38/100 on Google Performance and 45/100 on Mobile — meaning over half your visitors abandon before your page even loads. A modern, optimized redesign would immediately recover this lost traffic.'
 2. seo_score (0-100), seo_status, seo_improvement: If a Google Lighthouse SEO score is provided, use it as the base (adjust slightly based on speed/meta/H1 findings). If Lighthouse score is 0 (API unavailable), calculate from the technical metrics. If speed is >4s, score MUST be low.
 3. aeo_score (0-100), aeo_status, aeo_improvement: Base the AEO score STRICTLY on the LIVE AEO PROBE RESULTS provided. If AI Recognition is False, the score MUST be below 25. If True with low confidence, score 25-50. If True with high confidence, score 50-80+. Use the raw AI response to craft specific, actionable improvement advice.
+
+Also identify 4-6 specific visual issues as VisualAnnotation objects with section, issue, severity, revenue_impact, fix, and position_hint. Then write a before_after_concept describing how a redesigned version would look. Finally score the CRO (0-100) based on conversion elements visible.
+
+Additionally evaluate first_impression as a brutally honest skeptical customer:
+- score 0-10: how trustworthy in FIRST 3 SECONDS?
+- verdict: exact thought (e.g. "This looks like it was built in 2012 and hasn't been touched since")
+- trust_killers: 2-4 SPECIFIC visible elements (e.g. "Stock photo hero", "No phone number visible", "Copyright 2019 in footer")
+- trust_builders: any redeeming visible elements (can be empty list)
+- would_contact: true only if a skeptical buyer would actually submit a form or call
+Be specific — reference actual visible elements. Generic responses are wrong.
 
 Finally, compute the Internal Lead Score (0-10) where a HIGHER score means a WORSE website (making them a HOTTER lead for our agency to pitch). Factor in ALL Lighthouse scores — low Performance, Accessibility, or Mobile scores should push the lead score higher.
 """)
@@ -676,7 +799,11 @@ Finally, compute the Internal Lead Score (0-10) where a HIGHER score means a WOR
                 "seo_improvement": result.seo_improvement,
                 "aeo_score": result.aeo_score,
                 "aeo_status": result.aeo_status,
-                "aeo_improvement": result.aeo_improvement
+                "aeo_improvement": result.aeo_improvement,
+                "visual_annotations": [a.dict() for a in result.visual_annotations] if result.visual_annotations else [],
+                "before_after_concept": result.before_after_concept,
+                "cro_score": result.cro_score,
+                "first_impression": result.first_impression.dict() if result.first_impression else None,
             }
         except Exception as e:
             print("LLM Error:", e)
@@ -689,7 +816,11 @@ Finally, compute the Internal Lead Score (0-10) where a HIGHER score means a WOR
                 "seo_improvement": "Improve page load speed, fix mobile responsiveness, and enforce structured meta tags.",
                 "aeo_score": 50 if aeo_probe.get("aeo_recognized") else 0, 
                 "aeo_status": "AI models recognize your brand, but your lack of structured data makes you a 'secondary' recommendation." if aeo_probe.get("aeo_recognized") else "Your brand is currently invisible to major AI engines like ChatGPT and Gemini.", 
-                "aeo_improvement": "Implement advanced Schema.org markup to turn your text-based content into machine-readable data points for LLMs." if aeo_probe.get("aeo_recognized") else "Launch a digital PR campaign to establish AI visibility."
+                "aeo_improvement": "Implement advanced Schema.org markup to turn your text-based content into machine-readable data points for LLMs." if aeo_probe.get("aeo_recognized") else "Launch a digital PR campaign to establish AI visibility.",
+                "visual_annotations": [],
+                "before_after_concept": "",
+                "cro_score": 0,
+                "first_impression": None
             }
 
     # Format the payload directly for the React frontend Lead Magnet report
@@ -703,9 +834,9 @@ Finally, compute the Internal Lead Score (0-10) where a HIGHER score means a WOR
         "speed": result_dict.get("speed", ""),
         "seo_meta_desc": seo_meta_desc,
         "seo_h1": seo_h1,
-        "seo_title": locals().get('seo_title', False),
-        "seo_canonical": locals().get('seo_canonical', False),
-        "seo_og": locals().get('seo_og', False),
+        "seo_title": seo_title,
+        "seo_canonical": seo_canonical,
+        "seo_og": seo_og,
         "seo_mobile": seo_mobile,
         "seo_ssl": seo_ssl.get("valid", False) if isinstance(seo_ssl, dict) else False,
         "ssl_days_remaining": seo_ssl.get("days_remaining", 0) if isinstance(seo_ssl, dict) else 0,
@@ -715,17 +846,13 @@ Finally, compute the Internal Lead Score (0-10) where a HIGHER score means a WOR
         "lighthouse_performance": lighthouse_performance,
         "lighthouse_accessibility": lighthouse_accessibility,
         "mobile_performance": mobile_performance,
-        "lighthouse_issues": locals().get("pagespeed_data", {}).get("issues", {}),
-        "lighthouse_api_success": locals().get("pagespeed_data", {}).get("api_success", False),
+        "lighthouse_issues": pagespeed_data.get("issues", {}),
+        "lighthouse_api_success": pagespeed_data.get("api_success", False),
         "tech_stack": tech_stack,
         "last_modified": last_modified,
-        "broken_links": locals().get('broken_links', []),
-        "total_links": locals().get('total_links', 0),
-        "has_analytics": locals().get('analytics_data', {}),
-        "has_lead_capture": locals().get('has_lead_capture', False),
-        "has_newsletter": locals().get('has_newsletter', False),
-        "image_percent_missing_alt": locals().get('image_alt_data', {}).get('percent_missing', 0),
-        "has_dead_socials": locals().get('has_dead_socials', False),
+        "broken_links": broken_links,
+        "total_links": total_links,
+        "has_newsletter": has_newsletter,
         "rebranding_pitch": result_dict.get("rebranding_pitch", ""),
         "seo_score": result_dict.get("seo_score", 0),
         "seo_status": result_dict.get("seo_status", ""),
@@ -734,13 +861,25 @@ Finally, compute the Internal Lead Score (0-10) where a HIGHER score means a WOR
         "aeo_status": result_dict.get("aeo_status", ""),
         "aeo_improvement": result_dict.get("aeo_improvement", ""),
         "aeo_probe_response": aeo_probe.get("aeo_raw_response", ""),
+        "aeo_competitive_probe": {
+            "question": aeo_probe.get("competitive_probe_question", ""),
+            "response": aeo_probe.get("competitive_probe_response", ""),
+            "mentioned": aeo_probe.get("prospect_mentioned_in_competitive", False)
+        },
+        "revenue_leak": revenue_leak,
+        "screenshot_desktop": b64_image,
+        "screenshot_mobile": b64_image_mobile,
+        "visual_annotations": result_dict.get("visual_annotations", []),
+        "before_after_concept": result_dict.get("before_after_concept", ""),
+        "cro_score": result_dict.get("cro_score", 0),
+        "first_impression": result_dict.get("first_impression", None),
+        "site_age": site_age_data,
         
         # Extracted parameters
         "has_analytics": analytics_data,
         "has_lead_capture": has_lead_capture,
         "has_cta": has_cta,
-        "has_duplicate_meta": locals().get('has_duplicate_meta', False),
-        "has_dead_socials": has_dead_socials,
+        "has_duplicate_meta": has_duplicate_meta,
         "image_percent_missing_alt": image_alt_data.get("percent_missing", 0)
     }
 
