@@ -28,7 +28,7 @@ export default function LeadResults({ leads }) {
               boxShadow: '0 4px 20px rgba(6, 182, 212, 0.3)'
             }}
             onClick={() => {
-              const csvHeader = 'website,final_score,design,cta,message,trust,speed,first_impression_score,first_impression_verdict,first_impression_explanation,revenue_leak,leak_severity,visitors_lost,leads_lost,missing_leads_count,conversion_loss_percent,readiness_level,missing_leads_insight,rebranding_pitch,trust_warnings,seo_issues,aeo_quote,emailfullbody\n';
+              const csvHeader = 'website,final_score,design,cta,message,trust,speed,first_impression_score,first_impression_verdict,first_impression_explanation,revenue_leak,leak_severity,visitors_lost,leads_lost,missing_leads_count,conversion_loss_percent,readiness_level,missing_leads_insight,industry_percentile,industry_tier,industry_competitiveness,industry_insight,rebranding_pitch,trust_warnings,seo_issues,aeo_quote,emailfullbody\n';
 
               const csvRows = leads.map(lead => {
                 const consistencyVal = lead.design === 'Modern' ? 90 : 60;
@@ -105,6 +105,10 @@ Best,
                   escapeCSV(`${lead.estimated_conversion_loss_percent || 0}%`),
                   escapeCSV(lead.conversion_readiness_level || 'Low'),
                   escapeCSV(lead.missing_leads_insight || ''),
+                  escapeCSV(lead.industry_percentile || 0),
+                  escapeCSV(lead.industry_tier || 'Unknown'),
+                  escapeCSV(lead.industry_competitiveness || 'Unknown'),
+                  escapeCSV(lead.industry_insight || ''),
                   escapeCSV(lead.rebranding_pitch),
                   escapeCSV(trustWarning),
                   escapeCSV(seoIssues),
@@ -208,7 +212,7 @@ Best,
                 <div className="header-actions">
                   <button className="action-btn" onClick={() => window.location.reload()}><RefreshCw size={14} /> Recalculate</button>
                   <button className="action-btn primary" onClick={() => {
-                    const csvHeader = 'website,final_score,design,cta,message,trust,speed,first_impression_score,first_impression_verdict,first_impression_explanation,revenue_leak,leak_severity,visitors_lost,leads_lost,missing_leads_count,conversion_loss_percent,readiness_level,missing_leads_insight,rebranding_pitch,trust_warnings,seo_issues,aeo_quote,emailfullbody\n';
+                    const csvHeader = 'website,final_score,design,cta,message,trust,speed,first_impression_score,first_impression_verdict,first_impression_explanation,revenue_leak,leak_severity,visitors_lost,leads_lost,missing_leads_count,conversion_loss_percent,readiness_level,missing_leads_insight,industry_percentile,industry_tier,industry_competitiveness,industry_insight,rebranding_pitch,trust_warnings,seo_issues,aeo_quote,emailfullbody\n';
                     const trustWarning = [
                       (!lead.seo_ssl ? 'SSL certificate invalid or missing' : (lead.ssl_days_remaining < 30 ? `SSL expires in ${lead.ssl_days_remaining} days` : '')),
                       !lead.has_lead_capture ? 'No contact form detected' : '',
@@ -255,6 +259,10 @@ Best,
                       escapeCSV(`${lead.estimated_conversion_loss_percent || 0}%`),
                       escapeCSV(lead.conversion_readiness_level || 'Low'),
                       escapeCSV(lead.missing_leads_insight || ''),
+                      escapeCSV(lead.industry_percentile || 0),
+                      escapeCSV(lead.industry_tier || 'Unknown'),
+                      escapeCSV(lead.industry_competitiveness || 'Unknown'),
+                      escapeCSV(lead.industry_insight || ''),
                       escapeCSV(lead.rebranding_pitch),
                       escapeCSV(trustWarning),
                       escapeCSV(seoIssues),
@@ -559,6 +567,45 @@ Best,
                     </div>
                     <p style={{ fontSize: '0.85rem', color: 'var(--text-secondary)', margin: 0, fontStyle: 'italic' }}>
                       "{lead.missing_leads_insight || "Visitors have limited conversion paths, reducing lead generation potential."}"
+                    </p>
+                  </div>
+                </div>
+
+                {/* 5.5 Industry Percentile Rank */}
+                <div className="quad-card industry-rank-card animate-slide-up">
+                  <div className="quad-header">
+                    <h2 style={{ color: '#3b82f6', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                      <Target size={20} /> Industry Percentile Rank
+                    </h2>
+                    <div className={`severity-badge severity-${(lead.industry_competitiveness || 'Low').toLowerCase() === 'high' ? 'low' : (lead.industry_competitiveness || 'Low').toLowerCase().includes('moderate') ? 'moderate' : 'critical'}`}>
+                      {lead.industry_tier || 'Unknown'}
+                    </div>
+                  </div>
+
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.5rem' }}>
+                    <div className="rank-score-box">
+                      <span className="big-score" style={{ color: '#3b82f6', fontSize: '2.5rem', fontWeight: 800 }}>{lead.industry_percentile || 0}</span>
+                      <span style={{ fontSize: '1rem', color: '#64748b', fontWeight: 500 }}>th</span>
+                    </div>
+                    <div className="competitiveness-box" style={{ textAlign: 'right' }}>
+                      <div style={{ color: '#e2e8f0', fontSize: '1.2rem', fontWeight: 700 }}>
+                        {lead.industry_percentile >= 50 ? 'Top' : 'Bottom'} {lead.industry_percentile >= 50 ? 100 - (lead.industry_percentile || 0) : lead.industry_percentile || 0}%
+                      </div>
+                      <div style={{ color: '#64748b', fontSize: '0.75rem' }}>Competitiveness: {lead.industry_competitiveness || 'Low'}</div>
+                    </div>
+                  </div>
+
+                  <p style={{ color: 'var(--text-secondary)', fontSize: '0.9rem', marginBottom: '1.5rem', textAlign: 'center' }}>
+                    {lead.industry_percentile >= 50 ? `You outperform ${lead.industry_percentile}% of websites in your category.` : `Industry Rank: Bottom ${lead.industry_percentile}%`}
+                  </p>
+
+                  <div className="ai-insight-box" style={{ marginTop: 'auto', background: 'rgba(59, 130, 246, 0.05)', padding: '1rem', borderRadius: '12px', borderLeft: '4px solid #3b82f6' }}>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', marginBottom: '0.5rem' }}>
+                      <Bot size={16} color="#3b82f6" />
+                      <span style={{ fontSize: '0.8rem', fontWeight: 700, color: '#3b82f6', textTransform: 'uppercase' }}>AI Insight</span>
+                    </div>
+                    <p style={{ fontSize: '0.85rem', color: 'var(--text-secondary)', margin: 0, fontStyle: 'italic' }}>
+                      "{lead.industry_insight || "Website lacks specific industry competitive advantages in terms of UX and technical performance."}"
                     </p>
                   </div>
                 </div>

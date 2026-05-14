@@ -24,3 +24,4 @@ class WebsiteAnalyzerOutput(BaseModel):
     
     missing_leads_insight: str = Field(description="AI insight about missing lead capture opportunities. Example: 'Visitors have limited conversion paths, reducing lead generation potential.'")
     conversion_readiness_level: str = Field(description="Conversion readiness level (High, Medium, Low) based on existing conversion elements.")
+    industry_insight: str = Field(description="1-sentence AI insight comparing their website to top industry performers. Example: 'Website is visually competitive but underperforms in conversion infrastructure compared to top industry performers.'")

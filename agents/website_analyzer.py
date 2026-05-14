@@ -145,6 +145,52 @@ def calculate_missing_leads_metrics(elements: dict) -> dict:
         "conversion_loss_percent": total_loss,
     }
 
+def calculate_industry_percentile(metrics: dict) -> dict:
+    """
+    Heuristically compares the website against industry standards.
+    Returns: percentile, competitiveness, tier
+    """
+    seo = metrics.get("seo_score", 0)
+    perf = metrics.get("performance_score", 0)
+    
+    trust_str = metrics.get("trust", "")
+    trust_score = 90 if trust_str == "Strong" else (60 if trust_str == "Moderate" else 40)
+    
+    design_val = 90 if metrics.get("design") == "Modern" else 60
+    message_val = 80 if metrics.get("message") == "Clear" else 50
+    mobile_val = 80 if metrics.get("seo_mobile") else 30
+    cta_val = 90 if metrics.get("cta") == "Strong" else 40
+    ux_score = (design_val + message_val + mobile_val + cta_val) / 4
+
+    readiness_str = metrics.get("readiness_level", "Low")
+    readiness_score = 90 if readiness_str == "High" else (60 if readiness_str == "Medium" else 30)
+
+    # Simple average weighting
+    average_score = (seo + perf + trust_score + ux_score + readiness_score) / 5
+    
+    # Map average score (0-100) to a percentile (1-99)
+    # Heuristic: Score of 80 is ~85th percentile, 50 is ~30th percentile
+    percentile = int(max(1, min(99, (average_score - 15) * 1.3)))
+    
+    if percentile >= 85:
+        tier = "Industry Leading"
+        competitiveness = "High"
+    elif percentile >= 60:
+        tier = "Competitive"
+        competitiveness = "Moderate-High"
+    elif percentile >= 30:
+        tier = "Below Average"
+        competitiveness = "Moderate-Low"
+    else:
+        tier = "Critical"
+        competitiveness = "Low"
+
+    return {
+        "percentile": percentile,
+        "tier": tier,
+        "competitiveness": competitiveness
+    }
+
 def check_newsletter(soup) -> bool:
     forms = soup.find_all("form")
 
@@ -799,8 +845,9 @@ Analyze:
 Assign a verdict: Excellent (9-10), Good (7-8), Average (5-6), Poor (0-4).
 Provide a short, concise, and emotionally impactful AI explanation (e.g., "Website feels outdated and lacks strong trust signals.").
 
-Provide an AI insight (`missing_leads_insight`) about the missing conversion elements. Give a 1-sentence aggressive insight into how their missing elements cost them money.
 Also provide a `conversion_readiness_level` (High, Medium, Low) based on the conversion elements present.
+
+Finally, provide an `industry_insight`: compare this website to top industry performers. 1-sentence aggressive insight into why they are winning or losing compared to the top 10% of competitors.
 """)
 
         human_msg_content = [
@@ -871,7 +918,10 @@ Also provide a `conversion_readiness_level` (High, Medium, Low) based on the con
                 "aeo_improvement": result.aeo_improvement,
                 "first_impression_score": result.first_impression_score,
                 "first_impression_verdict": result.first_impression_verdict,
-                "first_impression_explanation": result.first_impression_explanation
+                "first_impression_explanation": result.first_impression_explanation,
+                "conversion_readiness_level": result.conversion_readiness_level,
+                "missing_leads_insight": result.missing_leads_insight,
+                "industry_insight": result.industry_insight
             }
         except Exception as e:
             print("LLM Error:", e)
@@ -887,7 +937,10 @@ Also provide a `conversion_readiness_level` (High, Medium, Low) based on the con
                 "aeo_improvement": "Implement advanced Schema.org markup to turn your text-based content into machine-readable data points for LLMs." if aeo_probe.get("aeo_recognized") else "Launch a digital PR campaign to establish AI visibility.",
                 "first_impression_score": 5,
                 "first_impression_verdict": "Average",
-                "first_impression_explanation": "Analysis partially failed — initial signals suggest the site lacks polish and professional trust cues."
+                "first_impression_explanation": "Analysis partially failed — initial signals suggest the site lacks polish and professional trust cues.",
+                "conversion_readiness_level": "Low",
+                "missing_leads_insight": "Analysis failed to extract specific conversion gaps.",
+                "industry_insight": "Compared to industry leaders, this site lacks the technical infrastructure required for high-level competition."
             }
 
     # Format the payload directly for the React frontend Lead Magnet report
@@ -964,6 +1017,23 @@ Also provide a `conversion_readiness_level` (High, Medium, Low) based on the con
     output_row["estimated_conversion_loss_percent"] = missing_metrics["conversion_loss_percent"]
     output_row["conversion_readiness_level"] = result_dict.get("conversion_readiness_level", "Low")
     output_row["missing_leads_insight"] = result_dict.get("missing_leads_insight", "")
+    output_row["industry_insight"] = result_dict.get("industry_insight", "")
     output_row["conversion_elements"] = conversion_elements
+
+    # --- INDUSTRY PERCENTILE RANK ---
+    industry_metrics = {
+        "seo_score": output_row.get("seo_score", 0),
+        "performance_score": lighthouse_performance,
+        "trust": output_row.get("trust", ""),
+        "design": output_row.get("design", ""),
+        "message": output_row.get("message", ""),
+        "seo_mobile": seo_mobile,
+        "cta": output_row.get("cta", ""),
+        "readiness_level": output_row.get("conversion_readiness_level", "Low")
+    }
+    industry_rank = calculate_industry_percentile(industry_metrics)
+    output_row["industry_percentile"] = industry_rank["percentile"]
+    output_row["industry_tier"] = industry_rank["tier"]
+    output_row["industry_competitiveness"] = industry_rank["competitiveness"]
 
     return {"output_row": output_row}
