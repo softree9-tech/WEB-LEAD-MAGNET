@@ -154,21 +154,120 @@
   margin: 0;
 }
 
-.grade-badge,
-.trust-badge {
-  background: rgba(251, 191, 36, 0.1);
-  color: #fbbf24;
-  padding: 4px 10px;
-  border-radius: 20px;
-  font-size: 0.75rem;
-  font-weight: 700;
-  border: 1px solid rgba(251, 191, 36, 0.2);
+/* AI TRUST INTELLIGENCE CARD */
+.trust-score-container {
+  display: flex;
+  align-items: center;
+  gap: 1.5rem;
+  margin-bottom: 1.5rem;
 }
 
-.trust-badge {
-  background: rgba(16, 185, 129, 0.1);
-  color: #10b981;
-  border: 1px solid rgba(16, 185, 129, 0.2);
+.trust-score-box {
+  display: flex;
+  align-items: baseline;
+  gap: 4px;
+}
+
+.trust-score-value {
+  font-size: 3rem;
+  font-weight: 900;
+  color: #fff;
+  line-height: 1;
+}
+
+.trust-score-label {
+  font-size: 1rem;
+  color: #64748b;
+  font-weight: 500;
+}
+
+.trust-risk-badge {
+  padding: 4px 12px;
+  border-radius: 6px;
+  font-size: 0.7rem;
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+}
+
+.risk-low { background: rgba(16, 185, 129, 0.1); color: #10b981; border: 1px solid rgba(16, 185, 129, 0.2); }
+.risk-moderate { background: rgba(251, 191, 36, 0.1); color: #fbbf24; border: 1px solid rgba(251, 191, 36, 0.2); }
+.risk-high { background: rgba(239, 68, 68, 0.1); color: #ef4444; border: 1px solid rgba(239, 68, 68, 0.2); }
+
+.trust-ai-insight {
+  background: rgba(255, 255, 255, 0.03);
+  border-radius: 12px;
+  padding: 1rem;
+  border-left: 4px solid #3b82f6;
+  margin-bottom: 1.5rem;
+}
+
+.trust-insight-header {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 6px;
+}
+
+.trust-insight-label {
+  font-size: 0.75rem;
+  font-weight: 800;
+  color: #3b82f6;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+}
+
+.trust-insight-text {
+  font-size: 0.85rem;
+  color: #94a3b8;
+  margin: 0;
+  font-style: italic;
+  line-height: 1.5;
+}
+
+.trust-check-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 1rem;
+}
+
+.trust-check-group {
+  background: rgba(0, 0, 0, 0.2);
+  border: 1px solid rgba(255, 255, 255, 0.03);
+  border-radius: 12px;
+  padding: 1rem;
+}
+
+.trust-check-group h3 {
+  font-size: 0.85rem;
+  color: #fff;
+  margin: 0 0 0.75rem 0;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-weight: 600;
+}
+
+.trust-check-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  font-size: 0.8rem;
+  color: #94a3b8;
+  margin-bottom: 6px;
+}
+
+.trust-check-item:last-child {
+  margin-bottom: 0;
+}
+
+.conversion-weakness {
+  color: #ef4444;
+  font-size: 0.7rem;
+  font-weight: 600;
+  margin-top: 8px;
+  display: block;
+  text-align: right;
 }
 
 /* Rings */

@@ -145,6 +145,40 @@ Best,
         const seoScore = parseInt(lead.seo_score || 0);
         const aeoScore = parseInt(lead.aeo_score || 0);
 
+        // AI Trust Intelligence Logic
+        const trustSignals = [
+          lead.has_analytics?.google_analytics,
+          lead.has_analytics?.tag_manager,
+          lead.has_analytics?.facebook_pixel,
+          lead.has_analytics?.linkedin_tag,
+          lead.has_lead_capture,
+          lead.has_cta,
+          lead.has_newsletter,
+          lead.seo_ssl,
+          lead.ssl_enforced,
+          lead.seo_title,
+          lead.seo_meta_desc,
+          lead.seo_canonical,
+          lead.seo_og
+        ];
+        const passedSignals = trustSignals.filter(Boolean).length;
+        const trustScore = Math.round((passedSignals / 13) * 100);
+
+        let trustRisk = 'High';
+        if (trustScore > 75) trustRisk = 'Low';
+        else if (trustScore > 40) trustRisk = 'Moderate';
+
+        let trustInsight = "Website demonstrates strong credibility signals and technical optimization for trust.";
+        if (!lead.seo_ssl) {
+          trustInsight = "Critical security vulnerability detected: SSL is missing or invalid, causing immediate trust loss and search penalties.";
+        } else if (!lead.has_lead_capture && !lead.has_newsletter) {
+          trustInsight = "Website lacks optimized conversion paths and lead capture mechanisms, resulting in significant missed opportunities.";
+        } else if (passedSignals < 6) {
+          trustInsight = "Major technical trust gaps identified. Lack of tracking and security signals may deter high-value prospects.";
+        } else if (passedSignals < 10) {
+          trustInsight = "Website has a solid foundation but lacks advanced conversion tracking and complete SEO metadata optimization.";
+        }
+
         const emailBody = `Hi team,
 
 I was doing some research in your industry and took a look under the hood of ${lead.website.replace(/^https?:\/\//i, '')}. I ran a deep forensic analysis and found 4 critical bottlenecks bleeding your organic traffic and conversions:
@@ -373,41 +407,75 @@ Best,
                   </div>
                 </div>
 
-                {/* 2. Tech & Trust */}
+                {/* 2. AI Trust Intelligence */}
                 <div className="quad-card" id={`lead-${index}-trust`}>
                   <div className="quad-header">
-                    <h2>Tech & Trust Checkmarks</h2>
-                    <div className="trust-badge" style={{ background: lead.trust === 'Strong' ? 'rgba(16, 185, 129, 0.1)' : 'rgba(239, 68, 68, 0.1)', color: lead.trust === 'Strong' ? '#10b981' : '#ef4444', borderColor: lead.trust === 'Strong' ? 'rgba(16, 185, 129, 0.2)' : 'rgba(239, 68, 68, 0.2)' }}>
-                      TRUST SIGNALS: {lead.trust} ({lead.trust === 'Strong' ? '90' : '40'}%)
+                    <h2>AI Trust Intelligence</h2>
+                    <div className={`trust-risk-badge risk-${trustRisk.toLowerCase()}`}>
+                      Risk: {trustRisk}
                     </div>
                   </div>
-                  <div className="checkmarks-grid">
-                    <div className="check-box">
-                      <h3><Activity size={16} color="#fbbf24" /> Tracking</h3>
-                      <div className="check-item"><span>Google Analytics</span> {lead.has_analytics?.google_analytics ? <Check color="#10b981" size={16} /> : <X color="#ef4444" size={16} />}</div>
-                      <div className="check-item"><span>Tag Manager</span> {lead.has_analytics?.tag_manager ? <Check color="#10b981" size={16} /> : <X color="#ef4444" size={16} />}</div>
-                      <div className="check-item"><span>Facebook Pixel</span> {lead.has_analytics?.facebook_pixel ? <Check color="#10b981" size={16} /> : <X color="#ef4444" size={16} />}</div>
-                      <div className="check-item"><span>LinkedIn Tag</span> {lead.has_analytics?.linkedin_tag ? <Check color="#10b981" size={16} /> : <X color="#ef4444" size={16} />}</div>
+
+                  <div className="trust-score-container">
+                    <div className="trust-score-box">
+                      <span className="trust-score-value">{trustScore}</span>
+                      <span className="trust-score-label">/100</span>
                     </div>
-                    <div className="check-box">
-                      <h3><Mail size={16} color="#a855f7" /> Lead Capture</h3>
-                      <div className="check-item"><span>Contact Form</span> {lead.has_lead_capture ? <Check color="#10b981" size={16} /> : <X color="#ef4444" size={16} />}</div>
-                      <div className="check-item"><span>CTA Placement</span> {lead.has_cta ? <Check color="#10b981" size={16} /> : <X color="#ef4444" size={16} />}</div>
-                      <div className="check-item"><span>Newsletter Sign-up</span> {lead.has_newsletter ? <Check color="#10b981" size={16} /> : <X color="#ef4444" size={16} />}</div>
-                      {(!lead.has_lead_capture || !lead.has_newsletter) && <div style={{ color: '#ef4444', fontSize: '0.7rem', textAlign: 'right' }}>(Needs attention)</div>}
+                    <div style={{ flex: 1 }}>
+                      <div className="bar-track" style={{ height: '8px' }}>
+                        <div
+                          className="bar-fill"
+                          style={{
+                            width: `${trustScore}%`,
+                            background: trustScore > 75 ? '#10b981' : trustScore > 40 ? '#fbbf24' : '#ef4444'
+                          }}
+                        ></div>
+                      </div>
+                      <p style={{ margin: '8px 0 0', fontSize: '0.75rem', color: '#64748b', fontWeight: 600 }}>
+                        {passedSignals} of 13 Trust Signals Verified
+                      </p>
                     </div>
-                    <div className="check-box">
-                      <h3><Lock size={16} color="#10b981" /> SSL Security</h3>
-                      <div className="check-item"><span>Certificate Valid</span> {lead.seo_ssl ? <Check color="#10b981" size={16} /> : <X color="#ef4444" size={16} />}</div>
-                      <div className="check-item"><span>Expires</span> {lead.ssl_days_remaining ? `${lead.ssl_days_remaining} days` : 'N/A'}</div>
-                      <div className="check-item"><span>HTTPS enforced</span> {lead.ssl_enforced ? <Check color="#10b981" size={16} /> : <X color="#ef4444" size={16} />}</div>
+                  </div>
+
+                  <div className="trust-ai-insight">
+                    <div className="trust-insight-header">
+                      <Bot size={14} color="#3b82f6" />
+                      <span className="trust-insight-label">AI Trust Insight</span>
                     </div>
-                    <div className="check-box">
-                      <h3><FileCode size={16} color="#3b82f6" /> Meta Tags</h3>
-                      <div className="check-item"><span>Title Tag</span> {lead.seo_title ? <Check color="#10b981" size={16} /> : <X color="#ef4444" size={16} />}</div>
-                      <div className="check-item"><span>Description</span> {lead.seo_meta_desc ? <Check color="#10b981" size={16} /> : <X color="#ef4444" size={16} />}</div>
-                      <div className="check-item"><span>Canonical Tag</span> {lead.seo_canonical ? <Check color="#10b981" size={16} /> : <X color="#ef4444" size={16} />}</div>
-                      <div className="check-item"><span>Open Graph</span> {lead.seo_og ? <Check color="#10b981" size={16} /> : <X color="#ef4444" size={16} />}</div>
+                    <p className="trust-insight-text">
+                      "{trustInsight}"
+                    </p>
+                  </div>
+
+                  <div className="trust-check-grid">
+                    <div className="trust-check-group">
+                      <h3><Activity size={14} color="#fbbf24" /> Tracking</h3>
+                      <div className="trust-check-item"><span>Google Analytics</span> {lead.has_analytics?.google_analytics ? <Check color="#10b981" size={14} /> : <X color="#ef4444" size={14} />}</div>
+                      <div className="trust-check-item"><span>Tag Manager</span> {lead.has_analytics?.tag_manager ? <Check color="#10b981" size={14} /> : <X color="#ef4444" size={14} />}</div>
+                      <div className="trust-check-item"><span>Facebook Pixel</span> {lead.has_analytics?.facebook_pixel ? <Check color="#10b981" size={14} /> : <X color="#ef4444" size={14} />}</div>
+                      <div className="trust-check-item"><span>LinkedIn Tag</span> {lead.has_analytics?.linkedin_tag ? <Check color="#10b981" size={14} /> : <X color="#ef4444" size={14} />}</div>
+                    </div>
+                    <div className="trust-check-group">
+                      <h3><Mail size={14} color="#a855f7" /> Lead Capture</h3>
+                      <div className="trust-check-item"><span>Contact Form</span> {lead.has_lead_capture ? <Check color="#10b981" size={14} /> : <X color="#ef4444" size={14} />}</div>
+                      <div className="trust-check-item"><span>CTA Placement</span> {lead.has_cta ? <Check color="#10b981" size={14} /> : <X color="#ef4444" size={14} />}</div>
+                      <div className="trust-check-item"><span>Newsletter</span> {lead.has_newsletter ? <Check color="#10b981" size={14} /> : <X color="#ef4444" size={14} />}</div>
+                      {(!lead.has_lead_capture || !lead.has_newsletter) && <span className="conversion-weakness">Potential Conversion Weakness</span>}
+                    </div>
+                    <div className="trust-check-group">
+                      <h3><Lock size={14} color="#10b981" /> SSL Security</h3>
+                      <div className="trust-check-item"><span>SSL Valid</span> {lead.seo_ssl ? <Check color="#10b981" size={14} /> : <X color="#ef4444" size={14} />}</div>
+                      <div className="trust-check-item"><span>Enforced</span> {lead.ssl_enforced ? <Check color="#10b981" size={14} /> : <X color="#ef4444" size={14} />}</div>
+                      <div className="trust-check-item" style={{ fontSize: '0.75rem', color: lead.ssl_days_remaining < 30 ? '#ef4444' : '#94a3b8' }}>
+                        <span>Expires</span> {lead.ssl_days_remaining ? `${lead.ssl_days_remaining}d` : 'N/A'}
+                      </div>
+                    </div>
+                    <div className="trust-check-group">
+                      <h3><FileCode size={14} color="#3b82f6" /> Meta Tags</h3>
+                      <div className="trust-check-item"><span>Title Tag</span> {lead.seo_title ? <Check color="#10b981" size={14} /> : <X color="#ef4444" size={14} />}</div>
+                      <div className="trust-check-item"><span>Description</span> {lead.seo_meta_desc ? <Check color="#10b981" size={14} /> : <X color="#ef4444" size={14} />}</div>
+                      <div className="trust-check-item"><span>Canonical</span> {lead.seo_canonical ? <Check color="#10b981" size={14} /> : <X color="#ef4444" size={14} />}</div>
+                      <div className="trust-check-item"><span>Open Graph</span> {lead.seo_og ? <Check color="#10b981" size={14} /> : <X color="#ef4444" size={14} />}</div>
                     </div>
                   </div>
                 </div>
