@@ -77,7 +77,8 @@ def process_single_lead(lead: LeadInput):
         final_state = graph_app.invoke(initial_state)
         return final_state.get("output_row", {})
     except Exception as e:
-        raise HTTPException(status_code=500, detail=str(e))
+        print(f"❌ Error in process_single_lead: {e}")
+        raise HTTPException(status_code=500, detail="Internal server error during lead processing")
 
 async def _process_one_lead(initial_state: dict, label: str) -> dict:
     """Process a single lead inside the semaphore-limited thread pool."""
@@ -89,7 +90,7 @@ async def _process_one_lead(initial_state: dict, label: str) -> dict:
             return final_state.get("output_row", {})
         except Exception as e:
             print(f"❌ Error processing {label}: {e}")
-            return {"error": str(e), "identifier": label}
+            return {"error": "Error during parallel processing", "identifier": label}
 
 @app.post("/api/process/batch")
 async def process_batch_leads(payload: LeadList):
@@ -143,13 +144,13 @@ async def process_csv(file: UploadFile = File(...)):
                     yield json.dumps(result) + "\n"
             except Exception as e:
                 print(f"--- Error in stream_results: {e} ---")
-                yield json.dumps({"error": str(e)}) + "\n"
+                yield json.dumps({"error": "An error occurred during streaming"}) + "\n"
 
         return StreamingResponse(stream_results(), media_type="application/x-ndjson")
     except HTTPException:
         raise
     except Exception as e:
         print(f"--- Fatal error in process_csv: {e} ---")
-        raise HTTPException(status_code=500, detail=f"Failed to process CSV: {str(e)}")
+        raise HTTPException(status_code=500, detail="Internal server error during CSV processing")
 
 # To run the app use: uvicorn main:app --reload

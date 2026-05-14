@@ -10,4 +10,5 @@ def generate_response(prompt: str) -> str:
         )
         return response.text
     except Exception as e:
-        return f"Error: {str(e)}"
+        print(f"❌ Error in generate_response: {e}")
+        return "Error: LLM generation failed"
