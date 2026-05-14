@@ -1,45 +1,29 @@
 import React, { useState, useRef } from 'react';
-import { UploadCloud, File, Loader2 } from 'lucide-react';
-import { processCSV } from "../api/api"
+import { UploadCloud, File, Loader2, CheckCircle, AlertCircle } from 'lucide-react';
 
 export default function CSVUpload({ onResult }) {
   const [file, setFile] = useState(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
-  const [processedCount, setProcessedCount] = useState(0);
-  const [totalRows, setTotalRows] = useState(0);
+  const [jobId, setJobId] = useState(null);
+  const [status, setStatus] = useState({ completed: 0, total: 0 });
   const fileInputRef = useRef(null);
 
-  const API_BASE_URL = import.meta.env.VITE_API_BASE_URL
-    ? `${import.meta.env.VITE_API_BASE_URL}/api/process`
-    : 'http://localhost:8000/api/process';
-
-  const countRows = (file) => {
-    return new Promise((resolve) => {
-      const reader = new FileReader();
-      reader.onload = (e) => {
-        const text = e.target.result;
-        const lines = text.split(/\r?\n/).filter(line => line.trim() !== "");
-        resolve(Math.max(0, lines.length - 1));
-      };
-      reader.readAsText(file);
-    });
-  };
+  const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:8000';
 
   const handleUpload = async () => {
     if (!file) return;
     setLoading(true);
     setError(null);
-    setProcessedCount(0);
+    setJobId(null);
+    setStatus({ completed: 0, total: 0 });
     
     try {
-      const rows = await countRows(file);
-      setTotalRows(rows);
-
       const formData = new FormData();
       formData.append('file', file);
 
-      const response = await fetch(`${API_BASE_URL}/csv`, {
+      // Call the NEW async endpoint
+      const response = await fetch(`${API_BASE_URL}/api/process/csv-async`, {
         method: 'POST',
         body: formData,
       });
@@ -49,82 +33,116 @@ export default function CSVUpload({ onResult }) {
         throw new Error(errData?.detail || `Server error: ${response.status}`);
       }
 
-      const reader = response.body.getReader();
-      const decoder = new TextDecoder();
-      let buffer = '';
+      const data = await response.json();
+      setJobId(data.job_id);
+      setStatus({ completed: 0, total: data.total });
 
-      while (true) {
-        const { done, value } = await reader.read();
-        if (done) break;
+      // Connect to SSE stream
+      const eventSource = new EventSource(`${API_BASE_URL}/api/jobs/${data.job_id}/stream`);
 
-        buffer += decoder.decode(value, { stream: true });
-        const lines = buffer.split('\n');
-        buffer = lines.pop(); // Keep partial line in buffer
+      eventSource.addEventListener('result', (event) => {
+        const result = JSON.parse(event.data);
+        onResult([result]);
+      });
 
-        for (const line of lines) {
-          if (line.trim()) {
-            try {
-              const result = JSON.parse(line);
-              if (result.error) {
-                console.error("Result error:", result.error);
-              } else {
-                onResult([result]); // App.jsx handleBatchResults expects an array
-                setProcessedCount(prev => prev + 1);
-              }
-            } catch (e) {
-              console.error("Failed to parse stream line:", e);
-            }
-          }
+      eventSource.addEventListener('progress', (event) => {
+        const progress = JSON.parse(event.data);
+        setStatus({ completed: progress.completed, total: progress.total });
+      });
+
+      eventSource.addEventListener('done', (event) => {
+        const finalStatus = JSON.parse(event.data);
+        setStatus({ completed: finalStatus.completed, total: finalStatus.total });
+        setLoading(false);
+        setFile(null);
+        if (fileInputRef.current) fileInputRef.current.value = '';
+        eventSource.close();
+      });
+
+      eventSource.onerror = (err) => {
+        console.error("SSE Error:", err);
+        // Don't necessarily stop loading, as the job might still be running on server
+        // but we've lost connection. In a real app, we'd try to reconnect.
+        if (eventSource.readyState === EventSource.CLOSED) {
+           setError("Connection lost. Job may still be processing.");
+           setLoading(false);
         }
-      }
+      };
 
-      setFile(null);
-      if (fileInputRef.current) fileInputRef.current.value = '';
     } catch (err) {
       setError(err.message);
-    } finally {
       setLoading(false);
     }
   };
 
+  const progressPercent = status.total > 0 ? Math.round((status.completed / status.total) * 100) : 0;
+
   return (
-    <div className="glass-panel animate-fade-in" style={{ position: 'relative', padding: '0.75rem 1.25rem', display: 'flex', alignItems: 'center', gap: '1rem', height: '100%', animationDelay: '0.1s' }}>
-      <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', whiteSpace: 'nowrap' }}>
-        <UploadCloud size={18} color="var(--accent-color)" />
-        <span style={{ fontWeight: 600, fontSize: '0.95rem' }}>Batch CSV</span>
+    <div className="glass-panel animate-fade-in" style={{ position: 'relative', padding: '0.75rem 1.25rem', display: 'flex', flexDirection: 'column', gap: '0.5rem', animationDelay: '0.1s', minWidth: '400px' }}>
+      <div style={{ display: 'flex', alignItems: 'center', gap: '1rem', width: '100%' }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', whiteSpace: 'nowrap' }}>
+          <UploadCloud size={18} color="var(--accent-color)" />
+          <span style={{ fontWeight: 600, fontSize: '0.95rem' }}>Batch CSV</span>
+        </div>
+
+        <div style={{ display: 'flex', gap: '0.5rem', flexGrow: 1, alignItems: 'center', background: 'rgba(15, 23, 42, 0.9)', padding: '0.25rem 0.5rem', borderRadius: '8px', border: '1px solid var(--border-color)' }}>
+          <input
+            type="file"
+            accept=".csv"
+            ref={fileInputRef}
+            onChange={(e) => setFile(e.target.files[0])}
+            style={{ fontSize: '0.8rem', flexGrow: 1, color: 'var(--text-secondary)' }}
+            disabled={loading}
+          />
+
+          {file && (
+            <span style={{ fontSize: '0.8rem', color: 'var(--accent-color)', display: 'flex', alignItems: 'center', gap: '4px', whiteSpace: 'nowrap' }}>
+              <File size={14} /> {(file.size / 1024).toFixed(1)} KB
+            </span>
+          )}
+        </div>
+
+        <button
+          onClick={handleUpload}
+          className="primary-btn"
+          style={{ opacity: loading || !file ? 0.5 : 1, padding: '0.5rem 1rem', minWidth: '120px', whiteSpace: 'nowrap' }}
+          disabled={loading || !file}
+        >
+          {loading ? <Loader2 className="spinning" size={16} /> : <UploadCloud size={16} />}
+          {loading ? ' Processing' : ' Upload'}
+        </button>
       </div>
 
-      <div style={{ display: 'flex', gap: '0.5rem', flexGrow: 1, alignItems: 'center', background: 'rgba(15, 23, 42, 0.9)', padding: '0.25rem 0.5rem', borderRadius: '8px', border: '1px solid var(--border-color)' }}>
-        <input
-          type="file"
-          accept=".csv"
-          ref={fileInputRef}
-          onChange={(e) => setFile(e.target.files[0])}
-          style={{ fontSize: '0.8rem', flexGrow: 1, color: 'var(--text-secondary)' }}
-        />
+      {loading && (
+        <div style={{ marginTop: '0.5rem' }}>
+          <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.75rem', marginBottom: '4px' }}>
+            <span>Processing leads...</span>
+            <span>{status.completed} / {status.total} ({progressPercent}%)</span>
+          </div>
+          <div style={{ height: '6px', background: 'rgba(255,255,255,0.1)', borderRadius: '3px', overflow: 'hidden' }}>
+            <div
+              style={{
+                height: '100%',
+                background: 'linear-gradient(90deg, #06b6d4 0%, #3b82f6 100%)',
+                width: `${progressPercent}%`,
+                transition: 'width 0.3s ease'
+              }}
+            />
+          </div>
+        </div>
+      )}
 
-        {file && (
-          <span style={{ fontSize: '0.8rem', color: 'var(--accent-color)', display: 'flex', alignItems: 'center', gap: '4px', whiteSpace: 'nowrap' }}>
-            <File size={14} /> {(file.size / 1024).toFixed(1)} KB
-          </span>
-        )}
-      </div>
+      {error && (
+        <div style={{ color: '#ef4444', fontSize: '0.75rem', display: 'flex', alignItems: 'center', gap: '4px' }}>
+          <AlertCircle size={12} /> {error}
+        </div>
+      )}
 
-      <button
-        onClick={handleUpload}
-        className="primary-btn"
-        style={{ opacity: loading || !file ? 0.5 : 1, padding: '0.5rem 1rem', minWidth: '140px', whiteSpace: 'nowrap' }}
-        disabled={loading || !file}
-      >
-        {loading ? <Loader2 className="spinning" size={16} /> : <UploadCloud size={16} />}
-        {loading 
-          ? totalRows > 0 
-            ? ` Analyzing... ${processedCount}/${totalRows}` 
-            : ` Analyzing...`
-          : ' Upload'}
-      </button>
-
-      {error && <div style={{ position: 'absolute', bottom: '-15px', left: '1.25rem', color: '#ef4444', fontSize: '0.75rem', maxWidth: '300px', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{error}</div>}
+      {!loading && status.total > 0 && status.completed === status.total && (
+        <div style={{ color: '#10b981', fontSize: '0.75rem', display: 'flex', alignItems: 'center', gap: '4px' }}>
+          <CheckCircle size={12} /> Batch complete! {status.total} sites analyzed.
+        </div>
+      )}
     </div>
   );
 }

@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import SingleLeadForm from './components/SingleLeadForm';
 import CSVUpload from './components/CSVUpload';
 import LeadResults from './components/LeadResults';
@@ -6,6 +6,15 @@ import './App.css';
 
 function App() {
   const [results, setResults] = useState([]);
+
+  useEffect(() => {
+    const apiUrl = import.meta.env.VITE_API_URL || "http://localhost:8000";
+    const keepAlive = () => {
+      fetch(`${apiUrl}/health`).catch(() => {});
+    };
+    const interval = setInterval(keepAlive, 10 * 60 * 1000); // 10 minutes
+    return () => clearInterval(interval);
+  }, []);
 
   const handleSingleResult = (newResult) => {
     // Check if newResult has the output_row or is directly the result
