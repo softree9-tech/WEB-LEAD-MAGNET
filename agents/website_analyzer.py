@@ -41,6 +41,77 @@ def check_ssl_certificate(url: str) -> dict:
     except Exception:
         return {"valid": False, "days_remaining": 0, "https_enforced": False}
 
+def calculate_revenue_leak(metrics: dict) -> dict:
+    """
+    Heuristically estimates revenue leak based on performance, SEO, and conversion factors.
+    Returns: amount, severity, explanation, visitors_lost, leads_lost
+    """
+    # Baselines for a "typical" prospect website
+    base_monthly_revenue = 10000 
+    base_monthly_visitors = 2000
+    base_conversion_rate = 0.03 # 3%
+
+    leak_percent = 0.0
+    
+    # 1. Performance Leak (Speed)
+    load_time = float(metrics.get("load_time", 0.0))
+    if load_time > 2.5:
+        # Every second above 2.5s costs ~10% conversion/traffic
+        speed_leak = min(0.4, (load_time - 2.5) * 0.12)
+        leak_percent += speed_leak
+
+    # 2. SEO Leak (Visibility)
+    seo_score = metrics.get("seo_score", 100)
+    if seo_score < 80:
+        seo_leak = (80 - seo_score) / 100 * 0.35
+        leak_percent += seo_leak
+
+    # 3. Conversion Leak (Capture/CTA)
+    if not metrics.get("has_lead_capture"):
+        leak_percent += 0.25
+    if not metrics.get("has_cta"):
+        leak_percent += 0.15
+    if not metrics.get("has_newsletter"):
+        leak_percent += 0.05
+
+    # 4. Trust Leak (Security/Signals)
+    if not metrics.get("seo_ssl"):
+        leak_percent += 0.20
+    if metrics.get("trust") == "Weak":
+        leak_percent += 0.10
+    
+    # Cap total leak at 85% to stay "realistic"
+    leak_percent = min(0.85, leak_percent)
+    
+    amount = int(base_monthly_revenue * leak_percent)
+    visitors_lost = int(base_monthly_visitors * (leak_percent * 0.6)) # Traffic is only part of the leak
+    leads_lost = int((base_monthly_visitors * base_conversion_rate) * leak_percent)
+
+    severity = "Low"
+    if amount > 4000: severity = "Critical"
+    elif amount > 2500: severity = "High"
+    elif amount > 1000: severity = "Moderate"
+
+    # Emotional explanation
+    explanations = []
+    if load_time > 3.0: explanations.append("slow load speeds causing bounce")
+    if seo_score < 60: explanations.append("poor search visibility")
+    if not metrics.get("has_lead_capture"): explanations.append("missing lead capture paths")
+    if not metrics.get("seo_ssl"): explanations.append("security warnings scaring visitors")
+    
+    if not explanations:
+        explanation = "minor technical inefficiencies and missed conversion opportunities."
+    else:
+        explanation = f"due to {', '.join(explanations[:2])} and weak conversion optimization."
+
+    return {
+        "amount": amount,
+        "severity": severity,
+        "explanation": f"You are likely losing ~${amount:,}/month {explanation}",
+        "visitors_lost": visitors_lost,
+        "leads_lost": leads_lost
+    }
+
 def check_newsletter(soup) -> bool:
     forms = soup.find_all("form")
 
@@ -743,5 +814,23 @@ Finally, compute the Internal Lead Score (0-10) where a HIGHER score means a WOR
         "has_dead_socials": has_dead_socials,
         "image_percent_missing_alt": image_alt_data.get("percent_missing", 0)
     }
+
+    # ─── REVENUE LEAK CALCULATION ──────────────────────────────────────────
+    leak_metrics = {
+        "load_time": load_time,
+        "seo_score": output_row.get("seo_score", 0),
+        "has_lead_capture": has_lead_capture,
+        "has_cta": has_cta,
+        "has_newsletter": has_newsletter,
+        "seo_ssl": output_row.get("seo_ssl", False),
+        "trust": output_row.get("trust", "")
+    }
+    rev_leak = calculate_revenue_leak(leak_metrics)
+    
+    output_row["revenue_leak_amount"] = rev_leak["amount"]
+    output_row["revenue_leak_severity"] = rev_leak["severity"]
+    output_row["revenue_leak_explanation"] = rev_leak["explanation"]
+    output_row["visitors_lost"] = rev_leak["visitors_lost"]
+    output_row["leads_lost"] = rev_leak["leads_lost"]
 
     return {"output_row": output_row}

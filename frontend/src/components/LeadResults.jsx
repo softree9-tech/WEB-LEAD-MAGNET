@@ -1,6 +1,6 @@
 import React from 'react';
 import '../LeadResults.css';
-import { ExternalLink, RefreshCw, Download, Monitor, Mail, Lock, FileCode, Check, X, Search, Activity, BarChart3, Settings, LogOut, LayoutDashboard, FileText, Bot, Target, Smartphone, Copy } from 'lucide-react';
+import { ExternalLink, RefreshCw, Download, Monitor, Mail, Lock, FileCode, Check, X, Search, Activity, BarChart3, Settings, LogOut, LayoutDashboard, FileText, Bot, Target, Smartphone, Copy, TrendingDown, AlertTriangle } from 'lucide-react';
 
 export default function LeadResults({ leads }) {
   if (!leads || leads.length === 0) {
@@ -28,7 +28,7 @@ export default function LeadResults({ leads }) {
               boxShadow: '0 4px 20px rgba(6, 182, 212, 0.3)'
             }}
             onClick={() => {
-              const csvHeader = 'website,final_score,design,cta,message,trust,speed,rebranding_pitch,trust_warnings,seo_issues,aeo_quote,emailfullbody\n';
+              const csvHeader = 'website,final_score,design,cta,message,trust,speed,revenue_leak,leak_severity,visitors_lost,leads_lost,rebranding_pitch,trust_warnings,seo_issues,aeo_quote,emailfullbody\n';
 
               const csvRows = leads.map(lead => {
                 const consistencyVal = lead.design === 'Modern' ? 90 : 60;
@@ -94,6 +94,10 @@ Best,
                   escapeCSV(lead.message),
                   escapeCSV(lead.trust),
                   escapeCSV(lead.speed),
+                  escapeCSV(`$${lead.revenue_leak_amount || 0}`),
+                  escapeCSV(lead.revenue_leak_severity || 'Low'),
+                  escapeCSV(lead.visitors_lost || 0),
+                  escapeCSV(lead.leads_lost || 0),
                   escapeCSV(lead.rebranding_pitch),
                   escapeCSV(trustWarning),
                   escapeCSV(seoIssues),
@@ -197,7 +201,7 @@ Best,
                 <div className="header-actions">
                   <button className="action-btn" onClick={() => window.location.reload()}><RefreshCw size={14} /> Recalculate</button>
                   <button className="action-btn primary" onClick={() => {
-                    const csvHeader = 'website,final_score,design,cta,message,trust,speed,rebranding_pitch,trust_warnings,seo_issues,aeo_quote,emailfullbody\n';
+                    const csvHeader = 'website,final_score,design,cta,message,trust,speed,revenue_leak,leak_severity,visitors_lost,leads_lost,rebranding_pitch,trust_warnings,seo_issues,aeo_quote,emailfullbody\n';
                     const trustWarning = [
                       (!lead.seo_ssl ? 'SSL certificate invalid or missing' : (lead.ssl_days_remaining < 30 ? `SSL expires in ${lead.ssl_days_remaining} days` : '')),
                       !lead.has_lead_capture ? 'No contact form detected' : '',
@@ -233,6 +237,10 @@ Best,
                       escapeCSV(lead.message),
                       escapeCSV(lead.trust),
                       escapeCSV(lead.speed),
+                      escapeCSV(`$${lead.revenue_leak_amount || 0}`),
+                      escapeCSV(lead.revenue_leak_severity || 'Low'),
+                      escapeCSV(lead.visitors_lost || 0),
+                      escapeCSV(lead.leads_lost || 0),
                       escapeCSV(lead.rebranding_pitch),
                       escapeCSV(trustWarning),
                       escapeCSV(seoIssues),
@@ -489,6 +497,39 @@ Best,
                       <path d="M0,20 Q10,18 20,15 T40,18 T60,10 T80,15 T100,2" fill="none" stroke="#06b6d4" strokeWidth="1" />
                       <defs><linearGradient id="ai-grad" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stopColor="#06b6d4" /><stop offset="100%" stopColor="transparent" /></linearGradient></defs>
                     </svg>
+                  </div>
+                </div>
+
+                {/* 5. Revenue Leak Calculator */}
+                <div className="quad-card revenue-leak-card">
+                  <div className="quad-header">
+                    <h2 style={{ color: '#ef4444', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                      <TrendingDown size={20} /> Estimated Revenue Leakage
+                    </h2>
+                    <div className={`severity-badge severity-${(lead.revenue_leak_severity || 'Low').toLowerCase()}`}>
+                      {lead.revenue_leak_severity || 'Low'} Severity
+                    </div>
+                  </div>
+                  
+                  <div className="leak-amount">
+                    ${(lead.revenue_leak_amount || 0).toLocaleString()}
+                    <span style={{ fontSize: '1rem', color: '#64748b', marginLeft: '8px', fontWeight: 500 }}>/ month</span>
+                  </div>
+
+                  <div className="leak-stats">
+                    <div className="stat-item">
+                      <span className="stat-label">Potential Visitors Lost</span>
+                      <span className="stat-value">{lead.visitors_lost || 0}</span>
+                    </div>
+                    <div className="stat-item" style={{ borderLeft: '1px solid rgba(255,255,255,0.1)', paddingLeft: '1.5rem' }}>
+                      <span className="stat-label">Missed Leads</span>
+                      <span className="stat-value">{lead.leads_lost || 0}</span>
+                    </div>
+                  </div>
+
+                  <div className="leak-explanation">
+                    <AlertTriangle size={14} style={{ marginRight: '6px', verticalAlign: 'middle', color: '#fbbf24' }} />
+                    {lead.revenue_leak_explanation || "You are likely losing revenue due to technical bottlenecks and conversion gaps."}
                   </div>
                 </div>
 
