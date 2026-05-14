@@ -112,6 +112,39 @@ def calculate_revenue_leak(metrics: dict) -> dict:
         "leads_lost": leads_lost
     }
 
+def calculate_missing_leads_metrics(elements: dict) -> dict:
+    """Calculates missing opportunities count and conversion loss."""
+    total_checks = 7
+    present_count = sum(1 for v in elements.values() if v)
+    missing_count = total_checks - present_count
+    
+    # Heuristic conversion loss based on missing key elements
+    loss_map = {
+        "cta_presence": 20,
+        "contact_form": 25,
+        "newsletter_signup": 10,
+        "chat_whatsapp": 15,
+        "demo_booking": 15,
+        "sticky_cta": 10,
+        "popup_lead_capture": 15
+    }
+    
+    total_loss = 0
+    for key, value in elements.items():
+        if not value:
+            total_loss += loss_map.get(key, 0)
+            
+    # Cap at 90%
+    total_loss = min(90, total_loss)
+    
+    missing_items = [k.replace("_", " ").title() for k, v in elements.items() if not v]
+    
+    return {
+        "missing_count": missing_count,
+        "missing_items": missing_items,
+        "conversion_loss_percent": total_loss,
+    }
+
 def check_newsletter(soup) -> bool:
     forms = soup.find_all("form")
 
@@ -443,6 +476,53 @@ def check_cta_presence(soup: BeautifulSoup, html: str = "") -> bool:
     
     return False
 
+def check_conversion_elements(soup: BeautifulSoup, html: str = "") -> dict:
+    """Detailed check for specific conversion elements."""
+    html_lower = html.lower() if html else ""
+    
+    # 1. Contact Form
+    has_form = bool(soup.find_all("form"))
+    
+    # 2. Newsletter
+    has_newsletter = check_newsletter(soup)
+    
+    # 3. Chat/WhatsApp
+    chat_signals = ["tawk.to", "intercom", "drift", "hubspot", "crisp", "livechat", "zendesk", "freshdesk", "tidio", "whatsapp", "wa.me"]
+    has_chat = any(signal in html_lower for signal in chat_signals)
+    
+    # 4. Demo/Booking
+    booking_keywords = ["book a demo", "schedule a call", "calendly", "book now", "request demo", "demo request", "schedule demo"]
+    has_booking = any(kw in html_lower for kw in booking_keywords)
+    
+    # 5. Sticky CTA
+    # Looking for classes that suggest fixed/sticky positioning for buttons or bars
+    sticky_signals = ["sticky", "fixed", "floating", "bottom-bar", "top-bar"]
+    has_sticky_cta = False
+    for el in soup.find_all(["div", "section", "button", "a"]):
+        el_class = " ".join(el.get("class", [])).lower()
+        if any(signal in el_class for signal in sticky_signals) and ("cta" in el_class or "button" in el_class or "btn" in el_class):
+            has_sticky_cta = True
+            break
+            
+    # 6. Popup Lead Capture
+    popup_signals = ["modal", "popup", "dialog", "exit-intent", "optinmonster", "poptin", "sumo"]
+    has_popup = any(signal in html_lower for signal in popup_signals)
+    
+    # 7. CTA Presence
+    has_cta = check_cta_presence(soup, html)
+    
+    elements = {
+        "cta_presence": has_cta,
+        "contact_form": has_form,
+        "newsletter_signup": has_newsletter,
+        "chat_whatsapp": has_chat,
+        "demo_booking": has_booking,
+        "sticky_cta": has_sticky_cta,
+        "popup_lead_capture": has_popup
+    }
+    
+    return elements
+
 def check_image_alt_tags(soup: BeautifulSoup) -> dict:
     images = soup.find_all("img")
     if not images:
@@ -495,6 +575,15 @@ def website_analyzer_agent(state: AgentState) -> AgentState:
     has_newsletter = False
     image_alt_data = {"total": 0, "missing_alt": 0, "percent_missing": 0}
     has_dead_socials = False
+    conversion_elements = {
+        "cta_presence": False,
+        "contact_form": False,
+        "newsletter_signup": False,
+        "chat_whatsapp": False,
+        "demo_booking": False,
+        "sticky_cta": False,
+        "popup_lead_capture": False
+    }
     
     if url:
         company_name = state.get('raw_company', '') or url
@@ -529,6 +618,7 @@ def website_analyzer_agent(state: AgentState) -> AgentState:
                 has_newsletter = check_newsletter(soup)
                 image_alt_data = check_image_alt_tags(soup)
                 has_dead_socials = check_social_links(soup)
+                conversion_elements = check_conversion_elements(soup, html)
                 
                 # Extract SEO Metrics before stripping code
                 seo_mobile = bool(soup.find("meta", attrs={"name": "viewport"}))
@@ -575,6 +665,7 @@ def website_analyzer_agent(state: AgentState) -> AgentState:
                 has_newsletter = check_newsletter(soup)
                 image_alt_data = check_image_alt_tags(soup)
                 has_dead_socials = check_social_links(soup)
+                conversion_elements = check_conversion_elements(soup, html)
                 seo_mobile = bool(soup.find("meta", attrs={"name": "viewport"}))
                 seo_meta_desc = bool(soup.find("meta", attrs={"name": "description"}))
                 seo_h1 = bool(soup.find("h1"))
@@ -661,7 +752,9 @@ def website_analyzer_agent(state: AgentState) -> AgentState:
             "aeo_improvement": "Implement advanced Schema.org markup to turn your text-based content into machine-readable data points for LLMs." if aeo_probe.get("aeo_recognized") else "Launch a digital PR campaign to establish AI visibility.",
             "first_impression_score": 3,
             "first_impression_verdict": "Poor",
-            "first_impression_explanation": "Website is unreachable — visitors see nothing, killing trust instantly."
+            "first_impression_explanation": "Website is unreachable — visitors see nothing, killing trust instantly.",
+            "missing_leads_insight": "Critical: Website is unreachable, preventing any lead generation or conversion.",
+            "conversion_readiness_level": "Low"
         }
     else:
         # Adjust system message based on whether we have screenshots or only text
@@ -705,6 +798,9 @@ Analyze:
 
 Assign a verdict: Excellent (9-10), Good (7-8), Average (5-6), Poor (0-4).
 Provide a short, concise, and emotionally impactful AI explanation (e.g., "Website feels outdated and lacks strong trust signals.").
+
+Provide an AI insight (`missing_leads_insight`) about the missing conversion elements. Give a 1-sentence aggressive insight into how their missing elements cost them money.
+Also provide a `conversion_readiness_level` (High, Medium, Low) based on the conversion elements present.
 """)
 
         human_msg_content = [
@@ -726,6 +822,15 @@ Provide a short, concise, and emotionally impactful AI explanation (e.g., "Websi
                 - Visible Lead Capture (Forms/Phone/Email): {has_lead_capture}
                 - Dead/Template Social Links Found: {has_dead_socials}
                 - Images Missing Alt Text: {image_alt_data['percent_missing']}% ({image_alt_data['missing_alt']}/{image_alt_data['total']} images)
+                
+                CONVERSION ELEMENTS PRESENT:
+                - CTA Buttons: {conversion_elements['cta_presence']}
+                - Contact Form: {conversion_elements['contact_form']}
+                - Newsletter: {conversion_elements['newsletter_signup']}
+                - Chat/WhatsApp Widget: {conversion_elements['chat_whatsapp']}
+                - Demo/Booking Buttons: {conversion_elements['demo_booking']}
+                - Sticky CTA: {conversion_elements['sticky_cta']}
+                - Popup Lead Capture: {conversion_elements['popup_lead_capture']}
                 
                 LIVE AEO PROBE RESULTS (Verified by asking Gemini about this brand):
                 - AI Recognition: {aeo_probe['aeo_recognized']}
@@ -851,5 +956,14 @@ Provide a short, concise, and emotionally impactful AI explanation (e.g., "Websi
     output_row["revenue_leak_explanation"] = rev_leak["explanation"]
     output_row["visitors_lost"] = rev_leak["visitors_lost"]
     output_row["leads_lost"] = rev_leak["leads_lost"]
+
+    # --- MISSING LEADS METRICS ---
+    missing_metrics = calculate_missing_leads_metrics(conversion_elements)
+    output_row["missing_opportunities_count"] = missing_metrics["missing_count"]
+    output_row["missing_opportunities_list"] = missing_metrics["missing_items"]
+    output_row["estimated_conversion_loss_percent"] = missing_metrics["conversion_loss_percent"]
+    output_row["conversion_readiness_level"] = result_dict.get("conversion_readiness_level", "Low")
+    output_row["missing_leads_insight"] = result_dict.get("missing_leads_insight", "")
+    output_row["conversion_elements"] = conversion_elements
 
     return {"output_row": output_row}

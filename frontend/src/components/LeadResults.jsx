@@ -28,7 +28,7 @@ export default function LeadResults({ leads }) {
               boxShadow: '0 4px 20px rgba(6, 182, 212, 0.3)'
             }}
             onClick={() => {
-              const csvHeader = 'website,final_score,design,cta,message,trust,speed,first_impression_score,first_impression_verdict,first_impression_explanation,revenue_leak,leak_severity,visitors_lost,leads_lost,rebranding_pitch,trust_warnings,seo_issues,aeo_quote,emailfullbody\n';
+              const csvHeader = 'website,final_score,design,cta,message,trust,speed,first_impression_score,first_impression_verdict,first_impression_explanation,revenue_leak,leak_severity,visitors_lost,leads_lost,missing_leads_count,conversion_loss_percent,readiness_level,missing_leads_insight,rebranding_pitch,trust_warnings,seo_issues,aeo_quote,emailfullbody\n';
 
               const csvRows = leads.map(lead => {
                 const consistencyVal = lead.design === 'Modern' ? 90 : 60;
@@ -101,6 +101,10 @@ Best,
                   escapeCSV(lead.revenue_leak_severity || 'Low'),
                   escapeCSV(lead.visitors_lost || 0),
                   escapeCSV(lead.leads_lost || 0),
+                  escapeCSV(lead.missing_opportunities_count || 0),
+                  escapeCSV(`${lead.estimated_conversion_loss_percent || 0}%`),
+                  escapeCSV(lead.conversion_readiness_level || 'Low'),
+                  escapeCSV(lead.missing_leads_insight || ''),
                   escapeCSV(lead.rebranding_pitch),
                   escapeCSV(trustWarning),
                   escapeCSV(seoIssues),
@@ -204,7 +208,7 @@ Best,
                 <div className="header-actions">
                   <button className="action-btn" onClick={() => window.location.reload()}><RefreshCw size={14} /> Recalculate</button>
                   <button className="action-btn primary" onClick={() => {
-                    const csvHeader = 'website,final_score,design,cta,message,trust,speed,first_impression_score,first_impression_verdict,first_impression_explanation,revenue_leak,leak_severity,visitors_lost,leads_lost,rebranding_pitch,trust_warnings,seo_issues,aeo_quote,emailfullbody\n';
+                    const csvHeader = 'website,final_score,design,cta,message,trust,speed,first_impression_score,first_impression_verdict,first_impression_explanation,revenue_leak,leak_severity,visitors_lost,leads_lost,missing_leads_count,conversion_loss_percent,readiness_level,missing_leads_insight,rebranding_pitch,trust_warnings,seo_issues,aeo_quote,emailfullbody\n';
                     const trustWarning = [
                       (!lead.seo_ssl ? 'SSL certificate invalid or missing' : (lead.ssl_days_remaining < 30 ? `SSL expires in ${lead.ssl_days_remaining} days` : '')),
                       !lead.has_lead_capture ? 'No contact form detected' : '',
@@ -247,6 +251,10 @@ Best,
                       escapeCSV(lead.revenue_leak_severity || 'Low'),
                       escapeCSV(lead.visitors_lost || 0),
                       escapeCSV(lead.leads_lost || 0),
+                      escapeCSV(lead.missing_opportunities_count || 0),
+                      escapeCSV(`${lead.estimated_conversion_loss_percent || 0}%`),
+                      escapeCSV(lead.conversion_readiness_level || 'Low'),
+                      escapeCSV(lead.missing_leads_insight || ''),
                       escapeCSV(lead.rebranding_pitch),
                       escapeCSV(trustWarning),
                       escapeCSV(seoIssues),
@@ -562,6 +570,55 @@ Best,
                   <div className="leak-explanation">
                     <AlertTriangle size={14} style={{ marginRight: '6px', verticalAlign: 'middle', color: '#fbbf24' }} />
                     {lead.revenue_leak_explanation || "You are likely losing revenue due to technical bottlenecks and conversion gaps."}
+                  </div>
+                </div>
+
+                {/* 6. Leads You're Missing */}
+                <div className="quad-card missing-leads-card animate-slide-up">
+                  <div className="quad-header">
+                    <h2 style={{ color: '#f97316', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                      <Bot size={20} /> Leads You're Missing
+                    </h2>
+                    <div className={`severity-badge severity-${(lead.conversion_readiness_level || 'Low').toLowerCase() === 'high' ? 'low' : (lead.conversion_readiness_level || 'Low').toLowerCase() === 'medium' ? 'moderate' : 'critical'}`}>
+                      Readiness: {lead.conversion_readiness_level || 'Low'}
+                    </div>
+                  </div>
+
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.5rem' }}>
+                    <div className="missing-count-box">
+                      <span className="missing-number">{lead.missing_opportunities_count || 0}</span>
+                      <span className="missing-label">Missed Opportunities</span>
+                    </div>
+                    <div className="loss-percent-box" style={{ textAlign: 'right' }}>
+                      <div style={{ color: '#ef4444', fontSize: '1.5rem', fontWeight: 800 }}>-{lead.estimated_conversion_loss_percent || 0}%</div>
+                      <div style={{ color: '#64748b', fontSize: '0.75rem' }}>Est. Conversion Loss</div>
+                    </div>
+                  </div>
+
+                  <div className="missing-items-list">
+                    <h4 style={{ fontSize: '0.8rem', color: 'var(--text-secondary)', marginBottom: '0.75rem' }}>Missing Conversion Paths:</h4>
+                    <div style={{ display: 'flex', flexWrap: 'wrap', gap: '0.5rem' }}>
+                      {(lead.missing_opportunities_list || []).map((item, i) => (
+                        <div key={i} className="factor-tag" style={{ background: 'rgba(239, 68, 68, 0.1)', color: '#ef4444', border: '1px solid rgba(239, 68, 68, 0.2)' }}>
+                          <X size={12} /> {item}
+                        </div>
+                      ))}
+                      {(lead.missing_opportunities_list || []).length === 0 && (
+                        <div className="factor-tag" style={{ background: 'rgba(16, 185, 129, 0.1)', color: '#10b981', border: '1px solid rgba(16, 185, 129, 0.2)' }}>
+                          <Check size={12} /> All conversion paths active
+                        </div>
+                      )}
+                    </div>
+                  </div>
+
+                  <div className="ai-insight-box" style={{ marginTop: '1.5rem', background: 'rgba(249, 115, 22, 0.05)', padding: '1rem', borderRadius: '12px', borderLeft: '4px solid #f97316' }}>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', marginBottom: '0.5rem' }}>
+                      <Bot size={16} color="#f97316" />
+                      <span style={{ fontSize: '0.8rem', fontWeight: 700, color: '#f97316', textTransform: 'uppercase' }}>AI Insight</span>
+                    </div>
+                    <p style={{ fontSize: '0.85rem', color: 'var(--text-secondary)', margin: 0, fontStyle: 'italic' }}>
+                      "{lead.missing_leads_insight || "Visitors have limited conversion paths, reducing lead generation potential."}"
+                    </p>
                   </div>
                 </div>
 

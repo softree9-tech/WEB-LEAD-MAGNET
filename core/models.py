@@ -21,3 +21,6 @@ class WebsiteAnalyzerOutput(BaseModel):
     first_impression_score: int = Field(description="First Impression Score (0-10) based on branding, layout, CTA clarity, professionalism, trust indicators, readability, and mobile feel.")
     first_impression_verdict: str = Field(description="Verdict (Excellent, Good, Average, Poor) based on the first impression score.")
     first_impression_explanation: str = Field(description="A short, concise, and emotionally impactful AI explanation of the first impression.")
+    
+    missing_leads_insight: str = Field(description="AI insight about missing lead capture opportunities. Example: 'Visitors have limited conversion paths, reducing lead generation potential.'")
+    conversion_readiness_level: str = Field(description="Conversion readiness level (High, Medium, Low) based on existing conversion elements.")

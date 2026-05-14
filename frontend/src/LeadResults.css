@@ -644,4 +644,51 @@
   padding: 4px 8px;
   border-radius: 4px;
 }
+
+/* LEADS YOU'RE MISSING CARD */
+.missing-leads-card {
+  background: linear-gradient(135deg, #1e1b4b 0%, #0b1120 100%);
+  border: 1px solid rgba(249, 115, 22, 0.2);
+  position: relative;
+  overflow: hidden;
+}
+
+.missing-leads-card::after {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: radial-gradient(circle at top left, rgba(249, 115, 22, 0.05), transparent 70%);
+  pointer-events: none;
+}
+
+.missing-count-box {
+  display: flex;
+  flex-direction: column;
+  line-height: 1.1;
+}
+
+.missing-number {
+  font-size: 3rem;
+  font-weight: 900;
+  color: #f97316;
+  text-shadow: 0 0 20px rgba(249, 115, 22, 0.3);
+}
+
+.missing-label {
+  font-size: 0.85rem;
+  color: #94a3b8;
+  font-weight: 500;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+}
+
+.missing-items-list {
+  background: rgba(0, 0, 0, 0.2);
+  padding: 1rem;
+  border-radius: 12px;
+  border: 1px solid rgba(255, 255, 255, 0.02);
+}
 
