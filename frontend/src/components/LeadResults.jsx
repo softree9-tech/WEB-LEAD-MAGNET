@@ -93,15 +93,15 @@ Best,
                   escapeCSV(lead.cta),
                   escapeCSV(lead.message),
                   escapeCSV(lead.trust),
-                   escapeCSV(lead.speed),
-                   escapeCSV(lead.first_impression_score || 0),
-                   escapeCSV(lead.first_impression_verdict || 'Unknown'),
-                   escapeCSV(lead.first_impression_explanation || ''),
-                   escapeCSV(`$${lead.revenue_leak_amount || 0}`),
-                   escapeCSV(lead.revenue_leak_severity || 'Low'),
-                   escapeCSV(lead.visitors_lost || 0),
-                   escapeCSV(lead.leads_lost || 0),
-                   escapeCSV(lead.rebranding_pitch),
+                  escapeCSV(lead.speed),
+                  escapeCSV(lead.first_impression_score || 0),
+                  escapeCSV(lead.first_impression_verdict || 'Unknown'),
+                  escapeCSV(lead.first_impression_explanation || ''),
+                  escapeCSV(`$${lead.revenue_leak_amount || 0}`),
+                  escapeCSV(lead.revenue_leak_severity || 'Low'),
+                  escapeCSV(lead.visitors_lost || 0),
+                  escapeCSV(lead.leads_lost || 0),
+                  escapeCSV(lead.rebranding_pitch),
                   escapeCSV(trustWarning),
                   escapeCSV(seoIssues),
                   escapeCSV((lead.aeo_probe_response || 'No AI recognition data.').substring(0, 1000)),
@@ -202,9 +202,9 @@ Best,
                   <p className="report-date">Data as of: {new Date().toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}</p>
                 </div>
                 <div className="header-actions">
-                   <button className="action-btn" onClick={() => window.location.reload()}><RefreshCw size={14} /> Recalculate</button>
-                   <button className="action-btn primary" onClick={() => {
-                     const csvHeader = 'website,final_score,design,cta,message,trust,speed,first_impression_score,first_impression_verdict,first_impression_explanation,revenue_leak,leak_severity,visitors_lost,leads_lost,rebranding_pitch,trust_warnings,seo_issues,aeo_quote,emailfullbody\n';
+                  <button className="action-btn" onClick={() => window.location.reload()}><RefreshCw size={14} /> Recalculate</button>
+                  <button className="action-btn primary" onClick={() => {
+                    const csvHeader = 'website,final_score,design,cta,message,trust,speed,first_impression_score,first_impression_verdict,first_impression_explanation,revenue_leak,leak_severity,visitors_lost,leads_lost,rebranding_pitch,trust_warnings,seo_issues,aeo_quote,emailfullbody\n';
                     const trustWarning = [
                       (!lead.seo_ssl ? 'SSL certificate invalid or missing' : (lead.ssl_days_remaining < 30 ? `SSL expires in ${lead.ssl_days_remaining} days` : '')),
                       !lead.has_lead_capture ? 'No contact form detected' : '',
@@ -238,16 +238,16 @@ Best,
                       escapeCSV(lead.design),
                       escapeCSV(lead.cta),
                       escapeCSV(lead.message),
-                       escapeCSV(lead.trust),
-                       escapeCSV(lead.speed),
-                       escapeCSV(lead.first_impression_score || 0),
-                       escapeCSV(lead.first_impression_verdict || 'Unknown'),
-                       escapeCSV(lead.first_impression_explanation || ''),
-                       escapeCSV(`$${lead.revenue_leak_amount || 0}`),
-                       escapeCSV(lead.revenue_leak_severity || 'Low'),
-                       escapeCSV(lead.visitors_lost || 0),
-                       escapeCSV(lead.leads_lost || 0),
-                       escapeCSV(lead.rebranding_pitch),
+                      escapeCSV(lead.trust),
+                      escapeCSV(lead.speed),
+                      escapeCSV(lead.first_impression_score || 0),
+                      escapeCSV(lead.first_impression_verdict || 'Unknown'),
+                      escapeCSV(lead.first_impression_explanation || ''),
+                      escapeCSV(`$${lead.revenue_leak_amount || 0}`),
+                      escapeCSV(lead.revenue_leak_severity || 'Low'),
+                      escapeCSV(lead.visitors_lost || 0),
+                      escapeCSV(lead.leads_lost || 0),
+                      escapeCSV(lead.rebranding_pitch),
                       escapeCSV(trustWarning),
                       escapeCSV(seoIssues),
                       escapeCSV((lead.aeo_probe_response || 'No AI recognition data.').substring(0, 500)),
@@ -269,12 +269,12 @@ Best,
                 </div>
               </div>
 
-               <div className="quadrant-grid">
+              <div className="quadrant-grid">
 
                 {/* 0. First Impression Score */}
                 <div className="quad-card first-impression-card animate-slide-up">
                   <div className="quad-header">
-                    <h2>First Impression Score</h2>
+                    <h2>Professional Presence Score</h2>
                     <div className={`verdict-badge verdict-${(lead.first_impression_verdict || 'Average').toLowerCase()}`}>
                       {lead.first_impression_verdict || 'Average'}
                     </div>
@@ -542,7 +542,7 @@ Best,
                       {lead.revenue_leak_severity || 'Low'} Severity
                     </div>
                   </div>
-                  
+
                   <div className="leak-amount">
                     ${(lead.revenue_leak_amount || 0).toLocaleString()}
                     <span style={{ fontSize: '1rem', color: '#64748b', marginLeft: '8px', fontWeight: 500 }}>/ month</span>
