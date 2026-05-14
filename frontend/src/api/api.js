@@ -16,6 +16,16 @@ export const processSingleLead = async (leadData) => {
   }
 };
 
+export const processBattle = async (battleData) => {
+  try {
+    const response = await axios.post(`${API_BASE_URL}/battle`, battleData);
+    return response.data;
+  } catch (error) {
+    console.error('Error processing battle analysis:', error);
+    throw error;
+  }
+};
+
 export const processCSV = async (file) => {
   const formData = new FormData();
   formData.append('file', file);

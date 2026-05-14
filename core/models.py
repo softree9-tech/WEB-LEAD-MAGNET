@@ -25,3 +25,15 @@ class WebsiteAnalyzerOutput(BaseModel):
     missing_leads_insight: str = Field(description="AI insight about missing lead capture opportunities. Example: 'Visitors have limited conversion paths, reducing lead generation potential.'")
     conversion_readiness_level: str = Field(description="Conversion readiness level (High, Medium, Low) based on existing conversion elements.")
     industry_insight: str = Field(description="1-sentence AI insight comparing their website to top industry performers. Example: 'Website is visually competitive but underperforms in conversion infrastructure compared to top industry performers.'")
+
+class BattleCardResult(BaseModel):
+    seo_winner: str = Field(description="'Primary', 'Competitor', or 'Tie'")
+    ux_winner: str = Field(description="'Primary', 'Competitor', or 'Tie'")
+    trust_winner: str = Field(description="'Primary', 'Competitor', or 'Tie'")
+    ai_visibility_winner: str = Field(description="'Primary', 'Competitor', or 'Tie'")
+    performance_winner: str = Field(description="'Primary', 'Competitor', or 'Tie'")
+    lead_capture_winner: str = Field(description="'Primary', 'Competitor', or 'Tie'")
+    conversion_winner: str = Field(description="'Primary', 'Competitor', or 'Tie'")
+    overall_advantage: str = Field(description="A concise summary of who has the advantage and why. Example: 'Primary holds 15% better SEO but Competitor wins on conversion.'")
+    overall_winner: str = Field(description="'Primary', 'Competitor', or 'Tie'")
+    ai_verdict: str = Field(description="Executive AI verdict. Example: 'Competitor has stronger conversion architecture and clearer CTA positioning, likely resulting in better lead generation performance.'")

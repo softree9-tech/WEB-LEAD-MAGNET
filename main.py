@@ -15,6 +15,8 @@ from typing import List
 from dotenv import load_dotenv
 from graph import graph_app
 from fastapi.middleware.cors import CORSMiddleware
+from langchain_google_genai import ChatGoogleGenerativeAI
+from core.models import BattleCardResult
 
 # ─── Parallel Processing Config ─────────────────────────────────────────────
 # Max leads to process simultaneously. Keep low to avoid RAM/rate-limit issues.
@@ -63,6 +65,10 @@ class LeadInput(BaseModel):
 class LeadList(BaseModel):
     leads: List[LeadInput]
 
+class BattleInput(BaseModel):
+    primary_website: str
+    competitor_website: str
+
 @app.post("/api/process/single")
 def process_single_lead(lead: LeadInput):
     initial_state = {
@@ -106,6 +112,72 @@ async def process_batch_leads(payload: LeadList):
 
     results = await asyncio.gather(*tasks)
     return {"processed_leads": list(results)}
+
+@app.post("/api/process/battle")
+async def process_battle(payload: BattleInput):
+    """
+    Runs analysis for both primary and competitor websites, then generates a comparison battle card.
+    """
+    primary_state = {
+        "raw_name": "Primary",
+        "raw_email": "",
+        "raw_company": "Primary Company",
+        "raw_role": "",
+        "raw_website": payload.primary_website
+    }
+    
+    competitor_state = {
+        "raw_name": "Competitor",
+        "raw_email": "",
+        "raw_company": "Competitor Company",
+        "raw_role": "",
+        "raw_website": payload.competitor_website
+    }
+
+    try:
+        # Run both analyses in parallel
+        print(f"🚀 Starting Battle Analysis: {payload.primary_website} vs {payload.competitor_website}")
+        results = await asyncio.gather(
+            asyncio.to_thread(graph_app.invoke, primary_state),
+            asyncio.to_thread(graph_app.invoke, competitor_state)
+        )
+        
+        primary_data = results[0].get("output_row", {})
+        competitor_data = results[1].get("output_row", {})
+        
+        # Generate the Battle Card Comparison using AI
+        llm = ChatGoogleGenerativeAI(
+            model="gemini-3.1-flash-lite-preview", 
+            temperature=0,
+            api_key=os.environ.get("GEMINI_API_KEY")
+        )
+        structured_llm = llm.with_structured_output(BattleCardResult)
+        
+        prompt = f"""
+        Compare these two website analyses and generate a Competitor Battle Card.
+        
+        PRIMARY WEBSITE ({payload.primary_website}):
+        {json.dumps(primary_data, indent=2)}
+        
+        COMPETITOR WEBSITE ({payload.competitor_website}):
+        {json.dumps(competitor_data, indent=2)}
+        
+        Compare them across: SEO score, UX score, Trust score, AI visibility, Performance, Lead capture systems, and Conversion readiness.
+        Identify the winner for each category and provide an overall AI verdict.
+        """
+        
+        battle_card = structured_llm.invoke(prompt)
+        
+        # Return combined result
+        # We attach the battle data to the primary result so the frontend knows it's a battle mode result
+        primary_data["battle_data"] = battle_card.dict()
+        primary_data["competitor_data"] = competitor_data
+        
+        return primary_data
+        
+    except Exception as e:
+        print(f"❌ Battle Analysis Error: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
 
 @app.post("/api/process/csv")
 async def process_csv(file: UploadFile = File(...)):

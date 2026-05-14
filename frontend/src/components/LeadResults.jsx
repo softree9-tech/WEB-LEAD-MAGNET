@@ -1,6 +1,6 @@
 import React from 'react';
 import '../LeadResults.css';
-import { ExternalLink, RefreshCw, Download, Monitor, Mail, Lock, FileCode, Check, X, Search, Activity, BarChart3, Settings, LogOut, LayoutDashboard, FileText, Bot, Target, Smartphone, Copy, TrendingDown, AlertTriangle } from 'lucide-react';
+import { ExternalLink, RefreshCw, Download, Monitor, Mail, Lock, FileCode, Check, X, Search, Activity, BarChart3, Settings, LogOut, LayoutDashboard, FileText, Bot, Target, Smartphone, Copy, TrendingDown, AlertTriangle, Sword, Trophy, Zap } from 'lucide-react';
 
 export default function LeadResults({ leads }) {
   if (!leads || leads.length === 0) {
@@ -28,7 +28,7 @@ export default function LeadResults({ leads }) {
               boxShadow: '0 4px 20px rgba(6, 182, 212, 0.3)'
             }}
             onClick={() => {
-              const csvHeader = 'website,final_score,design,cta,message,trust,speed,first_impression_score,first_impression_verdict,first_impression_explanation,revenue_leak,leak_severity,visitors_lost,leads_lost,missing_leads_count,conversion_loss_percent,readiness_level,missing_leads_insight,industry_percentile,industry_tier,industry_competitiveness,industry_insight,rebranding_pitch,trust_warnings,seo_issues,aeo_quote,emailfullbody\n';
+              const csvHeader = 'website,competitor_website,final_score,design,cta,message,trust,speed,first_impression_score,first_impression_verdict,revenue_leak,leak_severity,visitors_lost,leads_lost,missing_leads_count,conversion_loss_percent,readiness_level,industry_percentile,industry_tier,industry_competitiveness,rebranding_pitch,seo_issues,aeo_quote,battle_winner,battle_verdict,emailfullbody\n';
 
               const csvRows = leads.map(lead => {
                 const consistencyVal = lead.design === 'Modern' ? 90 : 60;
@@ -88,6 +88,7 @@ Best,
 
                 return [
                   escapeCSV(lead.website),
+                  escapeCSV(lead.competitor_data?.website || 'N/A'),
                   uxScore,
                   escapeCSV(lead.design),
                   escapeCSV(lead.cta),
@@ -96,7 +97,6 @@ Best,
                   escapeCSV(lead.speed),
                   escapeCSV(lead.first_impression_score || 0),
                   escapeCSV(lead.first_impression_verdict || 'Unknown'),
-                  escapeCSV(lead.first_impression_explanation || ''),
                   escapeCSV(`$${lead.revenue_leak_amount || 0}`),
                   escapeCSV(lead.revenue_leak_severity || 'Low'),
                   escapeCSV(lead.visitors_lost || 0),
@@ -104,15 +104,15 @@ Best,
                   escapeCSV(lead.missing_opportunities_count || 0),
                   escapeCSV(`${lead.estimated_conversion_loss_percent || 0}%`),
                   escapeCSV(lead.conversion_readiness_level || 'Low'),
-                  escapeCSV(lead.missing_leads_insight || ''),
                   escapeCSV(lead.industry_percentile || 0),
                   escapeCSV(lead.industry_tier || 'Unknown'),
                   escapeCSV(lead.industry_competitiveness || 'Unknown'),
-                  escapeCSV(lead.industry_insight || ''),
                   escapeCSV(lead.rebranding_pitch),
                   escapeCSV(trustWarning),
                   escapeCSV(seoIssues),
                   escapeCSV((lead.aeo_probe_response || 'No AI recognition data.').substring(0, 1000)),
+                  escapeCSV(lead.battle_data?.overall_winner || 'N/A'),
+                  escapeCSV(lead.battle_data?.ai_verdict || 'N/A'),
                   escapeCSV(batchEmailBody)
                 ].join(',');
               }).join('\n');
@@ -246,7 +246,7 @@ Best,
                 <div className="header-actions">
                   <button className="action-btn" onClick={() => window.location.reload()}><RefreshCw size={14} /> Recalculate</button>
                   <button className="action-btn primary" onClick={() => {
-                    const csvHeader = 'website,final_score,design,cta,message,trust,speed,first_impression_score,first_impression_verdict,first_impression_explanation,revenue_leak,leak_severity,visitors_lost,leads_lost,missing_leads_count,conversion_loss_percent,readiness_level,missing_leads_insight,industry_percentile,industry_tier,industry_competitiveness,industry_insight,rebranding_pitch,trust_warnings,seo_issues,aeo_quote,emailfullbody\n';
+                    const csvHeader = 'website,competitor_website,final_score,design,cta,message,trust,speed,first_impression_score,first_impression_verdict,revenue_leak,leak_severity,visitors_lost,leads_lost,missing_leads_count,conversion_loss_percent,readiness_level,industry_percentile,industry_tier,industry_competitiveness,rebranding_pitch,seo_issues,aeo_quote,battle_winner,battle_verdict,emailfullbody\n';
                     const trustWarning = [
                       (!lead.seo_ssl ? 'SSL certificate invalid or missing' : (lead.ssl_days_remaining < 30 ? `SSL expires in ${lead.ssl_days_remaining} days` : '')),
                       !lead.has_lead_capture ? 'No contact form detected' : '',
@@ -276,6 +276,7 @@ Best,
 
                     const csvRow = [
                       escapeCSV(lead.website),
+                      escapeCSV(lead.competitor_data?.website || 'N/A'),
                       uxScore,
                       escapeCSV(lead.design),
                       escapeCSV(lead.cta),
@@ -284,7 +285,6 @@ Best,
                       escapeCSV(lead.speed),
                       escapeCSV(lead.first_impression_score || 0),
                       escapeCSV(lead.first_impression_verdict || 'Unknown'),
-                      escapeCSV(lead.first_impression_explanation || ''),
                       escapeCSV(`$${lead.revenue_leak_amount || 0}`),
                       escapeCSV(lead.revenue_leak_severity || 'Low'),
                       escapeCSV(lead.visitors_lost || 0),
@@ -292,15 +292,15 @@ Best,
                       escapeCSV(lead.missing_opportunities_count || 0),
                       escapeCSV(`${lead.estimated_conversion_loss_percent || 0}%`),
                       escapeCSV(lead.conversion_readiness_level || 'Low'),
-                      escapeCSV(lead.missing_leads_insight || ''),
                       escapeCSV(lead.industry_percentile || 0),
                       escapeCSV(lead.industry_tier || 'Unknown'),
                       escapeCSV(lead.industry_competitiveness || 'Unknown'),
-                      escapeCSV(lead.industry_insight || ''),
                       escapeCSV(lead.rebranding_pitch),
                       escapeCSV(trustWarning),
                       escapeCSV(seoIssues),
                       escapeCSV((lead.aeo_probe_response || 'No AI recognition data.').substring(0, 500)),
+                      escapeCSV(lead.battle_data?.overall_winner || 'N/A'),
+                      escapeCSV(lead.battle_data?.ai_verdict || 'N/A'),
                       escapeCSV(emailBody)
                     ].join(',');
 
@@ -320,6 +320,65 @@ Best,
               </div>
 
               <div className="quadrant-grid">
+
+                {/* 0. Competitor Battle Card (Full Width) */}
+                {lead.battle_data && (
+                  <div className="quad-card battle-card animate-slide-up">
+                    <div className="battle-header">
+                      <div className="battle-title">
+                        <Sword size={24} />
+                        Competitor Battle Card
+                      </div>
+                      <div className="battle-vs-badge">
+                        {lead.website.replace(/^https?:\/\//i, '').split('/')[0]} vs {lead.competitor_data?.website.replace(/^https?:\/\//i, '').split('/')[0]}
+                      </div>
+                    </div>
+
+                    <div className="battle-comparison-grid">
+                      {[
+                        { label: 'SEO Score', key: 'seo_winner', primary: lead.seo_score, comp: lead.competitor_data?.seo_score },
+                        { label: 'UX Score', key: 'ux_winner', primary: uxScore, comp: Math.round(((lead.competitor_data?.design === 'Modern' ? 90 : 60) + (lead.competitor_data?.message === 'Clear' ? 80 : 50) + (lead.competitor_data?.seo_mobile ? 80 : 30) + (lead.competitor_data?.cta === 'Strong' ? 90 : 40)) / 4) },
+                        { label: 'Trust Score', key: 'trust_winner', primary: trustScore, comp: Math.round((([lead.competitor_data?.has_analytics?.google_analytics, lead.competitor_data?.has_analytics?.tag_manager, lead.competitor_data?.has_analytics?.facebook_pixel, lead.competitor_data?.has_analytics?.linkedin_tag, lead.competitor_data?.has_lead_capture, lead.competitor_data?.has_cta, lead.competitor_data?.has_newsletter, lead.competitor_data?.seo_ssl, lead.competitor_data?.ssl_enforced, lead.competitor_data?.seo_title, lead.competitor_data?.seo_meta_desc, lead.competitor_data?.seo_canonical, lead.competitor_data?.seo_og].filter(Boolean).length) / 13) * 100) },
+                        { label: 'AI Visibility', key: 'ai_visibility_winner', primary: lead.aeo_score, comp: lead.competitor_data?.aeo_score },
+                        { label: 'Performance', key: 'performance_winner', primary: lead.lighthouse_performance, comp: lead.competitor_data?.lighthouse_performance },
+                        { label: 'Lead Capture', key: 'lead_capture_winner', primary: lead.has_lead_capture ? 1 : 0, comp: lead.competitor_data?.has_lead_capture ? 1 : 0 },
+                        { label: 'Conversion Readiness', key: 'conversion_winner', primary: lead.conversion_readiness_level === 'High' ? 100 : lead.conversion_readiness_level === 'Medium' ? 60 : 30, comp: lead.competitor_data?.conversion_readiness_level === 'High' ? 100 : lead.competitor_data?.conversion_readiness_level === 'Medium' ? 60 : 30 }
+                      ].map((metric, i) => (
+                        <div key={i} className="battle-metric-row">
+                          <div className="battle-metric-value primary">
+                            <span className="metric-domain">PRIMARY</span>
+                            <span className="metric-score">{metric.primary}{typeof metric.primary === 'number' && metric.primary > 1 ? '%' : ''}</span>
+                            {lead.battle_data[metric.key] === 'Primary' && <div className="winner-indicator win"><Trophy size={10} /> Winner</div>}
+                          </div>
+                          
+                          <div className="battle-metric-label">{metric.label}</div>
+                          
+                          <div className="battle-metric-value competitor">
+                            <span className="metric-domain">COMPETITOR</span>
+                            <span className="metric-score">{metric.comp}{typeof metric.comp === 'number' && metric.comp > 1 ? '%' : ''}</span>
+                            {lead.battle_data[metric.key] === 'Competitor' && <div className="winner-indicator win"><Trophy size={10} /> Winner</div>}
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+
+                    <div className="battle-verdict-box">
+                      <div className="verdict-header">
+                        <Zap size={20} color="#ef4444" fill="#ef4444" />
+                        <span className="verdict-title">Executive AI Verdict</span>
+                        <div className={`verdict-badge verdict-${lead.battle_data.overall_winner === 'Primary' ? 'excellent' : 'poor'}`} style={{ marginLeft: 'auto' }}>
+                          Overall Advantage: {lead.battle_data.overall_winner}
+                        </div>
+                      </div>
+                      <p className="verdict-text">
+                        "{lead.battle_data.ai_verdict}"
+                      </p>
+                      <div className="advantage-summary">
+                        <Target size={14} /> Strategic Insight: <span className="advantage-value">{lead.battle_data.overall_advantage}</span>
+                      </div>
+                    </div>
+                  </div>
+                )}
 
                 {/* 0. First Impression Score */}
                 <div className="quad-card first-impression-card animate-slide-up">
