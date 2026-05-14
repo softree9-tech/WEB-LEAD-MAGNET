@@ -15,6 +15,7 @@ from core.state import AgentState
 import socket
 import ssl
 from datetime import datetime
+import json
 
 def check_ssl_certificate(url: str) -> dict:
     try:
@@ -190,6 +191,50 @@ def calculate_industry_percentile(metrics: dict) -> dict:
         "tier": tier,
         "competitiveness": competitiveness
     }
+
+def check_schema_markup(soup: BeautifulSoup) -> dict:
+    """Detects JSON-LD schema types in the page."""
+    schema_tags = soup.find_all("script", type="application/ld+json")
+    detected_types = set()
+    
+    target_schemas = [
+        "FAQPage",
+        "LocalBusiness",
+        "Review",
+        "Organization",
+        "Product",
+        "BreadcrumbList",
+        "Article"
+    ]
+    
+    for tag in schema_tags:
+        try:
+            data = json.loads(tag.string)
+            
+            def extract_types(obj):
+                if isinstance(obj, dict):
+                    t = obj.get("@type")
+                    if t:
+                        if isinstance(t, list):
+                            detected_types.update(t)
+                        else:
+                            detected_types.add(t)
+                    for val in obj.values():
+                        extract_types(val)
+                elif isinstance(obj, list):
+                    for item in obj:
+                        extract_types(item)
+            
+            extract_types(data)
+        except Exception:
+            continue
+            
+    results = {}
+    for s in target_schemas:
+        is_present = any(s.lower() in dt.lower() for dt in detected_types)
+        results[s] = is_present
+        
+    return results
 
 def check_newsletter(soup) -> bool:
     forms = soup.find_all("form")
@@ -630,6 +675,15 @@ def website_analyzer_agent(state: AgentState) -> AgentState:
         "sticky_cta": False,
         "popup_lead_capture": False
     }
+    schema_data = {
+        "FAQPage": False,
+        "LocalBusiness": False,
+        "Review": False,
+        "Organization": False,
+        "Product": False,
+        "BreadcrumbList": False,
+        "Article": False
+    }
     
     if url:
         company_name = state.get('raw_company', '') or url
@@ -665,6 +719,7 @@ def website_analyzer_agent(state: AgentState) -> AgentState:
                 image_alt_data = check_image_alt_tags(soup)
                 has_dead_socials = check_social_links(soup)
                 conversion_elements = check_conversion_elements(soup, html)
+                schema_data = check_schema_markup(soup)
                 
                 # Extract SEO Metrics before stripping code
                 seo_mobile = bool(soup.find("meta", attrs={"name": "viewport"}))
@@ -712,6 +767,7 @@ def website_analyzer_agent(state: AgentState) -> AgentState:
                 image_alt_data = check_image_alt_tags(soup)
                 has_dead_socials = check_social_links(soup)
                 conversion_elements = check_conversion_elements(soup, html)
+                schema_data = check_schema_markup(soup)
                 seo_mobile = bool(soup.find("meta", attrs={"name": "viewport"}))
                 seo_meta_desc = bool(soup.find("meta", attrs={"name": "description"}))
                 seo_h1 = bool(soup.find("h1"))
@@ -848,6 +904,12 @@ Provide a short, concise, and emotionally impactful AI explanation (e.g., "Websi
 Also provide a `conversion_readiness_level` (High, Medium, Low) based on the conversion elements present.
 
 Finally, provide an `industry_insight`: compare this website to top industry performers. 1-sentence aggressive insight into why they are winning or losing compared to the top 10% of competitors.
+
+Finally, analyze the `SCHEMA MARKUP` situation. Based on the detected schemas provided:
+- Calculate a `schema_coverage_score` (0-100) based on the presence of FAQ, LocalBusiness, Review, Organization, Product, Breadcrumb, and Article schemas.
+- Provide a `schema_gap_insight`: Explain how missing schemas (like FAQ or Review) are hurting their AI visibility (ChatGPT recommendations) and Google Rich Results.
+- Set a `schema_visibility_impact` (High, Medium, Low).
+- Provide a `schema_recommendation` for implementation priority.
 """)
 
         human_msg_content = [
@@ -883,6 +945,9 @@ Finally, provide an `industry_insight`: compare this website to top industry per
                 - AI Recognition: {aeo_probe['aeo_recognized']}
                 - AI Confidence Level: {aeo_probe['aeo_confidence']}
                 - Raw AI Response: \"{aeo_probe['aeo_raw_response'][:500]}\"
+                
+                SCHEMA MARKUP DETECTED:
+                {json.dumps(schema_data, indent=2)}
                 
                 VISIBLE TEXT (Top 8000 chars):
                 {text_content[:8000]}"""
@@ -921,7 +986,11 @@ Finally, provide an `industry_insight`: compare this website to top industry per
                 "first_impression_explanation": result.first_impression_explanation,
                 "conversion_readiness_level": result.conversion_readiness_level,
                 "missing_leads_insight": result.missing_leads_insight,
-                "industry_insight": result.industry_insight
+                "industry_insight": result.industry_insight,
+                "schema_coverage_score": result.schema_coverage_score,
+                "schema_gap_insight": result.schema_gap_insight,
+                "schema_visibility_impact": result.schema_visibility_impact,
+                "schema_recommendation": result.schema_recommendation
             }
         except Exception as e:
             print("LLM Error:", e)
@@ -989,7 +1058,12 @@ Finally, provide an `industry_insight`: compare this website to top industry per
         "aeo_improvement": result_dict.get("aeo_improvement", ""),
         "aeo_probe_response": aeo_probe.get("aeo_raw_response", ""),
         "has_cta": has_cta,
-        "has_duplicate_meta": locals().get('has_duplicate_meta', False)
+        "has_duplicate_meta": locals().get('has_duplicate_meta', False),
+        "schema_data": schema_data,
+        "schema_coverage_score": result_dict.get("schema_coverage_score", 0),
+        "schema_gap_insight": result_dict.get("schema_gap_insight", ""),
+        "schema_visibility_impact": result_dict.get("schema_visibility_impact", "Low"),
+        "schema_recommendation": result_dict.get("schema_recommendation", "")
     }
 
     # ─── REVENUE LEAK CALCULATION ──────────────────────────────────────────

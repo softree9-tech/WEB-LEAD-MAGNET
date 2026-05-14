@@ -1,6 +1,6 @@
 import React from 'react';
 import '../LeadResults.css';
-import { ExternalLink, RefreshCw, Download, Monitor, Mail, Lock, FileCode, Check, X, Search, Activity, BarChart3, Settings, LogOut, LayoutDashboard, FileText, Bot, Target, Smartphone, Copy, TrendingDown, AlertTriangle, Sword, Trophy, Zap } from 'lucide-react';
+import { ExternalLink, RefreshCw, Download, Monitor, Mail, Lock, FileCode, Check, X, Search, Activity, BarChart3, Settings, LogOut, LayoutDashboard, FileText, Bot, Target, Smartphone, Copy, TrendingDown, AlertTriangle, Sword, Trophy, Zap, Sparkles } from 'lucide-react';
 
 export default function LeadResults({ leads }) {
   if (!leads || leads.length === 0) {
@@ -28,7 +28,7 @@ export default function LeadResults({ leads }) {
               boxShadow: '0 4px 20px rgba(6, 182, 212, 0.3)'
             }}
             onClick={() => {
-              const csvHeader = 'website,competitor_website,final_score,design,cta,message,trust,speed,first_impression_score,first_impression_verdict,revenue_leak,leak_severity,visitors_lost,leads_lost,missing_leads_count,conversion_loss_percent,readiness_level,industry_percentile,industry_tier,industry_competitiveness,rebranding_pitch,seo_issues,aeo_quote,battle_winner,battle_verdict,emailfullbody\n';
+              const csvHeader = 'website,competitor_website,final_score,design,cta,message,trust,speed,schema_score,schema_impact,first_impression_score,first_impression_verdict,revenue_leak,leak_severity,visitors_lost,leads_lost,missing_leads_count,conversion_loss_percent,readiness_level,industry_percentile,industry_tier,industry_competitiveness,rebranding_pitch,seo_issues,aeo_quote,battle_winner,battle_verdict,emailfullbody\n';
 
               const csvRows = leads.map(lead => {
                 const consistencyVal = lead.design === 'Modern' ? 90 : 60;
@@ -95,6 +95,8 @@ Best,
                   escapeCSV(lead.message),
                   escapeCSV(lead.trust),
                   escapeCSV(lead.speed),
+                  escapeCSV(lead.schema_coverage_score || 0),
+                  escapeCSV(lead.schema_visibility_impact || 'Low'),
                   escapeCSV(lead.first_impression_score || 0),
                   escapeCSV(lead.first_impression_verdict || 'Unknown'),
                   escapeCSV(`$${lead.revenue_leak_amount || 0}`),
@@ -246,7 +248,7 @@ Best,
                 <div className="header-actions">
                   <button className="action-btn" onClick={() => window.location.reload()}><RefreshCw size={14} /> Recalculate</button>
                   <button className="action-btn primary" onClick={() => {
-                    const csvHeader = 'website,competitor_website,final_score,design,cta,message,trust,speed,first_impression_score,first_impression_verdict,revenue_leak,leak_severity,visitors_lost,leads_lost,missing_leads_count,conversion_loss_percent,readiness_level,industry_percentile,industry_tier,industry_competitiveness,rebranding_pitch,seo_issues,aeo_quote,battle_winner,battle_verdict,emailfullbody\n';
+                    const csvHeader = 'website,competitor_website,final_score,design,cta,message,trust,speed,schema_score,schema_impact,first_impression_score,first_impression_verdict,revenue_leak,leak_severity,visitors_lost,leads_lost,missing_leads_count,conversion_loss_percent,readiness_level,industry_percentile,industry_tier,industry_competitiveness,rebranding_pitch,seo_issues,aeo_quote,battle_winner,battle_verdict,emailfullbody\n';
                     const trustWarning = [
                       (!lead.seo_ssl ? 'SSL certificate invalid or missing' : (lead.ssl_days_remaining < 30 ? `SSL expires in ${lead.ssl_days_remaining} days` : '')),
                       !lead.has_lead_capture ? 'No contact form detected' : '',
@@ -283,6 +285,8 @@ Best,
                       escapeCSV(lead.message),
                       escapeCSV(lead.trust),
                       escapeCSV(lead.speed),
+                      escapeCSV(lead.schema_coverage_score || 0),
+                      escapeCSV(lead.schema_visibility_impact || 'Low'),
                       escapeCSV(lead.first_impression_score || 0),
                       escapeCSV(lead.first_impression_verdict || 'Unknown'),
                       escapeCSV(`$${lead.revenue_leak_amount || 0}`),
@@ -350,9 +354,9 @@ Best,
                             <span className="metric-score">{metric.primary}{typeof metric.primary === 'number' && metric.primary > 1 ? '%' : ''}</span>
                             {lead.battle_data[metric.key] === 'Primary' && <div className="winner-indicator win"><Trophy size={10} /> Winner</div>}
                           </div>
-                          
+
                           <div className="battle-metric-label">{metric.label}</div>
-                          
+
                           <div className="battle-metric-value competitor">
                             <span className="metric-domain">COMPETITOR</span>
                             <span className="metric-score">{metric.comp}{typeof metric.comp === 'number' && metric.comp > 1 ? '%' : ''}</span>
@@ -733,6 +737,55 @@ Best,
                     </div>
                     <p style={{ fontSize: '0.85rem', color: 'var(--text-secondary)', margin: 0, fontStyle: 'italic' }}>
                       "{lead.industry_insight || "Website lacks specific industry competitive advantages in terms of UX and technical performance."}"
+                    </p>
+                  </div>
+                </div>
+
+                {/* 5.6 Schema & AI Visibility Gap */}
+                <div className="quad-card schema-card animate-slide-up">
+                  <div className="quad-header">
+                    <h2 style={{ color: '#10b981', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                      <FileCode size={20} /> Schema & AI Visibility Gap
+                    </h2>
+                    <div className={`schema-impact-badge impact-${(lead.schema_visibility_impact || 'Low').toLowerCase()}`}>
+                      <Activity size={10} /> Impact: {lead.schema_visibility_impact || 'Low'}
+                    </div>
+                  </div>
+
+                  <div className="schema-coverage-container">
+                    <div className="schema-score-box">
+                      <span className="schema-score-value">{lead.schema_coverage_score || 0}%</span>
+                      <span className="schema-score-label">Schema Coverage</span>
+                    </div>
+                    <div className="schema-priority-fix">
+                      <div className="priority-label"><Sparkles size={10} /> Priority Fix</div>
+                      <div className="priority-value">{lead.schema_recommendation || 'No critical gaps'}</div>
+                    </div>
+                  </div>
+
+                  <div className="schema-tags-grid">
+                    {[
+                      { type: 'FAQ', key: 'FAQPage' },
+                      { type: 'LocalBusiness', key: 'LocalBusiness' },
+                      { type: 'Review', key: 'Review' },
+                      { type: 'Organization', key: 'Organization' },
+                      { type: 'Product', key: 'Product' },
+                      { type: 'Breadcrumb', key: 'BreadcrumbList' },
+                      { type: 'Article', key: 'Article' }
+                    ].map((s, i) => (
+                      <div key={i} className={`schema-tag ${lead.schema_data?.[s.key] ? 'present' : 'missing'}`}>
+                        {lead.schema_data?.[s.key] ? <Check size={12} /> : <X size={12} />}
+                        {s.type}
+                      </div>
+                    ))}
+                  </div>
+
+                  <div className="schema-insight-box">
+                    <div className="schema-insight-title">
+                      <Bot size={14} /> AI Visibility Insight
+                    </div>
+                    <p className="schema-insight-text">
+                      "{lead.schema_gap_insight || "Missing structured data is limiting your brand's presence in AI-generated search results and rich Google snippets."}"
                     </p>
                   </div>
                 </div>

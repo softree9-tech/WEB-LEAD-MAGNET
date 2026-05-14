@@ -25,6 +25,11 @@ class WebsiteAnalyzerOutput(BaseModel):
     missing_leads_insight: str = Field(description="AI insight about missing lead capture opportunities. Example: 'Visitors have limited conversion paths, reducing lead generation potential.'")
     conversion_readiness_level: str = Field(description="Conversion readiness level (High, Medium, Low) based on existing conversion elements.")
     industry_insight: str = Field(description="1-sentence AI insight comparing their website to top industry performers. Example: 'Website is visually competitive but underperforms in conversion infrastructure compared to top industry performers.'")
+    
+    schema_coverage_score: int = Field(description="Schema markup coverage score (0-100) based on target schemas present (FAQ, LocalBusiness, Review, Organization, Product, Breadcrumb, Article).")
+    schema_gap_insight: str = Field(description="1-2 sentences explaining the gap between current schema and ideal AI/Search visibility. Example: 'Missing FAQ and Review schema limits your presence in Google Rich Results and AI search citations.'")
+    schema_visibility_impact: str = Field(description="Impact level on AI/Search visibility (High, Medium, Low).")
+    schema_recommendation: str = Field(description="Concise, 3-5 word primary schema recommendation for implementation. Example: 'Add FAQ Schema'")
 
 class BattleCardResult(BaseModel):
     seo_winner: str = Field(description="'Primary', 'Competitor', or 'Tie'")
