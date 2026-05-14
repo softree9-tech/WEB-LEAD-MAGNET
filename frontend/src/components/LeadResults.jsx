@@ -473,75 +473,8 @@ Best,
                   </div>
                 </div>
 
-                {/* 4. AI Search */}
-                <div className="quad-card">
-                  <div className="quad-header">
-                    <h2>AI Search Visibility &amp; Ranking</h2>
-                  </div>
-                  <div className="ai-visibility-bar">
-                    <div style={{ display: 'flex', justifyContent: 'space-between' }}><span>Search Engine Visibility</span><span>{aeoScore}%</span></div>
-                    <div className="bar-track"><div className="bar-fill blue-purple" style={{ width: `${aeoScore}%` }}></div></div>
-                  </div>
-
-                  <div className="ai-logos">
-                    <span className="ai-badge"><Bot size={16} color="#10b981" /> ChatGPT</span>
-                    <span className="ai-badge"><Search size={16} color="#a855f7" /> Gemini</span>
-                    <span className="ai-badge" style={{ color: '#3b82f6' }}><span style={{ fontSize: '16px', marginRight: '6px', fontWeight: 800 }}>b</span> Bing Chat</span>
-                  </div>
-
-                  <p className="subtitle">Mentions across AI tools</p>
-                  <div className="ai-grid-bars" style={{ gap: '1.25rem' }}>
-                    <div>
-                      <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '4px' }}><span>Brand Authority</span><span>{Math.min(100, aeoScore + 5)}%</span></div>
-                      <div className="bar-track" style={{ marginBottom: '4px' }}><div className="bar-fill blue" style={{ width: `${Math.min(100, aeoScore + 5)}%` }}></div></div>
-                      <p style={{ margin: 0, fontSize: '0.65rem', color: 'var(--text-secondary)' }}>Tip: Increase high-quality backlinks and digital PR mentions.</p>
-                    </div>
-                    <div>
-                      <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '4px' }}><span>Conversational Ranking</span><span>{Math.max(0, aeoScore - 10)}%</span></div>
-                      <div className="bar-track" style={{ marginBottom: '4px' }}><div className="bar-fill purple" style={{ width: `${Math.max(0, aeoScore - 10)}%` }}></div></div>
-                      <p style={{ margin: 0, fontSize: '0.65rem', color: 'var(--text-secondary)' }}>Tip: Format content to directly answer common user FAQs.</p>
-                    </div>
-                    <div>
-                      <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '4px' }}><span>Topical Relevance</span><span>{aeoScore}%</span></div>
-                      <div className="bar-track" style={{ marginBottom: '4px' }}><div className="bar-fill teal" style={{ width: `${aeoScore}%` }}></div></div>
-                      <p style={{ margin: 0, fontSize: '0.65rem', color: 'var(--text-secondary)' }}>Tip: Publish comprehensive deep-dive blog clusters on core services.</p>
-                    </div>
-                    <div>
-                      <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '4px' }}><span>User Intent Match</span><span>{Math.min(100, aeoScore + 2)}%</span></div>
-                      <div className="bar-track" style={{ marginBottom: '4px' }}><div className="bar-fill blue-purple" style={{ width: `${Math.min(100, aeoScore + 2)}%` }}></div></div>
-                      <p style={{ margin: 0, fontSize: '0.65rem', color: 'var(--text-secondary)' }}>Tip: Align landing page headlines with exact buyer search terms.</p>
-                    </div>
-                  </div>
-
-                  <div style={{ marginTop: '1.5rem', background: 'rgba(0,0,0,0.2)', padding: '1rem', borderRadius: '12px', fontSize: '0.85rem' }}>
-                    <h3 style={{ color: '#f97316', margin: '0 0 0.5rem 0', fontSize: '0.9rem' }}><span className="icon">👁️</span> Visibility Status</h3>
-                    <p style={{ margin: '0', color: 'var(--text-secondary)' }}>{lead.aeo_status}</p>
-
-                    <h3 style={{ color: '#f97316', margin: '1rem 0 0.5rem 0', fontSize: '0.9rem' }}><span className="icon">🚀</span> Improvement Strategy</h3>
-                    <p style={{ margin: '0', color: 'var(--text-secondary)' }}>{lead.aeo_improvement}</p>
-
-                    {lead.aeo_probe_response && (
-                      <div style={{ marginTop: '1rem', background: 'rgba(249, 115, 22, 0.05)', borderLeft: '3px solid #f97316', padding: '1rem', borderRadius: '4px 8px 8px 4px' }}>
-                        <h4 style={{ color: '#f97316', fontSize: '0.75rem', textTransform: 'uppercase', letterSpacing: '1px', marginBottom: '8px', marginTop: 0 }}>Raw "ChatGPT" Database Query Response:</h4>
-                        <p style={{ fontStyle: 'italic', fontSize: '0.8rem', color: 'rgba(255,255,255,0.7)', margin: 0, lineHeight: 1.5 }}>
-                          "{lead.aeo_probe_response}"
-                        </p>
-                      </div>
-                    )}
-                  </div>
-
-                  <div className="fake-chart">
-                    <p>AI Traffic Predictions<br /><span style={{ fontSize: '0.65rem' }}>AI Traffic predictions and anatomic predictions</span></p>
-                    <svg viewBox="0 0 100 20" preserveAspectRatio="none">
-                      <path d="M0,20 Q10,18 20,15 T40,18 T60,10 T80,15 T100,2" fill="url(#ai-grad)" opacity="0.3" />
-                      <path d="M0,20 Q10,18 20,15 T40,18 T60,10 T80,15 T100,2" fill="none" stroke="#06b6d4" strokeWidth="1" />
-                      <defs><linearGradient id="ai-grad" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stopColor="#06b6d4" /><stop offset="100%" stopColor="transparent" /></linearGradient></defs>
-                    </svg>
-                  </div>
-                </div>
-
-                {/* 5. Revenue Leak Calculator */}
-                <div className="quad-card revenue-leak-card">
+                {/* 4. Revenue Leak Calculator */}
+                <div className="quad-card revenue-leak-card animate-slide-up">
                   <div className="quad-header">
                     <h2 style={{ color: '#ef4444', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
                       <TrendingDown size={20} /> Estimated Revenue Leakage
@@ -551,29 +484,37 @@ Best,
                     </div>
                   </div>
 
-                  <div className="leak-amount">
-                    ${(lead.revenue_leak_amount || 0).toLocaleString()}
-                    <span style={{ fontSize: '1rem', color: '#64748b', marginLeft: '8px', fontWeight: 500 }}>/ month</span>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.5rem' }}>
+                    <div className="leak-amount-box">
+                      <div className="leak-amount">
+                        ${(lead.revenue_leak_amount || 0).toLocaleString()}
+                        <span style={{ fontSize: '1rem', color: '#64748b', marginLeft: '6px', fontWeight: 500 }}>/ mo</span>
+                      </div>
+                    </div>
+                    <div className="leak-stats" style={{ textAlign: 'right' }}>
+                      <div className="stat-item" style={{ textAlign: 'right' }}>
+                        <span className="stat-label">Visitors Lost</span>
+                        <span className="stat-value">{lead.visitors_lost || 0}</span>
+                      </div>
+                      <div className="stat-item" style={{ borderLeft: '1px solid rgba(255,255,255,0.1)', paddingLeft: '1.25rem', textAlign: 'right' }}>
+                        <span className="stat-label">Missed Leads</span>
+                        <span className="stat-value">{lead.leads_lost || 0}</span>
+                      </div>
+                    </div>
                   </div>
 
-                  <div className="leak-stats">
-                    <div className="stat-item">
-                      <span className="stat-label">Potential Visitors Lost</span>
-                      <span className="stat-value">{lead.visitors_lost || 0}</span>
+                  <div className="ai-insight-box" style={{ marginTop: 'auto', background: 'rgba(239, 68, 68, 0.05)', padding: '1rem', borderRadius: '12px', borderLeft: '4px solid #ef4444' }}>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', marginBottom: '0.5rem' }}>
+                      <AlertTriangle size={16} color="#ef4444" />
+                      <span style={{ fontSize: '0.8rem', fontWeight: 700, color: '#ef4444', textTransform: 'uppercase' }}>AI Insight</span>
                     </div>
-                    <div className="stat-item" style={{ borderLeft: '1px solid rgba(255,255,255,0.1)', paddingLeft: '1.5rem' }}>
-                      <span className="stat-label">Missed Leads</span>
-                      <span className="stat-value">{lead.leads_lost || 0}</span>
-                    </div>
-                  </div>
-
-                  <div className="leak-explanation">
-                    <AlertTriangle size={14} style={{ marginRight: '6px', verticalAlign: 'middle', color: '#fbbf24' }} />
-                    {lead.revenue_leak_explanation || "You are likely losing revenue due to technical bottlenecks and conversion gaps."}
+                    <p style={{ fontSize: '0.85rem', color: 'var(--text-secondary)', margin: 0, fontStyle: 'italic' }}>
+                      "{lead.revenue_leak_explanation || "You are likely losing revenue due to technical bottlenecks and conversion gaps."}"
+                    </p>
                   </div>
                 </div>
 
-                {/* 6. Leads You're Missing */}
+                {/* 5. Leads You're Missing */}
                 <div className="quad-card missing-leads-card animate-slide-up">
                   <div className="quad-header">
                     <h2 style={{ color: '#f97316', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
@@ -611,7 +552,7 @@ Best,
                     </div>
                   </div>
 
-                  <div className="ai-insight-box" style={{ marginTop: '1.5rem', background: 'rgba(249, 115, 22, 0.05)', padding: '1rem', borderRadius: '12px', borderLeft: '4px solid #f97316' }}>
+                  <div className="ai-insight-box" style={{ marginTop: 'auto', background: 'rgba(249, 115, 22, 0.05)', padding: '1rem', borderRadius: '12px', borderLeft: '4px solid #f97316' }}>
                     <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', marginBottom: '0.5rem' }}>
                       <Bot size={16} color="#f97316" />
                       <span style={{ fontSize: '0.8rem', fontWeight: 700, color: '#f97316', textTransform: 'uppercase' }}>AI Insight</span>
@@ -619,6 +560,81 @@ Best,
                     <p style={{ fontSize: '0.85rem', color: 'var(--text-secondary)', margin: 0, fontStyle: 'italic' }}>
                       "{lead.missing_leads_insight || "Visitors have limited conversion paths, reducing lead generation potential."}"
                     </p>
+                  </div>
+                </div>
+
+                {/* 6. AI Search Visibility & Ranking — Full Width */}
+                <div className="quad-card aeo-card-wide" style={{ gridColumn: '1 / -1' }}>
+                  <div className="quad-header">
+                    <h2>AI Search Visibility &amp; Ranking</h2>
+                    <div className="ai-logos" style={{ margin: 0 }}>
+                      <span className="ai-badge"><Bot size={14} color="#10b981" /> ChatGPT</span>
+                      <span className="ai-badge"><Search size={14} color="#a855f7" /> Gemini</span>
+                      <span className="ai-badge" style={{ color: '#3b82f6' }}><span style={{ fontSize: '14px', marginRight: '4px', fontWeight: 800 }}>b</span> Bing Chat</span>
+                    </div>
+                  </div>
+
+                  <div className="aeo-split-layout">
+                    {/* Left Column — Score + Bars + Chart */}
+                    <div className="aeo-left-col">
+                      <div className="ai-visibility-bar">
+                        <div style={{ display: 'flex', justifyContent: 'space-between' }}><span>Search Engine Visibility</span><span>{aeoScore}%</span></div>
+                        <div className="bar-track"><div className="bar-fill blue-purple" style={{ width: `${aeoScore}%` }}></div></div>
+                      </div>
+
+                      <p className="subtitle" style={{ marginBottom: '0.75rem' }}>Mentions across AI tools</p>
+                      <div className="ai-grid-bars" style={{ gridTemplateColumns: '1fr 1fr', gap: '1rem' }}>
+                        <div>
+                          <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '4px' }}><span>Brand Authority</span><span>{Math.min(100, aeoScore + 5)}%</span></div>
+                          <div className="bar-track" style={{ marginBottom: '4px' }}><div className="bar-fill blue" style={{ width: `${Math.min(100, aeoScore + 5)}%` }}></div></div>
+                          <p style={{ margin: 0, fontSize: '0.65rem', color: 'var(--text-secondary)' }}>Tip: Increase high-quality backlinks and digital PR mentions.</p>
+                        </div>
+                        <div>
+                          <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '4px' }}><span>Conversational Ranking</span><span>{Math.max(0, aeoScore - 10)}%</span></div>
+                          <div className="bar-track" style={{ marginBottom: '4px' }}><div className="bar-fill purple" style={{ width: `${Math.max(0, aeoScore - 10)}%` }}></div></div>
+                          <p style={{ margin: 0, fontSize: '0.65rem', color: 'var(--text-secondary)' }}>Tip: Format content to directly answer common user FAQs.</p>
+                        </div>
+                        <div>
+                          <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '4px' }}><span>Topical Relevance</span><span>{aeoScore}%</span></div>
+                          <div className="bar-track" style={{ marginBottom: '4px' }}><div className="bar-fill teal" style={{ width: `${aeoScore}%` }}></div></div>
+                          <p style={{ margin: 0, fontSize: '0.65rem', color: 'var(--text-secondary)' }}>Tip: Publish comprehensive deep-dive blog clusters on core services.</p>
+                        </div>
+                        <div>
+                          <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '4px' }}><span>User Intent Match</span><span>{Math.min(100, aeoScore + 2)}%</span></div>
+                          <div className="bar-track" style={{ marginBottom: '4px' }}><div className="bar-fill blue-purple" style={{ width: `${Math.min(100, aeoScore + 2)}%` }}></div></div>
+                          <p style={{ margin: 0, fontSize: '0.65rem', color: 'var(--text-secondary)' }}>Tip: Align landing page headlines with exact buyer search terms.</p>
+                        </div>
+                      </div>
+
+                      <div className="fake-chart" style={{ marginTop: '1rem' }}>
+                        <p>AI Traffic Predictions<br /><span style={{ fontSize: '0.65rem' }}>AI Traffic predictions and anatomic predictions</span></p>
+                        <svg viewBox="0 0 100 20" preserveAspectRatio="none">
+                          <path d="M0,20 Q10,18 20,15 T40,18 T60,10 T80,15 T100,2" fill="url(#ai-grad)" opacity="0.3" />
+                          <path d="M0,20 Q10,18 20,15 T40,18 T60,10 T80,15 T100,2" fill="none" stroke="#06b6d4" strokeWidth="1" />
+                          <defs><linearGradient id="ai-grad" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stopColor="#06b6d4" /><stop offset="100%" stopColor="transparent" /></linearGradient></defs>
+                        </svg>
+                      </div>
+                    </div>
+
+                    {/* Right Column — Insights & Probe Response */}
+                    <div className="aeo-right-col">
+                      <div style={{ background: 'rgba(0,0,0,0.2)', padding: '1rem', borderRadius: '12px', fontSize: '0.85rem' }}>
+                        <h3 style={{ color: '#f97316', margin: '0 0 0.5rem 0', fontSize: '0.9rem' }}><span className="icon">👁️</span> Visibility Status</h3>
+                        <p style={{ margin: '0 0 1rem 0', color: 'var(--text-secondary)' }}>{lead.aeo_status}</p>
+
+                        <h3 style={{ color: '#f97316', margin: '0 0 0.5rem 0', fontSize: '0.9rem' }}><span className="icon">🚀</span> Improvement Strategy</h3>
+                        <p style={{ margin: '0', color: 'var(--text-secondary)' }}>{lead.aeo_improvement}</p>
+                      </div>
+
+                      {lead.aeo_probe_response && (
+                        <div className="aeo-probe-scroll" style={{ marginTop: '1rem', background: 'rgba(249, 115, 22, 0.05)', borderLeft: '3px solid #f97316', padding: '1rem', borderRadius: '4px 12px 12px 4px', maxHeight: '180px', overflowY: 'auto' }}>
+                          <h4 style={{ color: '#f97316', fontSize: '0.75rem', textTransform: 'uppercase', letterSpacing: '1px', marginBottom: '8px', marginTop: 0 }}>Raw "ChatGPT" Database Query Response:</h4>
+                          <p style={{ fontStyle: 'italic', fontSize: '0.8rem', color: 'rgba(255,255,255,0.7)', margin: 0, lineHeight: 1.5 }}>
+                            "{lead.aeo_probe_response}"
+                          </p>
+                        </div>
+                      )}
+                    </div>
                   </div>
                 </div>
 

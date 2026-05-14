@@ -504,14 +504,15 @@
   font-size: 2.5rem;
   font-weight: 800;
   color: #ef4444;
-  margin: 1rem 0;
+  margin: 0;
+  line-height: 1;
   text-shadow: 0 0 20px rgba(239, 68, 68, 0.3);
 }
 
 .leak-stats {
   display: flex;
-  gap: 1.5rem;
-  margin-bottom: 1rem;
+  gap: 1.25rem;
+  margin: 0;
 }
 
 .stat-item {
@@ -565,14 +566,6 @@
   border: 1px solid rgba(16, 185, 129, 0.3);
 }
 
-.leak-explanation {
-  font-size: 0.9rem;
-  line-height: 1.5;
-  color: #cbd5e1;
-  border-top: 1px solid rgba(255, 255, 255, 0.05);
-  padding-top: 1rem;
-  margin-top: auto;
-}
 
 /* FIRST IMPRESSION CARD */
 .first-impression-card {
@@ -690,5 +683,51 @@
   padding: 1rem;
   border-radius: 12px;
   border: 1px solid rgba(255, 255, 255, 0.02);
+}
+
+/* AEO WIDE CARD LAYOUT */
+.aeo-card-wide {
+  background: linear-gradient(135deg, #0f172a 0%, #1e1b4b 100%);
+  border: 1px solid rgba(139, 92, 246, 0.15);
+}
+
+.aeo-split-layout {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 1.5rem;
+}
+
+@media (max-width: 1024px) {
+  .aeo-split-layout {
+    grid-template-columns: 1fr;
+  }
+}
+
+.aeo-left-col,
+.aeo-right-col {
+  display: flex;
+  flex-direction: column;
+}
+
+.aeo-right-col {
+  justify-content: flex-start;
+}
+
+.aeo-probe-scroll {
+  scrollbar-width: thin;
+  scrollbar-color: rgba(249, 115, 22, 0.3) transparent;
+}
+
+.aeo-probe-scroll::-webkit-scrollbar {
+  width: 4px;
+}
+
+.aeo-probe-scroll::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.aeo-probe-scroll::-webkit-scrollbar-thumb {
+  background: rgba(249, 115, 22, 0.3);
+  border-radius: 2px;
 }
 
