@@ -62,3 +62,19 @@ desktop.ini
 # ============================
 *.log
 logs/
+
+# ============================
+# Local Databases & Data
+# ============================
+jobs.db
+*.db
+
+# ============================
+# Verification Artifacts
+# ============================
+verification/
+
+# ============================
+# Templates (Source only)
+# ============================
+sneat-template/
