@@ -923,6 +923,15 @@ Finally, analyze the `MOBILE EXPERIENCE REALITY CHECK`:
 - Assign a `mobile_ux_rating` (Excellent, Good, Average, Poor, Critical).
 - Assess the `mobile_conversion_risk` (Low, Moderate, High, Critical) based on CTA visibility and readability on mobile.
 - Provide a `mobile_ai_insight`: A short, punchy AI recommendation to fix mobile conversion leaks (e.g., "Primary CTA is difficult to notice on smaller mobile devices, reducing conversion potential.").
+
+Finally, analyze the `COMPETITOR MOMENTUM TRACKER`:
+- Compare this website's current state (SEO, UX, AI visibility, trust signals, schema, lead capture, content freshness, conversion readiness) against rapid industry changes.
+- Generate a `momentum_score` (0-100) based on how quickly they appear to be adopting modern search and conversion standards.
+- Determine `competitive_growth_status` (Leading, Steady, Falling Behind).
+- Assess `strategic_risk_level` (High, Moderate, Low).
+- Write a `momentum_comparison`: 1-2 aggressive sentences comparing their momentum to competitors who are "rapidly improving AI visibility and conversion infrastructure."
+- Set `momentum_growth_direction` (Up, Down, Neutral).
+- Provide a `momentum_ai_insight`: A high-level AI strategic insight on how they are being outpaced or if they are keeping up with industry technology adoption.
 """)
 
         human_msg_content = [
@@ -1011,7 +1020,13 @@ Finally, analyze the `MOBILE EXPERIENCE REALITY CHECK`:
                 "keyword_visibility_gap_insight": result.keyword_visibility_gap_insight,
                 "mobile_ux_rating": result.mobile_ux_rating,
                 "mobile_conversion_risk": result.mobile_conversion_risk,
-                "mobile_ai_insight": result.mobile_ai_insight
+                "mobile_ai_insight": result.mobile_ai_insight,
+                "momentum_score": result.momentum_score,
+                "competitive_growth_status": result.competitive_growth_status,
+                "strategic_risk_level": result.strategic_risk_level,
+                "momentum_comparison": result.momentum_comparison,
+                "momentum_growth_direction": result.momentum_growth_direction,
+                "momentum_ai_insight": result.momentum_ai_insight
             }
         except Exception as e:
             print("LLM Error:", e)
@@ -1030,7 +1045,13 @@ Finally, analyze the `MOBILE EXPERIENCE REALITY CHECK`:
                 "first_impression_explanation": "Analysis partially failed — initial signals suggest the site lacks polish and professional trust cues.",
                 "conversion_readiness_level": "Low",
                 "missing_leads_insight": "Analysis failed to extract specific conversion gaps.",
-                "industry_insight": "Compared to industry leaders, this site lacks the technical infrastructure required for high-level competition."
+                "industry_insight": "Compared to industry leaders, this site lacks the technical infrastructure required for high-level competition.",
+                "momentum_score": 30,
+                "competitive_growth_status": "Falling Behind",
+                "strategic_risk_level": "High",
+                "momentum_comparison": "Competitors are rapidly improving AI visibility and conversion infrastructure while your website remains static.",
+                "momentum_growth_direction": "Down",
+                "momentum_ai_insight": "Critical: You are losing ground as competitors adopt modern AI-search and conversion optimization strategies at a faster pace."
             }
 
     # Format the payload directly for the React frontend Lead Magnet report
@@ -1093,6 +1114,12 @@ Finally, analyze the `MOBILE EXPERIENCE REALITY CHECK`:
         "mobile_ux_rating": result_dict.get("mobile_ux_rating", "Average"),
         "mobile_conversion_risk": result_dict.get("mobile_conversion_risk", "Moderate"),
         "mobile_ai_insight": result_dict.get("mobile_ai_insight", ""),
+        "momentum_score": result_dict.get("momentum_score", 0),
+        "competitive_growth_status": result_dict.get("competitive_growth_status", "Steady"),
+        "strategic_risk_level": result_dict.get("strategic_risk_level", "Moderate"),
+        "momentum_comparison": result_dict.get("momentum_comparison", ""),
+        "momentum_growth_direction": result_dict.get("momentum_growth_direction", "Neutral"),
+        "momentum_ai_insight": result_dict.get("momentum_ai_insight", ""),
         "b64_image_mobile": b64_image_mobile
     }
 

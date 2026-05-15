@@ -28,7 +28,7 @@ export default function LeadResults({ leads }) {
               boxShadow: '0 4px 20px rgba(6, 182, 212, 0.3)'
             }}
             onClick={() => {
-              const csvHeader = 'website,competitor_website,final_score,design,cta,message,trust,speed,schema_score,schema_impact,first_impression_score,first_impression_verdict,mobile_rating,mobile_risk,mobile_insight,revenue_leak,leak_severity,visitors_lost,leads_lost,missing_leads_count,conversion_loss_percent,readiness_level,industry_percentile,industry_tier,industry_competitiveness,keyword_opps,keyword_level,competitor_adv,search_impact,keyword_insight,rebranding_pitch,seo_issues,aeo_quote,battle_winner,battle_verdict,emailfullbody\n';
+              const csvHeader = 'website,competitor_website,final_score,design,cta,message,trust,speed,schema_score,schema_impact,first_impression_score,first_impression_verdict,mobile_rating,mobile_risk,mobile_insight,momentum_score,momentum_status,momentum_risk,momentum_direction,momentum_insight,revenue_leak,leak_severity,visitors_lost,leads_lost,missing_leads_count,conversion_loss_percent,readiness_level,industry_percentile,industry_tier,industry_competitiveness,keyword_opps,keyword_level,competitor_adv,search_impact,keyword_insight,rebranding_pitch,seo_issues,aeo_quote,battle_winner,battle_verdict,emailfullbody\n';
 
               const csvRows = leads.map(lead => {
                 const consistencyVal = lead.design === 'Modern' ? 90 : 60;
@@ -102,6 +102,11 @@ Best,
                   escapeCSV(lead.mobile_ux_rating || 'Average'),
                   escapeCSV(lead.mobile_conversion_risk || 'Moderate'),
                   escapeCSV(lead.mobile_ai_insight || ''),
+                  escapeCSV(lead.momentum_score || 0),
+                  escapeCSV(lead.competitive_growth_status || 'Steady'),
+                  escapeCSV(lead.strategic_risk_level || 'Moderate'),
+                  escapeCSV(lead.momentum_growth_direction || 'Neutral'),
+                  escapeCSV(lead.momentum_ai_insight || ''),
                   escapeCSV(`$${lead.revenue_leak_amount || 0}`),
                   escapeCSV(lead.revenue_leak_severity || 'Low'),
                   escapeCSV(lead.visitors_lost || 0),
@@ -256,7 +261,7 @@ Best,
                 <div className="header-actions">
                   <button className="action-btn" onClick={() => window.location.reload()}><RefreshCw size={14} /> Recalculate</button>
                   <button className="action-btn primary" onClick={() => {
-              const csvHeader = 'website,competitor_website,final_score,design,cta,message,trust,speed,schema_score,schema_impact,first_impression_score,first_impression_verdict,mobile_rating,mobile_risk,mobile_insight,revenue_leak,leak_severity,visitors_lost,leads_lost,missing_leads_count,conversion_loss_percent,readiness_level,industry_percentile,industry_tier,industry_competitiveness,keyword_opps,keyword_level,competitor_adv,search_impact,keyword_insight,rebranding_pitch,seo_issues,aeo_quote,battle_winner,battle_verdict,emailfullbody\n';
+              const csvHeader = 'website,competitor_website,final_score,design,cta,message,trust,speed,schema_score,schema_impact,first_impression_score,first_impression_verdict,mobile_rating,mobile_risk,mobile_insight,momentum_score,momentum_status,momentum_risk,momentum_direction,momentum_insight,revenue_leak,leak_severity,visitors_lost,leads_lost,missing_leads_count,conversion_loss_percent,readiness_level,industry_percentile,industry_tier,industry_competitiveness,keyword_opps,keyword_level,competitor_adv,search_impact,keyword_insight,rebranding_pitch,seo_issues,aeo_quote,battle_winner,battle_verdict,emailfullbody\n';
                     const trustWarning = [
                       (!lead.seo_ssl ? 'SSL certificate invalid or missing' : (lead.ssl_days_remaining < 30 ? `SSL expires in ${lead.ssl_days_remaining} days` : '')),
                       !lead.has_lead_capture ? 'No contact form detected' : '',
@@ -300,6 +305,11 @@ Best,
                       escapeCSV(lead.mobile_ux_rating || 'Average'),
                       escapeCSV(lead.mobile_conversion_risk || 'Moderate'),
                       escapeCSV(lead.mobile_ai_insight || ''),
+                      escapeCSV(lead.momentum_score || 0),
+                      escapeCSV(lead.competitive_growth_status || 'Steady'),
+                      escapeCSV(lead.strategic_risk_level || 'Moderate'),
+                      escapeCSV(lead.momentum_growth_direction || 'Neutral'),
+                      escapeCSV(lead.momentum_ai_insight || ''),
                       escapeCSV(`$${lead.revenue_leak_amount || 0}`),
                       escapeCSV(lead.revenue_leak_severity || 'Low'),
                       escapeCSV(lead.visitors_lost || 0),
@@ -904,6 +914,81 @@ Best,
                     </div>
                     <p style={{ fontSize: '0.85rem', color: 'var(--text-secondary)', margin: 0, fontStyle: 'italic' }}>
                       "{lead.keyword_visibility_gap_insight || "Website targets broad branding terms but lacks optimization for high-conversion buyer-intent keywords."}"
+                    </p>
+                  </div>
+                </div>
+
+                {/* 5.8 Competitor Momentum Tracker */}
+                <div className="quad-card momentum-tracker-card animate-slide-up">
+                  <div className="quad-header">
+                    <h2 style={{ color: '#06b6d4', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                      <Zap size={20} /> Competitor Momentum Tracker
+                    </h2>
+                    <div className={`status-badge status-${(lead.competitive_growth_status || 'Steady').toLowerCase().replace(' ', '-')}`}>
+                      {lead.competitive_growth_status || 'Steady'}
+                    </div>
+                  </div>
+
+                  <div className="momentum-score-container" style={{ display: 'flex', alignItems: 'center', gap: '1.5rem', marginBottom: '1.5rem' }}>
+                    <div className="momentum-score-box">
+                      <span className="momentum-score-value">{lead.momentum_score || 0}</span>
+                      <span className="momentum-score-label">/100</span>
+                    </div>
+                    <div style={{ flex: 1 }}>
+                      <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '4px' }}>
+                        <span style={{ fontSize: '0.75rem', color: '#94a3b8' }}>Growth Direction</span>
+                        <span style={{ display: 'flex', alignItems: 'center', gap: '4px', fontSize: '0.75rem', fontWeight: 700, color: lead.momentum_growth_direction === 'Up' ? '#10b981' : lead.momentum_growth_direction === 'Down' ? '#ef4444' : '#94a3b8' }}>
+                          {lead.momentum_growth_direction === 'Up' ? <TrendingDown size={14} style={{ transform: 'rotate(180deg)' }} /> : lead.momentum_growth_direction === 'Down' ? <TrendingDown size={14} /> : <Activity size={14} />}
+                          {lead.momentum_growth_direction || 'Neutral'}
+                        </span>
+                      </div>
+                      <div className="bar-track" style={{ height: '8px' }}>
+                        <div 
+                          className="bar-fill" 
+                          style={{ 
+                            width: `${lead.momentum_score || 0}%`,
+                            background: 'linear-gradient(90deg, #06b6d4, #8b5cf6)'
+                          }}
+                        ></div>
+                      </div>
+                    </div>
+                  </div>
+
+                  <div className="momentum-comparison-box" style={{ background: 'rgba(0,0,0,0.2)', padding: '1rem', borderRadius: '12px', border: '1px solid rgba(255,255,255,0.02)', marginBottom: '1.25rem' }}>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', marginBottom: '0.5rem' }}>
+                      <Activity size={14} color="#06b6d4" />
+                      <span style={{ fontSize: '0.75rem', fontWeight: 700, color: '#06b6d4', textTransform: 'uppercase' }}>Momentum Comparison</span>
+                    </div>
+                    <p style={{ fontSize: '0.8rem', color: '#94a3b8', margin: 0, lineHeight: '1.5' }}>
+                      {lead.momentum_comparison || "Analyzing industry optimization speed and technology adoption rates..."}
+                    </p>
+                  </div>
+
+                  <div className="momentum-factors-grid" style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '0.5rem', marginBottom: '1.25rem' }}>
+                    {[
+                      { label: 'SEO Strength', key: 'seo' },
+                      { label: 'UX Quality', key: 'ux' },
+                      { label: 'AI Visibility', key: 'ai' },
+                      { label: 'Trust Signals', key: 'trust' },
+                      { label: 'Schema Usage', key: 'schema' },
+                      { label: 'Lead Capture', key: 'leads' },
+                      { label: 'Freshness', key: 'content' },
+                      { label: 'Conversion', key: 'conversion' }
+                    ].map((f, i) => (
+                      <div key={i} className="factor-tag" style={{ justifyContent: 'space-between', padding: '4px 8px' }}>
+                        <span>{f.label}</span>
+                        <Check size={10} color={lead.momentum_score > 50 ? '#10b981' : '#64748b'} />
+                      </div>
+                    ))}
+                  </div>
+
+                  <div className="ai-insight-box" style={{ marginTop: 'auto', background: 'rgba(6, 182, 212, 0.05)', padding: '1rem', borderRadius: '12px', borderLeft: '4px solid #06b6d4' }}>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', marginBottom: '0.5rem' }}>
+                      <Sparkles size={16} color="#06b6d4" />
+                      <span style={{ fontSize: '0.8rem', fontWeight: 700, color: '#06b6d4', textTransform: 'uppercase' }}>Strategic Risk: {lead.strategic_risk_level || 'Moderate'}</span>
+                    </div>
+                    <p style={{ fontSize: '0.85rem', color: 'var(--text-secondary)', margin: 0, fontStyle: 'italic' }}>
+                      "{lead.momentum_ai_insight || "Competitor websites are adopting modern AI-search and conversion optimization strategies at a faster pace."}"
                     </p>
                   </div>
                 </div>

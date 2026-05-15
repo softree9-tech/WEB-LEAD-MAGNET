@@ -41,6 +41,13 @@ class WebsiteAnalyzerOutput(BaseModel):
     mobile_conversion_risk: str = Field(description="Mobile conversion risk level (Low, Moderate, High, Critical)")
     mobile_ai_insight: str = Field(description="Short, actionable AI insight about the mobile experience and conversion potential.")
 
+    momentum_score: int = Field(description="Competitor Momentum Score (0-100) based on optimization speed and technology adoption.")
+    competitive_growth_status: str = Field(description="Growth status relative to competitors (e.g., 'Leading', 'Steady', 'Falling Behind')")
+    strategic_risk_level: str = Field(description="Strategic risk level (High, Moderate, Low) based on competitive gaps.")
+    momentum_comparison: str = Field(description="1-2 sentences comparing website momentum to industry competitors.")
+    momentum_growth_direction: str = Field(description="Growth direction (Up, Down, Neutral).")
+    momentum_ai_insight: str = Field(description="Aggressive AI strategic insight on competitive momentum and technology adoption.")
+
 class BattleCardResult(BaseModel):
     seo_winner: str = Field(description="'Primary', 'Competitor', or 'Tie'")
     ux_winner: str = Field(description="'Primary', 'Competitor', or 'Tie'")
