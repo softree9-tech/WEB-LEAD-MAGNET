@@ -30,6 +30,12 @@ class WebsiteAnalyzerOutput(BaseModel):
     schema_gap_insight: str = Field(description="1-2 sentences explaining the gap between current schema and ideal AI/Search visibility. Example: 'Missing FAQ and Review schema limits your presence in Google Rich Results and AI search citations.'")
     schema_visibility_impact: str = Field(description="Impact level on AI/Search visibility (High, Medium, Low).")
     schema_recommendation: str = Field(description="Concise, 3-5 word primary schema recommendation for implementation. Example: 'Add FAQ Schema'")
+    
+    keyword_visibility_gap_opportunities: str = Field(description="Comma-separated list of 3-5 high-value missing keyword opportunities.")
+    keyword_visibility_gap_level: str = Field(description="Opportunity level (High, Medium, Low).")
+    keyword_visibility_gap_competitor_advantage: str = Field(description="1-sentence summary of competitor keyword advantages.")
+    keyword_visibility_gap_search_impact: str = Field(description="AI visibility and search impact level (High, Medium, Low).")
+    keyword_visibility_gap_insight: str = Field(description="Short, aggressive AI insight on search intent coverage and visibility gaps.")
 
 class BattleCardResult(BaseModel):
     seo_winner: str = Field(description="'Primary', 'Competitor', or 'Tie'")

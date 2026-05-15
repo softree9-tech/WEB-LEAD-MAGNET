@@ -910,6 +910,13 @@ Finally, analyze the `SCHEMA MARKUP` situation. Based on the detected schemas pr
 - Provide a `schema_gap_insight`: Explain how missing schemas (like FAQ or Review) are hurting their AI visibility (ChatGPT recommendations) and Google Rich Results.
 - Set a `schema_visibility_impact` (High, Medium, Low).
 - Provide a `schema_recommendation` for implementation priority.
+
+Finally, analyze the `KEYWORD VISIBILITY GAP`:
+- Identify 3-5 `keyword_visibility_gap_opportunities`: high-value missing keyword opportunities the website is missing compared to industry expectations.
+- Set a `keyword_visibility_gap_level` (High, Medium, Low) based on the missed potential.
+- Provide a `keyword_visibility_gap_competitor_advantage`: 1-sentence summary of what competitors are ranking for that this site is not.
+- Set a `keyword_visibility_gap_search_impact` (High, Medium, Low) on AI/Search visibility.
+- Provide a `keyword_visibility_gap_insight`: Short, aggressive AI insight on search intent coverage and visibility gaps.
 """)
 
         human_msg_content = [
@@ -990,7 +997,12 @@ Finally, analyze the `SCHEMA MARKUP` situation. Based on the detected schemas pr
                 "schema_coverage_score": result.schema_coverage_score,
                 "schema_gap_insight": result.schema_gap_insight,
                 "schema_visibility_impact": result.schema_visibility_impact,
-                "schema_recommendation": result.schema_recommendation
+                "schema_recommendation": result.schema_recommendation,
+                "keyword_visibility_gap_opportunities": result.keyword_visibility_gap_opportunities,
+                "keyword_visibility_gap_level": result.keyword_visibility_gap_level,
+                "keyword_visibility_gap_competitor_advantage": result.keyword_visibility_gap_competitor_advantage,
+                "keyword_visibility_gap_search_impact": result.keyword_visibility_gap_search_impact,
+                "keyword_visibility_gap_insight": result.keyword_visibility_gap_insight
             }
         except Exception as e:
             print("LLM Error:", e)
@@ -1063,7 +1075,12 @@ Finally, analyze the `SCHEMA MARKUP` situation. Based on the detected schemas pr
         "schema_coverage_score": result_dict.get("schema_coverage_score", 0),
         "schema_gap_insight": result_dict.get("schema_gap_insight", ""),
         "schema_visibility_impact": result_dict.get("schema_visibility_impact", "Low"),
-        "schema_recommendation": result_dict.get("schema_recommendation", "")
+        "schema_recommendation": result_dict.get("schema_recommendation", ""),
+        "keyword_visibility_gap_opportunities": result_dict.get("keyword_visibility_gap_opportunities", ""),
+        "keyword_visibility_gap_level": result_dict.get("keyword_visibility_gap_level", "Low"),
+        "keyword_visibility_gap_competitor_advantage": result_dict.get("keyword_visibility_gap_competitor_advantage", ""),
+        "keyword_visibility_gap_search_impact": result_dict.get("keyword_visibility_gap_search_impact", "Low"),
+        "keyword_visibility_gap_insight": result_dict.get("keyword_visibility_gap_insight", "")
     }
 
     # ─── REVENUE LEAK CALCULATION ──────────────────────────────────────────

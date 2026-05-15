@@ -28,7 +28,7 @@ export default function LeadResults({ leads }) {
               boxShadow: '0 4px 20px rgba(6, 182, 212, 0.3)'
             }}
             onClick={() => {
-              const csvHeader = 'website,competitor_website,final_score,design,cta,message,trust,speed,schema_score,schema_impact,first_impression_score,first_impression_verdict,revenue_leak,leak_severity,visitors_lost,leads_lost,missing_leads_count,conversion_loss_percent,readiness_level,industry_percentile,industry_tier,industry_competitiveness,rebranding_pitch,seo_issues,aeo_quote,battle_winner,battle_verdict,emailfullbody\n';
+              const csvHeader = 'website,competitor_website,final_score,design,cta,message,trust,speed,schema_score,schema_impact,first_impression_score,first_impression_verdict,revenue_leak,leak_severity,visitors_lost,leads_lost,missing_leads_count,conversion_loss_percent,readiness_level,industry_percentile,industry_tier,industry_competitiveness,keyword_opps,keyword_level,competitor_adv,search_impact,keyword_insight,rebranding_pitch,seo_issues,aeo_quote,battle_winner,battle_verdict,emailfullbody\n';
 
               const csvRows = leads.map(lead => {
                 const consistencyVal = lead.design === 'Modern' ? 90 : 60;
@@ -109,6 +109,11 @@ Best,
                   escapeCSV(lead.industry_percentile || 0),
                   escapeCSV(lead.industry_tier || 'Unknown'),
                   escapeCSV(lead.industry_competitiveness || 'Unknown'),
+                  escapeCSV(lead.keyword_visibility_gap_opportunities || ''),
+                  escapeCSV(lead.keyword_visibility_gap_level || 'Low'),
+                  escapeCSV(lead.keyword_visibility_gap_competitor_advantage || ''),
+                  escapeCSV(lead.keyword_visibility_gap_search_impact || 'Low'),
+                  escapeCSV(lead.keyword_visibility_gap_insight || ''),
                   escapeCSV(lead.rebranding_pitch),
                   escapeCSV(trustWarning),
                   escapeCSV(seoIssues),
@@ -248,7 +253,7 @@ Best,
                 <div className="header-actions">
                   <button className="action-btn" onClick={() => window.location.reload()}><RefreshCw size={14} /> Recalculate</button>
                   <button className="action-btn primary" onClick={() => {
-                    const csvHeader = 'website,competitor_website,final_score,design,cta,message,trust,speed,schema_score,schema_impact,first_impression_score,first_impression_verdict,revenue_leak,leak_severity,visitors_lost,leads_lost,missing_leads_count,conversion_loss_percent,readiness_level,industry_percentile,industry_tier,industry_competitiveness,rebranding_pitch,seo_issues,aeo_quote,battle_winner,battle_verdict,emailfullbody\n';
+              const csvHeader = 'website,competitor_website,final_score,design,cta,message,trust,speed,schema_score,schema_impact,first_impression_score,first_impression_verdict,revenue_leak,leak_severity,visitors_lost,leads_lost,missing_leads_count,conversion_loss_percent,readiness_level,industry_percentile,industry_tier,industry_competitiveness,keyword_opps,keyword_level,competitor_adv,search_impact,keyword_insight,rebranding_pitch,seo_issues,aeo_quote,battle_winner,battle_verdict,emailfullbody\n';
                     const trustWarning = [
                       (!lead.seo_ssl ? 'SSL certificate invalid or missing' : (lead.ssl_days_remaining < 30 ? `SSL expires in ${lead.ssl_days_remaining} days` : '')),
                       !lead.has_lead_capture ? 'No contact form detected' : '',
@@ -299,6 +304,11 @@ Best,
                       escapeCSV(lead.industry_percentile || 0),
                       escapeCSV(lead.industry_tier || 'Unknown'),
                       escapeCSV(lead.industry_competitiveness || 'Unknown'),
+                      escapeCSV(lead.keyword_visibility_gap_opportunities || ''),
+                      escapeCSV(lead.keyword_visibility_gap_level || 'Low'),
+                      escapeCSV(lead.keyword_visibility_gap_competitor_advantage || ''),
+                      escapeCSV(lead.keyword_visibility_gap_search_impact || 'Low'),
+                      escapeCSV(lead.keyword_visibility_gap_insight || ''),
                       escapeCSV(lead.rebranding_pitch),
                       escapeCSV(trustWarning),
                       escapeCSV(seoIssues),
@@ -786,6 +796,56 @@ Best,
                     </div>
                     <p className="schema-insight-text">
                       "{lead.schema_gap_insight || "Missing structured data is limiting your brand's presence in AI-generated search results and rich Google snippets."}"
+                    </p>
+                  </div>
+                </div>
+
+                {/* 5.7 Keyword Visibility Gap */}
+                <div className="quad-card keyword-gap-card animate-slide-up">
+                  <div className="quad-header">
+                    <h2 style={{ color: '#8b5cf6', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                      <Search size={20} /> Keyword Visibility Gap
+                    </h2>
+                    <div className={`severity-badge severity-${(lead.keyword_visibility_gap_level || 'Low').toLowerCase() === 'high' ? 'critical' : (lead.keyword_visibility_gap_level || 'Low').toLowerCase() === 'medium' ? 'moderate' : 'low'}`}>
+                      Gap: {lead.keyword_visibility_gap_level || 'Low'}
+                    </div>
+                  </div>
+
+                  <div className="keyword-opps-container">
+                    <h4 style={{ fontSize: '0.8rem', color: 'var(--text-secondary)', marginBottom: '0.75rem' }}>High-Intent Keyword Opportunities:</h4>
+                    <div className="keyword-tags-grid" style={{ display: 'flex', flexWrap: 'wrap', gap: '0.5rem', marginBottom: '1.25rem' }}>
+                      {(lead.keyword_visibility_gap_opportunities || "").split(',').map((kw, i) => (
+                        <div key={i} className="factor-tag" style={{ background: 'rgba(139, 92, 246, 0.1)', color: '#a78bfa', border: '1px solid rgba(139, 92, 246, 0.2)' }}>
+                          <TrendingDown size={12} style={{ transform: 'rotate(180deg)' }} /> {kw.trim()}
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+
+                  <div className="competitor-advantage-box" style={{ background: 'rgba(0,0,0,0.2)', padding: '1rem', borderRadius: '12px', border: '1px solid rgba(255,255,255,0.02)', marginBottom: '1.25rem' }}>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', marginBottom: '0.5rem' }}>
+                      <Sword size={14} color="#f87171" />
+                      <span style={{ fontSize: '0.75rem', fontWeight: 700, color: '#f87171', textTransform: 'uppercase' }}>Competitor Advantage</span>
+                    </div>
+                    <p style={{ fontSize: '0.8rem', color: '#94a3b8', margin: 0 }}>
+                      {lead.keyword_visibility_gap_competitor_advantage || "Competitors are capturing high-intent traffic for keywords you are currently missing."}
+                    </p>
+                  </div>
+
+                  <div className="keyword-impact-row" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '0 0.5rem', marginBottom: '1.25rem' }}>
+                    <span style={{ fontSize: '0.8rem', color: 'var(--text-secondary)' }}>Search Visibility Impact:</span>
+                    <div className={`verdict-badge verdict-${(lead.keyword_visibility_gap_search_impact || 'Low').toLowerCase() === 'high' ? 'poor' : (lead.keyword_visibility_gap_search_impact || 'Low').toLowerCase() === 'medium' ? 'average' : 'excellent'}`}>
+                      {lead.keyword_visibility_gap_search_impact || 'Low'} Impact
+                    </div>
+                  </div>
+
+                  <div className="ai-insight-box" style={{ marginTop: 'auto', background: 'rgba(139, 92, 246, 0.05)', padding: '1rem', borderRadius: '12px', borderLeft: '4px solid #8b5cf6' }}>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', marginBottom: '0.5rem' }}>
+                      <Sparkles size={16} color="#8b5cf6" />
+                      <span style={{ fontSize: '0.8rem', fontWeight: 700, color: '#8b5cf6', textTransform: 'uppercase' }}>Executive AI Insight</span>
+                    </div>
+                    <p style={{ fontSize: '0.85rem', color: 'var(--text-secondary)', margin: 0, fontStyle: 'italic' }}>
+                      "{lead.keyword_visibility_gap_insight || "Website targets broad branding terms but lacks optimization for high-conversion buyer-intent keywords."}"
                     </p>
                   </div>
                 </div>
