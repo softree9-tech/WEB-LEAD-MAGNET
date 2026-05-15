@@ -68,6 +68,26 @@ class WebsiteAnalyzerOutput(BaseModel):
     urgency_severity: str = Field(description="Urgency level for taking action (e.g., 'Immediate', '30-60 Days', '90+ Days').")
     revenue_impact_insight: str = Field(description="Executive AI insight on long-term business impact and strategic risks.")
 
+    cta_optimization_recommendation: str = Field(description="Concise AI recommendation for CTA optimization.")
+    conversion_improvement_suggestion: str = Field(description="Concise AI suggestion for overall conversion improvement.")
+    funnel_optimization_insight: str = Field(description="Concise AI insight on funnel optimization.")
+    mobile_conversion_recommendation: str = Field(description="Concise AI recommendation for mobile-specific conversion.")
+    lead_gen_improvement_opportunity: str = Field(description="Concise AI insight on lead generation improvement opportunities.")
+    conversion_intelligence_insight: str = Field(description="Strategic conversion intelligence insight combining analysis data.")
+
+    messaging_clarity_level: str = Field(description="Messaging clarity level (e.g., 'High', 'Moderate', 'Low').")
+    communication_effectiveness_insight: str = Field(description="Concise AI insight on brand communication effectiveness.")
+    value_proposition_analysis: str = Field(description="AI analysis of the value proposition strength and clarity.")
+    messaging_strategic_recommendation: str = Field(description="Strategic AI recommendation for messaging and content clarity.")
+    
+    headline_clarity_score: int = Field(description="Headline clarity score (0-10).")
+    value_prop_strength_score: int = Field(description="Value proposition strength score (0-10).")
+    cta_communication_quality_score: int = Field(description="CTA communication quality score (0-10).")
+    messaging_confidence_score: int = Field(description="Messaging confidence score (0-10).")
+    audience_targeting_clarity_score: int = Field(description="Audience targeting clarity score (0-10).")
+    brand_communication_effectiveness_score: int = Field(description="Brand communication effectiveness score (0-10).")
+
+
 class BattleCardResult(BaseModel):
     seo_winner: str = Field(description="'Primary', 'Competitor', or 'Tie'")
     ux_winner: str = Field(description="'Primary', 'Competitor', or 'Tie'")

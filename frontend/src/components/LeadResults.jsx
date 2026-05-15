@@ -28,7 +28,7 @@ export default function LeadResults({ leads }) {
               boxShadow: '0 4px 20px rgba(6, 182, 212, 0.3)'
             }}
             onClick={() => {
-              const csvHeader = 'website,competitor_website,final_score,design,cta,message,trust,speed,schema_score,schema_impact,first_impression_score,first_impression_verdict,executive_summary,business_risk_insight,strategic_opportunity_insight,executive_ai_recommendation,brand_credibility_insight,mobile_rating,mobile_risk,mobile_insight,momentum_score,momentum_status,momentum_risk,momentum_direction,momentum_insight,strategic_action_plan,revenue_leak,leak_severity,annual_loss,urgency_severity,revenue_impact_insight,visitors_lost,leads_lost,missing_leads_count,conversion_loss_percent,readiness_level,industry_percentile,industry_tier,industry_competitiveness,keyword_opps,keyword_level,competitor_adv,search_impact,keyword_insight,rebranding_pitch,seo_issues,aeo_quote,battle_winner,battle_verdict,emailfullbody\n';
+              const csvHeader = 'website,competitor_website,final_score,design,cta,message,trust,speed,schema_score,schema_impact,first_impression_score,first_impression_verdict,executive_summary,business_risk_insight,strategic_opportunity_insight,executive_ai_recommendation,brand_credibility_insight,msg_clarity_level,msg_effectiveness_insight,val_prop_analysis,msg_strategic_rec,headline_clarity,val_prop_strength,cta_quality,msg_confidence,audience_clarity,brand_effectiveness,mobile_rating,mobile_risk,mobile_insight,momentum_score,momentum_status,momentum_risk,momentum_direction,momentum_insight,strategic_action_plan,revenue_leak,leak_severity,annual_loss,urgency_severity,revenue_impact_insight,visitors_lost,leads_lost,missing_leads_count,conversion_loss_percent,readiness_level,cta_opt_rec,conv_imp_sug,funnel_opt_ins,mobile_conv_rec,lead_gen_opp,conv_intel_ins,industry_percentile,industry_tier,industry_competitiveness,keyword_opps,keyword_level,competitor_adv,search_impact,keyword_insight,rebranding_pitch,seo_issues,aeo_quote,battle_winner,battle_verdict,emailfullbody\n';
 
 
               const csvRows = leads.map(lead => {
@@ -104,7 +104,17 @@ Best,
                   escapeCSV(lead.business_risk_insight || ''),
                   escapeCSV(lead.strategic_opportunity_insight || ''),
                   escapeCSV(lead.executive_ai_recommendation || ''),
-                  escapeCSV(lead.brand_credibility_insight || ''),
+                   escapeCSV(lead.brand_credibility_insight || ''),
+                  escapeCSV(lead.messaging_clarity_level || 'Moderate'),
+                  escapeCSV(lead.communication_effectiveness_insight || ''),
+                  escapeCSV(lead.value_proposition_analysis || ''),
+                  escapeCSV(lead.messaging_strategic_recommendation || ''),
+                  escapeCSV(lead.headline_clarity_score || 0),
+                  escapeCSV(lead.value_prop_strength_score || 0),
+                  escapeCSV(lead.cta_communication_quality_score || 0),
+                  escapeCSV(lead.messaging_confidence_score || 0),
+                  escapeCSV(lead.audience_targeting_clarity_score || 0),
+                  escapeCSV(lead.brand_communication_effectiveness_score || 0),
                   escapeCSV(lead.mobile_ux_rating || 'Average'),
                   escapeCSV(lead.mobile_conversion_risk || 'Moderate'),
                   escapeCSV(lead.mobile_ai_insight || ''),
@@ -124,6 +134,12 @@ Best,
                   escapeCSV(lead.missing_opportunities_count || 0),
                   escapeCSV(`${lead.estimated_conversion_loss_percent || 0}%`),
                   escapeCSV(lead.conversion_readiness_level || 'Low'),
+                  escapeCSV(lead.cta_optimization_recommendation || ''),
+                  escapeCSV(lead.conversion_improvement_suggestion || ''),
+                  escapeCSV(lead.funnel_optimization_insight || ''),
+                  escapeCSV(lead.mobile_conversion_recommendation || ''),
+                  escapeCSV(lead.lead_gen_improvement_opportunity || ''),
+                  escapeCSV(lead.conversion_intelligence_insight || ''),
                   escapeCSV(lead.industry_percentile || 0),
                   escapeCSV(lead.industry_tier || 'Unknown'),
                   escapeCSV(lead.industry_competitiveness || 'Unknown'),
@@ -271,7 +287,7 @@ Best,
                 <div className="header-actions">
                   <button className="action-btn" onClick={() => window.location.reload()}><RefreshCw size={14} /> Recalculate</button>
                   <button className="action-btn primary" onClick={() => {
-              const csvHeader = 'website,competitor_website,final_score,design,cta,message,trust,speed,schema_score,schema_impact,first_impression_score,first_impression_verdict,executive_summary,business_risk_insight,strategic_opportunity_insight,executive_ai_recommendation,brand_credibility_insight,mobile_rating,mobile_risk,mobile_insight,momentum_score,momentum_status,momentum_risk,momentum_direction,momentum_insight,strategic_action_plan,revenue_leak,leak_severity,annual_loss,urgency_severity,revenue_impact_insight,visitors_lost,leads_lost,missing_leads_count,conversion_loss_percent,readiness_level,industry_percentile,industry_tier,industry_competitiveness,keyword_opps,keyword_level,competitor_adv,search_impact,keyword_insight,rebranding_pitch,seo_issues,aeo_quote,battle_winner,battle_verdict,emailfullbody\n';
+              const csvHeader = 'website,competitor_website,final_score,design,cta,message,trust,speed,schema_score,schema_impact,first_impression_score,first_impression_verdict,executive_summary,business_risk_insight,strategic_opportunity_insight,executive_ai_recommendation,brand_credibility_insight,msg_clarity_level,msg_effectiveness_insight,val_prop_analysis,msg_strategic_rec,headline_clarity,val_prop_strength,cta_quality,msg_confidence,audience_clarity,brand_effectiveness,mobile_rating,mobile_risk,mobile_insight,momentum_score,momentum_status,momentum_risk,momentum_direction,momentum_insight,strategic_action_plan,revenue_leak,leak_severity,annual_loss,urgency_severity,revenue_impact_insight,visitors_lost,leads_lost,missing_leads_count,conversion_loss_percent,readiness_level,cta_opt_rec,conv_imp_sug,funnel_opt_ins,mobile_conv_rec,lead_gen_opp,conv_intel_ins,industry_percentile,industry_tier,industry_competitiveness,keyword_opps,keyword_level,competitor_adv,search_impact,keyword_insight,rebranding_pitch,seo_issues,aeo_quote,battle_winner,battle_verdict,emailfullbody\n';
 
                     const trustWarning = [
                       (!lead.seo_ssl ? 'SSL certificate invalid or missing' : (lead.ssl_days_remaining < 30 ? `SSL expires in ${lead.ssl_days_remaining} days` : '')),
@@ -317,7 +333,17 @@ Best,
                       escapeCSV(lead.business_risk_insight || ''),
                       escapeCSV(lead.strategic_opportunity_insight || ''),
                       escapeCSV(lead.executive_ai_recommendation || ''),
-                      escapeCSV(lead.brand_credibility_insight || ''),
+                       escapeCSV(lead.brand_credibility_insight || ''),
+                      escapeCSV(lead.messaging_clarity_level || 'Moderate'),
+                      escapeCSV(lead.communication_effectiveness_insight || ''),
+                      escapeCSV(lead.value_proposition_analysis || ''),
+                      escapeCSV(lead.messaging_strategic_recommendation || ''),
+                      escapeCSV(lead.headline_clarity_score || 0),
+                      escapeCSV(lead.value_prop_strength_score || 0),
+                      escapeCSV(lead.cta_communication_quality_score || 0),
+                      escapeCSV(lead.messaging_confidence_score || 0),
+                      escapeCSV(lead.audience_targeting_clarity_score || 0),
+                      escapeCSV(lead.brand_communication_effectiveness_score || 0),
                       escapeCSV(lead.mobile_ux_rating || 'Average'),
                       escapeCSV(lead.mobile_conversion_risk || 'Moderate'),
                       escapeCSV(lead.mobile_ai_insight || ''),
@@ -337,6 +363,12 @@ Best,
                       escapeCSV(lead.missing_opportunities_count || 0),
                       escapeCSV(`${lead.estimated_conversion_loss_percent || 0}%`),
                       escapeCSV(lead.conversion_readiness_level || 'Low'),
+                      escapeCSV(lead.cta_optimization_recommendation || ''),
+                      escapeCSV(lead.conversion_improvement_suggestion || ''),
+                      escapeCSV(lead.funnel_optimization_insight || ''),
+                      escapeCSV(lead.mobile_conversion_recommendation || ''),
+                      escapeCSV(lead.lead_gen_improvement_opportunity || ''),
+                      escapeCSV(lead.conversion_intelligence_insight || ''),
                       escapeCSV(lead.industry_percentile || 0),
                       escapeCSV(lead.industry_tier || 'Unknown'),
                       escapeCSV(lead.industry_competitiveness || 'Unknown'),
@@ -479,12 +511,60 @@ Best,
                     </div>
                   </div>
 
-                  <div className="impression-factors" style={{ display: 'flex', flexWrap: 'wrap', gap: '0.5rem', justifyContent: 'center' }}>
+                   <div className="impression-factors" style={{ display: 'flex', flexWrap: 'wrap', gap: '0.5rem', justifyContent: 'center', marginBottom: '1.5rem' }}>
                     <div className="factor-tag" style={{ border: '1px solid rgba(59, 130, 246, 0.2)' }}><Activity size={12} /> Branding</div>
                     <div className="factor-tag" style={{ border: '1px solid rgba(59, 130, 246, 0.2)' }}><LayoutDashboard size={12} /> Layout</div>
                     <div className="factor-tag" style={{ border: '1px solid rgba(59, 130, 246, 0.2)' }}><Target size={12} /> CTA Clarity</div>
                     <div className="factor-tag" title={lead.brand_credibility_insight} style={{ border: '1px solid rgba(16, 185, 129, 0.3)', background: 'rgba(16, 185, 129, 0.05)' }}><Lock size={12} color="#10b981" /> Trust Signals Verified</div>
                     <div className="factor-tag" style={{ border: '1px solid rgba(59, 130, 246, 0.2)' }}><Smartphone size={12} /> Mobile Feel</div>
+                  </div>
+
+                  <div className="messaging-analysis-section" style={{ borderTop: '1px solid rgba(255,255,255,0.05)', paddingTop: '1.5rem' }}>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1rem' }}>
+                      <h3 style={{ fontSize: '0.9rem', fontWeight: 700, margin: 0, display: 'flex', alignItems: 'center', gap: '0.5rem', color: '#3b82f6' }}>
+                        <Bot size={18} /> Messaging & Content Clarity
+                      </h3>
+                      <div style={{ fontSize: '0.75rem', fontWeight: 600, padding: '2px 8px', borderRadius: '4px', background: 'rgba(59, 130, 246, 0.1)', color: '#3b82f6' }}>
+                        Level: {lead.messaging_clarity_level || 'Moderate'}
+                      </div>
+                    </div>
+
+                    <div style={{ background: 'rgba(0,0,0,0.15)', padding: '1rem', borderRadius: '12px', marginBottom: '1rem' }}>
+                      <p style={{ fontSize: '0.85rem', color: 'var(--text-secondary)', margin: '0 0 0.75rem 0', fontStyle: 'italic', lineHeight: '1.5' }}>
+                        "{lead.communication_effectiveness_insight || "Analyzing messaging effectiveness..."}"
+                      </p>
+                      <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', fontSize: '0.8rem', color: '#10b981', fontWeight: 600 }}>
+                        <Target size={12} /> Value Prop: <span style={{ color: 'var(--text-secondary)', fontWeight: 400 }}>{lead.value_proposition_analysis}</span>
+                      </div>
+                    </div>
+
+                    <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '0.75rem', marginBottom: '1rem' }}>
+                      {[
+                        { label: 'Headline Clarity', score: lead.headline_clarity_score },
+                        { label: 'Value Prop Strength', score: lead.value_prop_strength_score },
+                        { label: 'CTA Quality', score: lead.cta_communication_quality_score },
+                        { label: 'Confidence', score: lead.messaging_confidence_score },
+                        { label: 'Audience Clarity', score: lead.audience_targeting_clarity_score },
+                        { label: 'Effectiveness', score: lead.brand_communication_effectiveness_score }
+                      ].map((item, i) => (
+                        <div key={i} style={{ background: 'rgba(255,255,255,0.02)', padding: '0.5rem 0.75rem', borderRadius: '6px', border: '1px solid rgba(255,255,255,0.05)' }}>
+                          <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '4px' }}>
+                            <span style={{ fontSize: '0.7rem', color: '#64748b', fontWeight: 600 }}>{item.label}</span>
+                            <span style={{ fontSize: '0.7rem', color: '#3b82f6', fontWeight: 700 }}>{item.score || 0}/10</span>
+                          </div>
+                          <div className="bar-track" style={{ height: '3px' }}>
+                            <div className="bar-fill" style={{ width: `${(item.score || 0) * 10}%`, background: (item.score || 0) > 7 ? '#10b981' : (item.score || 0) > 4 ? '#3b82f6' : '#ef4444' }}></div>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+
+                    <div style={{ display: 'flex', alignItems: 'flex-start', gap: '0.75rem', padding: '0.75rem', background: 'rgba(168, 85, 247, 0.05)', borderRadius: '8px', border: '1px solid rgba(168, 85, 247, 0.1)' }}>
+                      <Sparkles size={14} color="#a855f7" style={{ marginTop: '2px' }} />
+                      <div style={{ fontSize: '0.8rem', color: 'var(--text-secondary)' }}>
+                        <span style={{ fontWeight: 700, color: '#a855f7' }}>Messaging Recommendation:</span> {lead.messaging_strategic_recommendation}
+                      </div>
+                    </div>
                   </div>
                 </div>
 
@@ -801,51 +881,75 @@ Best,
                   </div>
                 </div>
 
-                {/* 5. Leads You're Missing */}
-                <div className="quad-card missing-leads-card animate-slide-up">
+                {/* 5. Conversion Opportunity Intelligence */}
+                <div className="quad-card conversion-intelligence-card animate-slide-up">
                   <div className="quad-header">
                     <h2 style={{ color: '#f97316', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-                      <Bot size={20} /> Leads You're Missing
+                      <Bot size={20} /> Conversion Opportunity Intelligence
                     </h2>
                     <div className={`severity-badge severity-${(lead.conversion_readiness_level || 'Low').toLowerCase() === 'high' ? 'low' : (lead.conversion_readiness_level || 'Low').toLowerCase() === 'medium' ? 'moderate' : 'critical'}`}>
                       Readiness: {lead.conversion_readiness_level || 'Low'}
                     </div>
                   </div>
 
-                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.5rem' }}>
-                    <div className="missing-count-box">
-                      <span className="missing-number">{lead.missing_opportunities_count || 0}</span>
-                      <span className="missing-label">Missed Opportunities</span>
+                  <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem', marginBottom: '1.25rem' }}>
+                    <div className="missing-count-box" style={{ background: 'rgba(249, 115, 22, 0.05)', padding: '0.75rem', borderRadius: '10px', textAlign: 'center' }}>
+                      <span className="missing-number" style={{ fontSize: '1.5rem', color: '#f97316' }}>{lead.missing_opportunities_count || 0}</span>
+                      <div style={{ fontSize: '0.7rem', color: '#64748b', textTransform: 'uppercase', fontWeight: 700 }}>Missing Paths</div>
                     </div>
-                    <div className="loss-percent-box" style={{ textAlign: 'right' }}>
+                    <div className="loss-percent-box" style={{ background: 'rgba(239, 68, 68, 0.05)', padding: '0.75rem', borderRadius: '10px', textAlign: 'center' }}>
                       <div style={{ color: '#ef4444', fontSize: '1.5rem', fontWeight: 800 }}>-{lead.estimated_conversion_loss_percent || 0}%</div>
-                      <div style={{ color: '#64748b', fontSize: '0.75rem' }}>Est. Conversion Loss</div>
+                      <div style={{ color: '#64748b', fontSize: '0.7rem', textTransform: 'uppercase', fontWeight: 700 }}>Est. Conversion Loss</div>
                     </div>
                   </div>
 
-                  <div className="missing-items-list">
-                    <h4 style={{ fontSize: '0.8rem', color: 'var(--text-secondary)', marginBottom: '0.75rem' }}>Missing Conversion Paths:</h4>
-                    <div style={{ display: 'flex', flexWrap: 'wrap', gap: '0.5rem' }}>
+                  <div className="missing-items-list" style={{ marginBottom: '1.25rem' }}>
+                    <h4 style={{ fontSize: '0.75rem', color: 'var(--text-secondary)', marginBottom: '0.5rem', textTransform: 'uppercase', fontWeight: 700 }}>Missing Conversion Paths:</h4>
+                    <div style={{ display: 'flex', flexWrap: 'wrap', gap: '0.4rem' }}>
                       {(lead.missing_opportunities_list || []).map((item, i) => (
-                        <div key={i} className="factor-tag" style={{ background: 'rgba(239, 68, 68, 0.1)', color: '#ef4444', border: '1px solid rgba(239, 68, 68, 0.2)' }}>
-                          <X size={12} /> {item}
+                        <div key={i} className="factor-tag" style={{ background: 'rgba(239, 68, 68, 0.08)', color: '#ef4444', border: '1px solid rgba(239, 68, 68, 0.15)', fontSize: '0.7rem', padding: '2px 8px' }}>
+                          <X size={10} /> {item}
                         </div>
                       ))}
                       {(lead.missing_opportunities_list || []).length === 0 && (
-                        <div className="factor-tag" style={{ background: 'rgba(16, 185, 129, 0.1)', color: '#10b981', border: '1px solid rgba(16, 185, 129, 0.2)' }}>
-                          <Check size={12} /> All conversion paths active
+                        <div className="factor-tag" style={{ background: 'rgba(16, 185, 129, 0.08)', color: '#10b981', border: '1px solid rgba(16, 185, 129, 0.15)', fontSize: '0.7rem', padding: '2px 8px' }}>
+                          <Check size={10} /> All paths active
                         </div>
                       )}
+                    </div>
+                  </div>
+
+                  <div className="strategic-recs-grid" style={{ display: 'grid', gap: '0.75rem', marginBottom: '1.5rem' }}>
+                    <div style={{ background: 'rgba(0,0,0,0.2)', padding: '0.75rem', borderRadius: '10px', border: '1px solid rgba(255,255,255,0.03)' }}>
+                      <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', marginBottom: '0.25rem' }}>
+                        <Target size={14} color="#f97316" />
+                        <span style={{ fontSize: '0.75rem', fontWeight: 700, color: '#f97316' }}>CTA Optimization</span>
+                      </div>
+                      <p style={{ fontSize: '0.8rem', color: '#94a3b8', margin: 0 }}>{lead.cta_optimization_recommendation || "Optimize above-the-fold CTA placement and clarity."}</p>
+                    </div>
+                    <div style={{ background: 'rgba(0,0,0,0.2)', padding: '0.75rem', borderRadius: '10px', border: '1px solid rgba(255,255,255,0.03)' }}>
+                      <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', marginBottom: '0.25rem' }}>
+                        <Smartphone size={14} color="#3b82f6" />
+                        <span style={{ fontSize: '0.75rem', fontWeight: 700, color: '#3b82f6' }}>Mobile Conversion</span>
+                      </div>
+                      <p style={{ fontSize: '0.8rem', color: '#94a3b8', margin: 0 }}>{lead.mobile_conversion_recommendation || "Simplify mobile contact access to reduce conversion friction."}</p>
+                    </div>
+                    <div style={{ background: 'rgba(0,0,0,0.2)', padding: '0.75rem', borderRadius: '10px', border: '1px solid rgba(255,255,255,0.03)' }}>
+                      <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', marginBottom: '0.25rem' }}>
+                        <TrendingDown size={14} color="#ef4444" style={{ transform: 'rotate(180deg)' }} />
+                        <span style={{ fontSize: '0.75rem', fontWeight: 700, color: '#ef4444' }}>Funnel Insight</span>
+                      </div>
+                      <p style={{ fontSize: '0.8rem', color: '#94a3b8', margin: 0 }}>{lead.funnel_optimization_insight || "Analyze multi-step forms to identify where prospects are dropping off."}</p>
                     </div>
                   </div>
 
                   <div className="ai-insight-box" style={{ marginTop: 'auto', background: 'rgba(249, 115, 22, 0.05)', padding: '1rem', borderRadius: '12px', borderLeft: '4px solid #f97316' }}>
                     <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', marginBottom: '0.5rem' }}>
                       <Bot size={16} color="#f97316" />
-                      <span style={{ fontSize: '0.8rem', fontWeight: 700, color: '#f97316', textTransform: 'uppercase' }}>AI Insight</span>
+                      <span style={{ fontSize: '0.8rem', fontWeight: 700, color: '#f97316', textTransform: 'uppercase' }}>Strategic Intelligence</span>
                     </div>
-                    <p style={{ fontSize: '0.85rem', color: 'var(--text-secondary)', margin: 0, fontStyle: 'italic' }}>
-                      "{lead.missing_leads_insight || "Visitors have limited conversion paths, reducing lead generation potential."}"
+                    <p style={{ fontSize: '0.85rem', color: 'var(--text-secondary)', margin: 0, fontStyle: 'italic', lineHeight: '1.5' }}>
+                      "{lead.conversion_intelligence_insight || lead.missing_leads_insight || "Visitors have limited conversion paths, reducing lead generation potential."}"
                     </p>
                   </div>
                 </div>

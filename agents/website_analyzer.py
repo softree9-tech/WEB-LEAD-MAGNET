@@ -957,6 +957,29 @@ Finally, analyze the REVENUE IMPACT FORECAST:
 - Determine `annual_opportunity_loss`: Based on the technical metrics and current leaks, estimate the total lost business opportunity over the next 12 months.
 - Set `urgency_severity`: (Immediate, 30-60 Days, 90+ Days) based on the severity of current revenue leaks.
 
+Finally, analyze the CONVERSION OPPORTUNITY INTELLIGENCE:
+- Combine missing lead capture analysis with AI-driven conversion optimization recommendations.
+- Provide:
+  - `cta_optimization_recommendation`: Concise AI recommendation for CTA optimization based on above-the-fold placement and clarity.
+  - `conversion_improvement_suggestion`: Concise AI suggestion for overall conversion improvement across the site.
+  - `funnel_optimization_insight`: Concise AI insight on funnel optimization and path-to-purchase.
+  - `mobile_conversion_recommendation`: Concise AI recommendation specifically for mobile-specific conversion improvements.
+  - `lead_gen_improvement_opportunity`: Concise AI insight on lead generation improvement opportunities like forms, chat, or trust signals.
+  - `conversion_intelligence_insight`: A strategic, premium, executive-level conversion intelligence insight combining all analysis data (CTA, forms, mobile, trust, AI visibility).
+Finally, analyze the CONTENT & MESSAGING CLARITY:
+- Evaluate the website's messaging across:
+  - `headline_clarity_score`: (0-10) How clear and impactful is the primary headline?
+  - `value_prop_strength_score`: (0-10) How strong and unique is the value proposition?
+  - `cta_communication_quality_score`: (0-10) How well does the CTA communicate the next step?
+  - `messaging_confidence_score`: (0-10) Does the messaging sound authoritative and confident?
+  - `audience_targeting_clarity_score`: (0-10) Is it clear WHO the service is for?
+  - `brand_communication_effectiveness_score`: (0-10) Overall effectiveness of brand communication.
+- Provide:
+  - `messaging_clarity_level`: (High, Moderate, Low) Overall level of messaging clarity.
+  - `communication_effectiveness_insight`: Concise executive-level AI insight on brand communication effectiveness.
+  - `value_proposition_analysis`: Concise AI analysis of the value proposition strength and clarity.
+  - `messaging_strategic_recommendation`: Strategic AI recommendation for messaging and content clarity.
+  - Example: “The website appears visually professional, but the messaging lacks a strong value proposition and does not clearly communicate why customers should choose this business.”
 """)
 
         human_msg_content = [
@@ -1068,7 +1091,23 @@ Finally, analyze the REVENUE IMPACT FORECAST:
                 ],
                 "annual_opportunity_loss": result.annual_opportunity_loss,
                 "urgency_severity": result.urgency_severity,
-                "revenue_impact_insight": result.revenue_impact_insight
+                "revenue_impact_insight": result.revenue_impact_insight,
+                "cta_optimization_recommendation": result.cta_optimization_recommendation,
+                "conversion_improvement_suggestion": result.conversion_improvement_suggestion,
+                "funnel_optimization_insight": result.funnel_optimization_insight,
+                "mobile_conversion_recommendation": result.mobile_conversion_recommendation,
+                "lead_gen_improvement_opportunity": result.lead_gen_improvement_opportunity,
+                "conversion_intelligence_insight": result.conversion_intelligence_insight,
+                "messaging_clarity_level": result.messaging_clarity_level,
+                "communication_effectiveness_insight": result.communication_effectiveness_insight,
+                "value_proposition_analysis": result.value_proposition_analysis,
+                "messaging_strategic_recommendation": result.messaging_strategic_recommendation,
+                "headline_clarity_score": result.headline_clarity_score,
+                "value_prop_strength_score": result.value_prop_strength_score,
+                "cta_communication_quality_score": result.cta_communication_quality_score,
+                "messaging_confidence_score": result.messaging_confidence_score,
+                "audience_targeting_clarity_score": result.audience_targeting_clarity_score,
+                "brand_communication_effectiveness_score": result.brand_communication_effectiveness_score
             }
 
         except Exception as e:
@@ -1099,7 +1138,23 @@ Finally, analyze the REVENUE IMPACT FORECAST:
                 "strategic_risk_level": "High",
                 "momentum_comparison": "Competitors are rapidly improving AI visibility and conversion infrastructure while your website remains static.",
                 "momentum_growth_direction": "Down",
-                "momentum_ai_insight": "Critical: You are losing ground as competitors adopt modern AI-search and conversion optimization strategies at a faster pace."
+                "momentum_ai_insight": "Critical: You are losing ground as competitors adopt modern AI-search and conversion optimization strategies at a faster pace.",
+                "cta_optimization_recommendation": "Add a stronger CTA above the fold to improve immediate engagement.",
+                "conversion_improvement_suggestion": "Simplify mobile contact access to reduce conversion friction.",
+                "funnel_optimization_insight": "Optimize the primary conversion funnel by reducing required form fields.",
+                "mobile_conversion_recommendation": "Ensure CTA buttons are thumb-accessible and clear on mobile screens.",
+                "lead_gen_improvement_opportunity": "Integrate a chat or WhatsApp widget to capture high-intent mobile visitors.",
+                "conversion_intelligence_insight": "Strategic conversion paths are currently fragmented, leading to significant lead leakage.",
+                "messaging_clarity_level": "Moderate",
+                "communication_effectiveness_insight": "Messaging analysis partially failed, but initial signals suggest a lack of clear value proposition.",
+                "value_proposition_analysis": "Value proposition strength is currently unclear due to analysis limits.",
+                "messaging_strategic_recommendation": "Clarify brand messaging and target audience specifically on the hero section.",
+                "headline_clarity_score": 5,
+                "value_prop_strength_score": 5,
+                "cta_communication_quality_score": 5,
+                "messaging_confidence_score": 5,
+                "audience_targeting_clarity_score": 5,
+                "brand_communication_effectiveness_score": 5
             }
 
     # Format the payload directly for the React frontend Lead Magnet report
@@ -1177,6 +1232,22 @@ Finally, analyze the REVENUE IMPACT FORECAST:
         "annual_opportunity_loss": result_dict.get("annual_opportunity_loss", 0),
         "urgency_severity": result_dict.get("urgency_severity", "90+ Days"),
         "revenue_impact_insight": result_dict.get("revenue_impact_insight", ""),
+        "cta_optimization_recommendation": result_dict.get("cta_optimization_recommendation", ""),
+        "conversion_improvement_suggestion": result_dict.get("conversion_improvement_suggestion", ""),
+        "funnel_optimization_insight": result_dict.get("funnel_optimization_insight", ""),
+        "mobile_conversion_recommendation": result_dict.get("mobile_conversion_recommendation", ""),
+        "lead_gen_improvement_opportunity": result_dict.get("lead_gen_improvement_opportunity", ""),
+        "conversion_intelligence_insight": result_dict.get("conversion_intelligence_insight", ""),
+        "messaging_clarity_level": result_dict.get("messaging_clarity_level", "Moderate"),
+        "communication_effectiveness_insight": result_dict.get("communication_effectiveness_insight", ""),
+        "value_proposition_analysis": result_dict.get("value_proposition_analysis", ""),
+        "messaging_strategic_recommendation": result_dict.get("messaging_strategic_recommendation", ""),
+        "headline_clarity_score": result_dict.get("headline_clarity_score", 0),
+        "value_prop_strength_score": result_dict.get("value_prop_strength_score", 0),
+        "cta_communication_quality_score": result_dict.get("cta_communication_quality_score", 0),
+        "messaging_confidence_score": result_dict.get("messaging_confidence_score", 0),
+        "audience_targeting_clarity_score": result_dict.get("audience_targeting_clarity_score", 0),
+        "brand_communication_effectiveness_score": result_dict.get("brand_communication_effectiveness_score", 0),
         "b64_image_mobile": b64_image_mobile
     }
 
