@@ -28,7 +28,7 @@ export default function LeadResults({ leads }) {
               boxShadow: '0 4px 20px rgba(6, 182, 212, 0.3)'
             }}
             onClick={() => {
-              const csvHeader = 'website,competitor_website,final_score,design,cta,message,trust,speed,schema_score,schema_impact,first_impression_score,first_impression_verdict,executive_summary,business_risk_insight,strategic_opportunity_insight,executive_ai_recommendation,brand_credibility_insight,msg_clarity_level,msg_effectiveness_insight,val_prop_analysis,msg_strategic_rec,headline_clarity,val_prop_strength,cta_quality,msg_confidence,audience_clarity,brand_effectiveness,cta_strength,cta_urgency,cta_visibility,cta_placement,cta_clarity,cta_persuasiveness,cta_eff_insight,cta_opt_rec_ai,mobile_rating,mobile_risk,mobile_insight,momentum_score,momentum_status,momentum_risk,momentum_direction,momentum_insight,strategic_action_plan,revenue_leak,leak_severity,annual_loss,urgency_severity,revenue_impact_insight,visitors_lost,leads_lost,missing_leads_count,conversion_loss_percent,readiness_level,cta_opt_rec,conv_imp_sug,funnel_opt_ins,mobile_conv_rec,lead_gen_opp,conv_intel_ins,industry_percentile,industry_tier,industry_competitiveness,lead_quality,maturity_level,sales_potential,digital_readiness,growth_potential,market_insight,keyword_opps,keyword_level,competitor_adv,search_impact,keyword_insight,rebranding_pitch,seo_issues,aeo_quote,battle_winner,battle_verdict,emailfullbody\n';
+              const csvHeader = 'website,competitor_website,final_score,design,cta,message,trust,speed,schema_score,schema_impact,first_impression_score,first_impression_verdict,executive_summary,business_risk_insight,strategic_opportunity_insight,executive_ai_recommendation,brand_credibility_insight,msg_clarity_level,msg_effectiveness_insight,val_prop_analysis,msg_strategic_rec,headline_clarity,val_prop_strength,cta_quality,msg_confidence,audience_clarity,brand_effectiveness,cta_strength,cta_urgency,cta_visibility,cta_placement,cta_clarity,cta_persuasiveness,cta_eff_insight,cta_opt_rec_ai,mobile_rating,mobile_risk,mobile_insight,momentum_score,momentum_status,momentum_risk,momentum_direction,momentum_insight,strategic_action_plan,revenue_leak,leak_severity,annual_loss,urgency_severity,revenue_impact_insight,visitors_lost,leads_lost,missing_leads_count,conversion_loss_percent,readiness_level,cta_opt_rec,conv_imp_sug,funnel_opt_ins,mobile_conv_rec,lead_gen_opp,conv_intel_ins,industry_percentile,industry_tier,industry_competitiveness,lead_quality,maturity_level,sales_potential,digital_readiness,growth_potential,market_insight,buyer_intent,trans_intent,ent_orientation,lead_gen_focus,conv_positioning,comm_maturity,website_type,comm_insights,sales_maturity,comm_readiness_lvl,conv_target_insight,market_strat_rec,keyword_opps,keyword_level,competitor_adv,search_impact,keyword_insight,trust_decay,maintenance_confidence,outdated_signals,credibility_insight,trust_recommendation,rebranding_pitch,seo_issues,aeo_quote,battle_winner,battle_verdict,emailfullbody\n';
 
 
               const csvRows = leads.map(lead => {
@@ -115,6 +115,14 @@ Best,
                   escapeCSV(lead.messaging_confidence_score || 0),
                   escapeCSV(lead.audience_targeting_clarity_score || 0),
                   escapeCSV(lead.brand_communication_effectiveness_score || 0),
+                  escapeCSV(lead.cta_strength_level || 'Moderate'),
+                  escapeCSV(lead.cta_urgency_score || 0),
+                  escapeCSV(lead.cta_visibility_rating || 'Moderate'),
+                  escapeCSV(lead.cta_placement_quality || 'Suboptimal'),
+                  escapeCSV(lead.cta_action_clarity_score || 0),
+                  escapeCSV(lead.cta_persuasiveness_score || 0),
+                  escapeCSV(lead.cta_effectiveness_insight || ''),
+                  escapeCSV(lead.cta_ai_optimization_recommendation || ''),
                   escapeCSV(lead.mobile_ux_rating || 'Average'),
                   escapeCSV(lead.mobile_conversion_risk || 'Moderate'),
                   escapeCSV(lead.mobile_ai_insight || ''),
@@ -149,11 +157,28 @@ Best,
                   escapeCSV(lead.digital_readiness || 'Moderate'),
                   escapeCSV(lead.growth_potential || 'Moderate'),
                   escapeCSV(lead.market_position_intelligence_insight || ''),
+                  escapeCSV(lead.buyer_intent_strength || 'Moderate'),
+                  escapeCSV(lead.transactional_service_intent_score || 0),
+                  escapeCSV(lead.enterprise_sales_orientation_score || 0),
+                  escapeCSV(lead.lead_generation_focus_score || 0),
+                  escapeCSV(lead.conversion_oriented_positioning_score || 0),
+                  escapeCSV(lead.commercial_readiness_maturity || 'Moderate'),
+                  escapeCSV(lead.primary_website_type || 'informational'),
+                  escapeCSV(lead.commercial_insights || ''),
+                  escapeCSV(lead.sales_positioning_maturity_score || 0),
+                  escapeCSV(lead.commercial_readiness_level_score || 0),
+                  escapeCSV(lead.conversion_targeting_insight || ''),
+                  escapeCSV(lead.market_position_ai_strategic_recommendation || ''),
                   escapeCSV(lead.keyword_visibility_gap_opportunities || ''),
                   escapeCSV(lead.keyword_visibility_gap_level || 'Low'),
                   escapeCSV(lead.keyword_visibility_gap_competitor_advantage || ''),
                   escapeCSV(lead.keyword_visibility_gap_search_impact || 'Low'),
                   escapeCSV(lead.keyword_visibility_gap_insight || ''),
+                  escapeCSV(lead.trust_decay_level || 'Low'),
+                  escapeCSV(lead.maintenance_confidence || 100),
+                  escapeCSV(lead.outdated_signal_indicators || ''),
+                  escapeCSV(lead.credibility_impact_insight || ''),
+                  escapeCSV(lead.ai_trust_recommendation || ''),
                   escapeCSV(lead.rebranding_pitch),
                   escapeCSV(trustWarning),
                   escapeCSV(seoIssues),
@@ -162,6 +187,7 @@ Best,
                   escapeCSV(lead.battle_data?.ai_verdict || 'N/A'),
                   escapeCSV(batchEmailBody)
                 ].join(',');
+
               }).join('\n');
 
               const blob = new Blob(['\uFEFF' + csvHeader + csvRows], { type: 'text/csv;charset=utf-8;' });
@@ -293,7 +319,7 @@ Best,
                 <div className="header-actions">
                   <button className="action-btn" onClick={() => window.location.reload()}><RefreshCw size={14} /> Recalculate</button>
                   <button className="action-btn primary" onClick={() => {
-              const csvHeader = 'website,competitor_website,final_score,design,cta,message,trust,speed,schema_score,schema_impact,first_impression_score,first_impression_verdict,executive_summary,business_risk_insight,strategic_opportunity_insight,executive_ai_recommendation,brand_credibility_insight,msg_clarity_level,msg_effectiveness_insight,val_prop_analysis,msg_strategic_rec,headline_clarity,val_prop_strength,cta_quality,msg_confidence,audience_clarity,brand_effectiveness,cta_strength,cta_urgency,cta_visibility,cta_placement,cta_clarity,cta_persuasiveness,cta_eff_insight,cta_opt_rec_ai,mobile_rating,mobile_risk,mobile_insight,momentum_score,momentum_status,momentum_risk,momentum_direction,momentum_insight,strategic_action_plan,revenue_leak,leak_severity,annual_loss,urgency_severity,revenue_impact_insight,visitors_lost,leads_lost,missing_leads_count,conversion_loss_percent,readiness_level,cta_opt_rec,conv_imp_sug,funnel_opt_ins,mobile_conv_rec,lead_gen_opp,conv_intel_ins,industry_percentile,industry_tier,industry_competitiveness,lead_quality,maturity_level,sales_potential,digital_readiness,growth_potential,market_insight,keyword_opps,keyword_level,competitor_adv,search_impact,keyword_insight,rebranding_pitch,seo_issues,aeo_quote,battle_winner,battle_verdict,emailfullbody\n';
+                    const csvHeader = 'website,competitor_website,final_score,design,cta,message,trust,speed,schema_score,schema_impact,first_impression_score,first_impression_verdict,executive_summary,business_risk_insight,strategic_opportunity_insight,executive_ai_recommendation,brand_credibility_insight,msg_clarity_level,msg_effectiveness_insight,val_prop_analysis,msg_strategic_rec,headline_clarity,val_prop_strength,cta_quality,msg_confidence,audience_clarity,brand_effectiveness,cta_strength,cta_urgency,cta_visibility,cta_placement,cta_clarity,cta_persuasiveness,cta_eff_insight,cta_opt_rec_ai,mobile_rating,mobile_risk,mobile_insight,momentum_score,momentum_status,momentum_risk,momentum_direction,momentum_insight,strategic_action_plan,revenue_leak,leak_severity,annual_loss,urgency_severity,revenue_impact_insight,visitors_lost,leads_lost,missing_leads_count,conversion_loss_percent,readiness_level,cta_opt_rec,conv_imp_sug,funnel_opt_ins,mobile_conv_rec,lead_gen_opp,conv_intel_ins,industry_percentile,industry_tier,industry_competitiveness,lead_quality,maturity_level,sales_potential,digital_readiness,growth_potential,market_insight,buyer_intent,trans_intent,ent_orientation,lead_gen_focus,conv_positioning,comm_maturity,website_type,comm_insights,sales_maturity,comm_readiness_lvl,conv_target_insight,market_strat_rec,keyword_opps,keyword_level,competitor_adv,search_impact,keyword_insight,trust_decay,maintenance_confidence,outdated_signals,credibility_insight,trust_recommendation,rebranding_pitch,seo_issues,aeo_quote,battle_winner,battle_verdict,emailfullbody\n';
 
                     const trustWarning = [
                       (!lead.seo_ssl ? 'SSL certificate invalid or missing' : (lead.ssl_days_remaining < 30 ? `SSL expires in ${lead.ssl_days_remaining} days` : '')),
@@ -392,11 +418,28 @@ Best,
                       escapeCSV(lead.digital_readiness || 'Moderate'),
                       escapeCSV(lead.growth_potential || 'Moderate'),
                       escapeCSV(lead.market_position_intelligence_insight || ''),
+                      escapeCSV(lead.buyer_intent_strength || 'Moderate'),
+                      escapeCSV(lead.transactional_service_intent_score || 0),
+                      escapeCSV(lead.enterprise_sales_orientation_score || 0),
+                      escapeCSV(lead.lead_generation_focus_score || 0),
+                      escapeCSV(lead.conversion_oriented_positioning_score || 0),
+                      escapeCSV(lead.commercial_readiness_maturity || 'Moderate'),
+                      escapeCSV(lead.primary_website_type || 'informational'),
+                      escapeCSV(lead.commercial_insights || ''),
+                      escapeCSV(lead.sales_positioning_maturity_score || 0),
+                      escapeCSV(lead.commercial_readiness_level_score || 0),
+                      escapeCSV(lead.conversion_targeting_insight || ''),
+                      escapeCSV(lead.market_position_ai_strategic_recommendation || ''),
                       escapeCSV(lead.keyword_visibility_gap_opportunities || ''),
                       escapeCSV(lead.keyword_visibility_gap_level || 'Low'),
                       escapeCSV(lead.keyword_visibility_gap_competitor_advantage || ''),
                       escapeCSV(lead.keyword_visibility_gap_search_impact || 'Low'),
                       escapeCSV(lead.keyword_visibility_gap_insight || ''),
+                      escapeCSV(lead.trust_decay_level || 'Low'),
+                      escapeCSV(lead.maintenance_confidence || 100),
+                      escapeCSV(lead.outdated_signal_indicators || ''),
+                      escapeCSV(lead.credibility_impact_insight || ''),
+                      escapeCSV(lead.ai_trust_recommendation || ''),
                       escapeCSV(lead.rebranding_pitch),
                       escapeCSV(trustWarning),
                       escapeCSV(seoIssues),
@@ -696,6 +739,61 @@ Best,
                         {lead.has_dead_socials && <li>Features dead template social links</li>}
                         {(lead.seo_mobile && (!lead.broken_links || lead.broken_links.length === 0) && !lead.has_dead_socials) && <li>Minor visual flow inconsistencies</li>}
                       </ul>
+                    </div>
+                  </div>
+
+                  {/* AI Trust Decay Indicators Section */}
+                  <div className="trust-decay-section" style={{ borderTop: '1px solid rgba(255,255,255,0.05)', paddingTop: '1.5rem', marginTop: '1.5rem' }}>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.25rem' }}>
+                      <h3 style={{ fontSize: '0.9rem', fontWeight: 700, margin: 0, display: 'flex', alignItems: 'center', gap: '0.5rem', color: '#06b6d4' }}>
+                        <AlertTriangle size={18} /> AI Trust Decay Indicators
+                      </h3>
+                      <div className={`severity-badge severity-${(lead.trust_decay_level || 'Low').toLowerCase() === 'critical' || (lead.trust_decay_level || 'Low').toLowerCase() === 'high' ? 'critical' : (lead.trust_decay_level || 'Low').toLowerCase() === 'moderate' ? 'moderate' : 'low'}`} style={{ fontSize: '0.75rem', padding: '2px 10px' }}>
+                        Decay: {lead.trust_decay_level || 'Low'}
+                      </div>
+                    </div>
+
+                    <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem', marginBottom: '1.5rem' }}>
+                      <div style={{ background: 'rgba(0,0,0,0.15)', padding: '1rem', borderRadius: '10px', display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
+                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                          <span style={{ fontSize: '0.75rem', color: '#64748b', fontWeight: 600 }}>Maintenance Confidence</span>
+                          <span style={{ fontSize: '0.85rem', color: '#06b6d4', fontWeight: 700 }}>{lead.maintenance_confidence || 100}%</span>
+                        </div>
+                        <div className="bar-track" style={{ height: '4px' }}>
+                          <div className="bar-fill" style={{ width: `${lead.maintenance_confidence || 100}%`, background: (lead.maintenance_confidence || 100) > 80 ? '#10b981' : (lead.maintenance_confidence || 100) > 50 ? '#06b6d4' : '#ef4444' }}></div>
+                        </div>
+                        <p style={{ fontSize: '0.7rem', color: '#94a3b8', margin: 0 }}>System analysis of content freshness & technical health.</p>
+                      </div>
+                      <div style={{ background: 'rgba(0,0,0,0.15)', padding: '1rem', borderRadius: '10px' }}>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', marginBottom: '0.5rem' }}>
+                          <RefreshCw size={14} color="#f59e0b" />
+                          <span style={{ fontSize: '0.75rem', color: '#f59e0b', fontWeight: 700, textTransform: 'uppercase' }}>Outdated Signals</span>
+                        </div>
+                        <div style={{ display: 'flex', flexWrap: 'wrap', gap: '0.25rem' }}>
+                          {(lead.outdated_signal_indicators || 'None detected').split(',').map((sig, i) => (
+                            <span key={i} style={{ fontSize: '0.7rem', padding: '2px 6px', borderRadius: '4px', background: 'rgba(245, 158, 11, 0.1)', color: '#f59e0b', border: '1px solid rgba(245, 158, 11, 0.2)' }}>
+                              {sig.trim()}
+                            </span>
+                          ))}
+                        </div>
+                      </div>
+                    </div>
+
+                    <div style={{ background: 'rgba(6, 182, 212, 0.05)', padding: '1rem', borderRadius: '12px', borderLeft: '4px solid #06b6d4', marginBottom: '1rem' }}>
+                      <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', marginBottom: '0.5rem' }}>
+                        <Activity size={16} color="#06b6d4" />
+                        <span style={{ fontSize: '0.8rem', fontWeight: 700, color: '#06b6d4' }}>Credibility Impact Insight</span>
+                      </div>
+                      <p style={{ fontSize: '0.85rem', color: 'var(--text-secondary)', margin: 0, fontStyle: 'italic', lineHeight: '1.5' }}>
+                        "{lead.credibility_impact_insight || "Analyzing long-term credibility impact..."}"
+                      </p>
+                    </div>
+
+                    <div style={{ display: 'flex', alignItems: 'flex-start', gap: '0.75rem', padding: '1rem', background: 'rgba(16, 185, 129, 0.05)', borderRadius: '10px', border: '1px solid rgba(16, 185, 129, 0.1)' }}>
+                      <Bot size={16} color="#10b981" style={{ marginTop: '2px' }} />
+                      <div style={{ fontSize: '0.8rem', color: 'var(--text-secondary)' }}>
+                        <span style={{ fontWeight: 700, color: '#10b981' }}>AI Trust Recommendation:</span> {lead.ai_trust_recommendation || "Maintain content freshness and resolve outdated visual signals to restore brand authority."}
+                      </div>
                     </div>
                   </div>
                 </div>
@@ -1066,6 +1164,32 @@ Best,
                     </div>
                   </div>
 
+                  {/* Intent & Readiness Grid */}
+                  <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem', marginBottom: '1.5rem' }}>
+                    <div style={{ background: 'rgba(0,0,0,0.15)', padding: '1rem', borderRadius: '12px', border: '1px solid rgba(255,255,255,0.05)' }}>
+                      <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', marginBottom: '0.5rem', color: '#06b6d4', fontSize: '0.8rem', fontWeight: 700 }}>
+                        <Target size={14} /> Buyer Intent Strength
+                      </div>
+                      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                        <span style={{ fontSize: '1.1rem', fontWeight: 800, color: '#e2e8f0' }}>{lead.buyer_intent_strength || 'Moderate'}</span>
+                        <div style={{ fontSize: '0.75rem', fontWeight: 600, padding: '2px 8px', borderRadius: '4px', background: 'rgba(6, 182, 212, 0.1)', color: '#06b6d4' }}>
+                          {lead.primary_website_type || 'Informational'}
+                        </div>
+                      </div>
+                    </div>
+                    <div style={{ background: 'rgba(0,0,0,0.15)', padding: '1rem', borderRadius: '12px', border: '1px solid rgba(255,255,255,0.05)' }}>
+                      <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', marginBottom: '0.5rem', color: '#10b981', fontSize: '0.8rem', fontWeight: 700 }}>
+                        <Zap size={14} /> Commercial Readiness
+                      </div>
+                      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                        <span style={{ fontSize: '1.1rem', fontWeight: 800, color: '#e2e8f0' }}>{lead.commercial_readiness_maturity || 'Moderate'}</span>
+                        <div className={`severity-badge severity-${(lead.commercial_readiness_maturity || 'Low').toLowerCase() === 'advanced' ? 'excellent' : (lead.commercial_readiness_maturity || 'Low').toLowerCase() === 'high' ? 'moderate' : 'low'}`} style={{ fontSize: '0.7rem' }}>
+                          Maturity
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+
                   <div className="market-metrics-grid" style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: '0.75rem', marginBottom: '1.5rem' }}>
                     <div style={{ background: 'rgba(0,0,0,0.2)', padding: '0.75rem', borderRadius: '8px', border: '1px solid rgba(255,255,255,0.05)', textAlign: 'center' }}>
                       <div style={{ fontSize: '0.65rem', color: '#64748b', fontWeight: 700, textTransform: 'uppercase', marginBottom: '4px' }}>Business Maturity</div>
@@ -1080,25 +1204,40 @@ Best,
                       <div style={{ fontSize: '0.85rem', color: lead.growth_potential === 'High' ? '#10b981' : lead.growth_potential === 'Moderate' ? '#3b82f6' : '#ef4444', fontWeight: 600 }}>{lead.growth_potential || 'Moderate'}</div>
                     </div>
                     <div style={{ background: 'rgba(0,0,0,0.2)', padding: '0.75rem', borderRadius: '8px', border: '1px solid rgba(255,255,255,0.05)', textAlign: 'center' }}>
-                      <div style={{ fontSize: '0.65rem', color: '#64748b', fontWeight: 700, textTransform: 'uppercase', marginBottom: '4px' }}>Digital Readiness</div>
-                      <div style={{ fontSize: '0.85rem', color: lead.digital_readiness === 'High' ? '#10b981' : lead.digital_readiness === 'Moderate' ? '#3b82f6' : '#ef4444', fontWeight: 600 }}>{lead.digital_readiness || 'Moderate'}</div>
+                      <div style={{ fontSize: '0.65rem', color: '#64748b', fontWeight: 700, textTransform: 'uppercase', marginBottom: '4px' }}>Sales Maturity</div>
+                      <div style={{ fontSize: '0.85rem', color: '#e2e8f0', fontWeight: 600 }}>{lead.sales_positioning_maturity_score || 0}%</div>
                     </div>
-                    <div style={{ background: 'rgba(0,0,0,0.2)', padding: '0.75rem', borderRadius: '8px', border: '1px solid rgba(255,255,255,0.05)', textAlign: 'center', gridColumn: 'span 2' }}>
-                      <div style={{ fontSize: '0.65rem', color: '#64748b', fontWeight: 700, textTransform: 'uppercase', marginBottom: '4px' }}>Competitiveness</div>
-                      <div style={{ fontSize: '0.85rem', color: '#e2e8f0', fontWeight: 600 }}>{lead.industry_competitiveness || 'Low'}</div>
+                    <div style={{ background: 'rgba(0,0,0,0.2)', padding: '0.75rem', borderRadius: '8px', border: '1px solid rgba(255,255,255,0.05)', textAlign: 'center' }}>
+                      <div style={{ fontSize: '0.65rem', color: '#64748b', fontWeight: 700, textTransform: 'uppercase', marginBottom: '4px' }}>Enterprise Focus</div>
+                      <div style={{ fontSize: '0.85rem', color: '#e2e8f0', fontWeight: 600 }}>{lead.enterprise_sales_orientation_score || 0}%</div>
+                    </div>
+                    <div style={{ background: 'rgba(0,0,0,0.2)', padding: '0.75rem', borderRadius: '8px', border: '1px solid rgba(255,255,255,0.05)', textAlign: 'center' }}>
+                      <div style={{ fontSize: '0.65rem', color: '#64748b', fontWeight: 700, textTransform: 'uppercase', marginBottom: '4px' }}>Readiness Level</div>
+                      <div style={{ fontSize: '0.85rem', color: '#e2e8f0', fontWeight: 600 }}>{lead.commercial_readiness_level_score || 0}%</div>
                     </div>
                   </div>
 
-                  <div className="ai-insight-box" style={{ marginTop: 'auto', background: 'rgba(6, 182, 212, 0.05)', padding: '1rem', borderRadius: '12px', borderLeft: '4px solid #06b6d4' }}>
+                  <div style={{ background: 'rgba(6, 182, 212, 0.05)', padding: '1rem', borderRadius: '12px', borderLeft: '4px solid #06b6d4', marginBottom: '1rem' }}>
                     <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', marginBottom: '0.5rem' }}>
-                      <Sparkles size={16} color="#06b6d4" />
-                      <span style={{ fontSize: '0.8rem', fontWeight: 700, color: '#06b6d4', textTransform: 'uppercase' }}>AI Strategic Recommendation</span>
+                      <Activity size={16} color="#06b6d4" />
+                      <span style={{ fontSize: '0.8rem', fontWeight: 700, color: '#06b6d4', textTransform: 'uppercase' }}>Conversion Targeting Insight</span>
                     </div>
                     <p style={{ fontSize: '0.85rem', color: 'var(--text-secondary)', margin: 0, fontStyle: 'italic', lineHeight: '1.5' }}>
-                      "{lead.market_position_intelligence_insight || lead.industry_insight || "Website lacks specific industry competitive advantages in terms of UX and technical performance."}"
+                      "{lead.conversion_targeting_insight || lead.commercial_insights || "Analyzing high-intent buyer targeting and commercial positioning..."}"
+                    </p>
+                  </div>
+
+                  <div className="ai-insight-box" style={{ marginTop: 'auto', background: 'rgba(59, 130, 246, 0.05)', padding: '1rem', borderRadius: '12px', borderLeft: '4px solid #3b82f6' }}>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', marginBottom: '0.5rem' }}>
+                      <Sparkles size={16} color="#3b82f6" />
+                      <span style={{ fontSize: '0.8rem', fontWeight: 700, color: '#3b82f6', textTransform: 'uppercase' }}>AI Strategic Recommendation</span>
+                    </div>
+                    <p style={{ fontSize: '0.85rem', color: 'var(--text-secondary)', margin: 0, fontStyle: 'italic', lineHeight: '1.5' }}>
+                      "{lead.market_position_ai_strategic_recommendation || lead.market_position_intelligence_insight || lead.industry_insight || "Website lacks specific industry competitive advantages in terms of UX and technical performance."}"
                     </p>
                   </div>
                 </div>
+
 
                 {/* 5.6 Schema & AI Visibility Gap */}
                 <div className="quad-card schema-card animate-slide-up">

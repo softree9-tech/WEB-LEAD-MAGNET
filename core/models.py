@@ -104,6 +104,27 @@ class WebsiteAnalyzerOutput(BaseModel):
     growth_potential: str = Field(description="Growth potential level (High, Moderate, Low).")
     market_position_intelligence_insight: str = Field(description="Concise AI strategic insight about the business's market position and potential.")
 
+    buyer_intent_strength: str = Field(description="Buyer intent strength level (e.g., 'Low', 'Moderate', 'High', 'Advanced').")
+    transactional_service_intent_score: int = Field(description="Transactional/service intent score (0-100).")
+    enterprise_sales_orientation_score: int = Field(description="Enterprise sales orientation score (0-100).")
+    lead_generation_focus_score: int = Field(description="Lead-generation focus score (0-100).")
+    conversion_oriented_positioning_score: int = Field(description="Conversion-oriented positioning score (0-100).")
+    commercial_readiness_maturity: str = Field(description="Commercial readiness maturity (e.g., 'Low', 'Moderate', 'High', 'Advanced').")
+    primary_website_type: str = Field(description="Primary website type (informational, branding-focused, service-oriented, conversion-focused, enterprise-sales focused).")
+    commercial_insights: str = Field(description="Concise AI commercial insights.")
+    sales_positioning_maturity_score: int = Field(description="Sales positioning maturity score (0-100).")
+    commercial_readiness_level_score: int = Field(description="Commercial readiness level score (0-100).")
+    conversion_targeting_insight: str = Field(description="Concise AI insight on conversion targeting.")
+    market_position_ai_strategic_recommendation: str = Field(description="Strategic AI recommendation for market positioning.")
+
+
+    # Trust Decay & Credibility Intelligence
+    trust_decay_level: str = Field(description="Trust decay level (Critical, High, Moderate, Low) based on outdated signals.")
+    maintenance_confidence: int = Field(description="Maintenance confidence score (0-100) based on content freshness and technical health.")
+    outdated_signal_indicators: str = Field(description="Comma-separated list of detected outdated signals (e.g., 'Outdated Copyright', 'Stale Blog', 'Broken Socials').")
+    credibility_impact_insight: str = Field(description="Concise AI insight on how trust decay impacts long-term brand credibility.")
+    ai_trust_recommendation: str = Field(description="Strategic AI recommendation to restore brand trust and authority.")
+
 
 class BattleCardResult(BaseModel):
     seo_winner: str = Field(description="'Primary', 'Competitor', or 'Tie'")

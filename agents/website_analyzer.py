@@ -990,7 +990,8 @@ Finally, analyze the CONTENT & MESSAGING CLARITY:
   - Example: “The website appears visually professional, but the messaging lacks a strong value proposition and does not clearly communicate why customers should choose this business.”
 
 Finally, analyze the MARKET POSITION INTELLIGENCE:
-- Combine industry competitiveness analysis with AI-powered lead quality and business potential scoring.
+- Combine industry competitiveness analysis with AI-powered lead quality, business potential, and commercial readiness scoring.
+- Detect whether the website is primarily: informational, branding-focused, service-oriented, conversion-focused, or enterprise-sales focused.
 - Generate:
   - `lead_quality_score`: (0-100) based on overall website quality, business maturity, and sales opportunity.
   - `business_maturity_level`: (Early Stage, Growth Phase, Established, Market Leader).
@@ -998,6 +999,36 @@ Finally, analyze the MARKET POSITION INTELLIGENCE:
   - `digital_readiness`: (High, Moderate, Low) based on tech stack, analytics, and optimization.
   - `growth_potential`: (High, Moderate, Low).
   - `market_position_intelligence_insight`: A concise, executive AI strategic insight (e.g., “The business demonstrates above-average market competitiveness and strong digital maturity, making it a high-potential sales opportunity.”)
+  - `buyer_intent_strength`: (Low, Moderate, High, Advanced) based on transactional and conversion-focused signals.
+  - `transactional_service_intent_score`: (0-100) How well does the site drive direct sales/service inquiries?
+  - `enterprise_sales_orientation_score`: (0-100) Does the site target high-value B2B/Enterprise clients?
+  - `lead_generation_focus_score`: (0-100) How prominent are lead capture mechanisms?
+  - `conversion_oriented_positioning_score`: (0-100) Is the messaging focused on converting visitors?
+  - `commercial_readiness_maturity`: (Low, Moderate, High, Advanced) Overall commercial readiness level.
+  - `primary_website_type`: (informational, branding-focused, service-oriented, conversion-focused, enterprise-sales focused).
+  - `commercial_insights`: Concise AI commercial insights.
+  - `sales_positioning_maturity_score`: (0-100) How mature is the sales positioning?
+  - `commercial_readiness_level_score`: (0-100) How ready is the business to handle digital sales?
+  - `conversion_targeting_insight`: Concise AI insight on how effectively the site targets high-intent buyers.
+  - `market_position_ai_strategic_recommendation`: Strategic AI recommendation for market positioning and commercial readiness.
+
+
+Finally, analyze the TRUST DECAY & CREDIBILITY:
+- Detect outdated or weak trust signals:
+  - Outdated copyright years (e.g., 2022 or older).
+  - Broken/dead social links (template links or 404s).
+  - Stale content (blog/news not updated in 6+ months).
+  - Outdated UI patterns (non-responsive, old fonts, cluttered layout).
+  - Inconsistent branding.
+  - Weak maintenance signals.
+  - Inactive trust indicators (missing reviews or empty testimonial sections).
+- Generate:
+  - `trust_decay_level`: (Critical, High, Moderate, Low).
+  - `maintenance_confidence`: (0-100) based on content freshness and technical health.
+  - `outdated_signal_indicators`: Comma-separated list of detected outdated signals.
+  - `credibility_impact_insight`: Concise AI insight on how trust decay impacts long-term brand credibility.
+  - `ai_trust_recommendation`: Strategic AI recommendation to restore brand trust and authority.
+  - Example: "The website design is modern overall, but stale content and inactive trust signals may weaken perceived professionalism."
 """)
 
         human_msg_content = [
@@ -1019,6 +1050,7 @@ Finally, analyze the MARKET POSITION INTELLIGENCE:
                 - Visible Lead Capture (Forms/Phone/Email): {has_lead_capture}
                 - Dead/Template Social Links Found: {has_dead_socials}
                 - Images Missing Alt Text: {image_alt_data['percent_missing']}% ({image_alt_data['missing_alt']}/{image_alt_data['total']} images)
+                - Last Modified/Copyright Signal: {last_modified}
                 
                 CONVERSION ELEMENTS PRESENT:
                 - CTA Buttons: {conversion_elements['cta_presence']}
@@ -1139,7 +1171,24 @@ Finally, analyze the MARKET POSITION INTELLIGENCE:
                 "sales_potential": result.sales_potential,
                 "digital_readiness": result.digital_readiness,
                 "growth_potential": result.growth_potential,
-                "market_position_intelligence_insight": result.market_position_intelligence_insight
+                "market_position_intelligence_insight": result.market_position_intelligence_insight,
+                "buyer_intent_strength": result.buyer_intent_strength,
+                "transactional_service_intent_score": result.transactional_service_intent_score,
+                "enterprise_sales_orientation_score": result.enterprise_sales_orientation_score,
+                "lead_generation_focus_score": result.lead_generation_focus_score,
+                "conversion_oriented_positioning_score": result.conversion_oriented_positioning_score,
+                "commercial_readiness_maturity": result.commercial_readiness_maturity,
+                "primary_website_type": result.primary_website_type,
+                "commercial_insights": result.commercial_insights,
+                "sales_positioning_maturity_score": result.sales_positioning_maturity_score,
+                "commercial_readiness_level_score": result.commercial_readiness_level_score,
+                "conversion_targeting_insight": result.conversion_targeting_insight,
+                "market_position_ai_strategic_recommendation": result.market_position_ai_strategic_recommendation,
+                "trust_decay_level": result.trust_decay_level,
+                "maintenance_confidence": result.maintenance_confidence,
+                "outdated_signal_indicators": result.outdated_signal_indicators,
+                "credibility_impact_insight": result.credibility_impact_insight,
+                "ai_trust_recommendation": result.ai_trust_recommendation
             }
 
         except Exception as e:
@@ -1302,6 +1351,23 @@ Finally, analyze the MARKET POSITION INTELLIGENCE:
         "digital_readiness": result_dict.get("digital_readiness", "Moderate"),
         "growth_potential": result_dict.get("growth_potential", "Moderate"),
         "market_position_intelligence_insight": result_dict.get("market_position_intelligence_insight", ""),
+        "buyer_intent_strength": result_dict.get("buyer_intent_strength", "Moderate"),
+        "transactional_service_intent_score": result_dict.get("transactional_service_intent_score", 0),
+        "enterprise_sales_orientation_score": result_dict.get("enterprise_sales_orientation_score", 0),
+        "lead_generation_focus_score": result_dict.get("lead_generation_focus_score", 0),
+        "conversion_oriented_positioning_score": result_dict.get("conversion_oriented_positioning_score", 0),
+        "commercial_readiness_maturity": result_dict.get("commercial_readiness_maturity", "Moderate"),
+        "primary_website_type": result_dict.get("primary_website_type", "informational"),
+        "commercial_insights": result_dict.get("commercial_insights", ""),
+        "sales_positioning_maturity_score": result_dict.get("sales_positioning_maturity_score", 0),
+        "commercial_readiness_level_score": result_dict.get("commercial_readiness_level_score", 0),
+        "conversion_targeting_insight": result_dict.get("conversion_targeting_insight", ""),
+        "market_position_ai_strategic_recommendation": result_dict.get("market_position_ai_strategic_recommendation", ""),
+        "trust_decay_level": result_dict.get("trust_decay_level", "Low"),
+        "maintenance_confidence": result_dict.get("maintenance_confidence", 100),
+        "outdated_signal_indicators": result_dict.get("outdated_signal_indicators", ""),
+        "credibility_impact_insight": result_dict.get("credibility_impact_insight", ""),
+        "ai_trust_recommendation": result_dict.get("ai_trust_recommendation", ""),
         "b64_image_mobile": b64_image_mobile
     }
 
