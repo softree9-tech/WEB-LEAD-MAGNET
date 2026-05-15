@@ -932,6 +932,13 @@ Finally, analyze the `COMPETITOR MOMENTUM TRACKER`:
 - Write a `momentum_comparison`: 1-2 aggressive sentences comparing their momentum to competitors who are "rapidly improving AI visibility and conversion infrastructure."
 - Set `momentum_growth_direction` (Up, Down, Neutral).
 - Provide a `momentum_ai_insight`: A high-level AI strategic insight on how they are being outpaced or if they are keeping up with industry technology adoption.
+
+Finally, generate an `AI STRATEGIC ACTION PLAN`:
+- Based on ALL analysis data (SEO, UX, Trust, AI visibility, conversion readiness, schema gaps, mobile UX, and lead capture), generate a prioritized roadmap of 3-5 execution steps.
+- For each step, provide: priority (High, Medium, Low), action, impact (High, Medium, Low), difficulty (Easy, Moderate, Hard), and is_quick_win (True if difficulty is Easy and impact is High).
+- The roadmap should prioritize improvements that offer the highest business impact for SEO, AI visibility, and conversion performance.
+- Example action: "Add FAQ schema and move primary CTA above the fold to improve AI discoverability and lead conversion."
+
 """)
 
         human_msg_content = [
@@ -1026,8 +1033,18 @@ Finally, analyze the `COMPETITOR MOMENTUM TRACKER`:
                 "strategic_risk_level": result.strategic_risk_level,
                 "momentum_comparison": result.momentum_comparison,
                 "momentum_growth_direction": result.momentum_growth_direction,
-                "momentum_ai_insight": result.momentum_ai_insight
+                "momentum_ai_insight": result.momentum_ai_insight,
+                "ai_strategic_plan": [
+                    {
+                        "priority": step.priority,
+                        "action": step.action,
+                        "impact": step.impact,
+                        "difficulty": step.difficulty,
+                        "is_quick_win": step.is_quick_win
+                    } for step in result.ai_strategic_plan
+                ]
             }
+
         except Exception as e:
             print("LLM Error:", e)
             result_dict = {
@@ -1120,8 +1137,10 @@ Finally, analyze the `COMPETITOR MOMENTUM TRACKER`:
         "momentum_comparison": result_dict.get("momentum_comparison", ""),
         "momentum_growth_direction": result_dict.get("momentum_growth_direction", "Neutral"),
         "momentum_ai_insight": result_dict.get("momentum_ai_insight", ""),
+        "ai_strategic_plan": result_dict.get("ai_strategic_plan", []),
         "b64_image_mobile": b64_image_mobile
     }
+
 
     # ─── REVENUE LEAK CALCULATION ──────────────────────────────────────────
     leak_metrics = {

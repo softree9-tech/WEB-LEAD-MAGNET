@@ -1,4 +1,12 @@
 from pydantic import BaseModel, Field
+from typing import List
+
+class StrategicAction(BaseModel):
+    priority: str = Field(description="Priority level (High, Medium, Low)")
+    action: str = Field(description="Recommended action step (e.g., 'Add FAQ Schema')")
+    impact: str = Field(description="Expected impact (High, Medium, Low)")
+    difficulty: str = Field(description="Implementation difficulty (Easy, Moderate, Hard)")
+    is_quick_win: bool = Field(description="True if this is a quick win (low difficulty, high impact)")
 
 class WebsiteAnalyzerOutput(BaseModel):
     design: str = Field(description="Design quality (Modern, Outdated, Clean, Cluttered)")
@@ -40,13 +48,15 @@ class WebsiteAnalyzerOutput(BaseModel):
     mobile_ux_rating: str = Field(description="Mobile UX rating (Excellent, Good, Average, Poor, Critical)")
     mobile_conversion_risk: str = Field(description="Mobile conversion risk level (Low, Moderate, High, Critical)")
     mobile_ai_insight: str = Field(description="Short, actionable AI insight about the mobile experience and conversion potential.")
-
+    
     momentum_score: int = Field(description="Competitor Momentum Score (0-100) based on optimization speed and technology adoption.")
     competitive_growth_status: str = Field(description="Growth status relative to competitors (e.g., 'Leading', 'Steady', 'Falling Behind')")
     strategic_risk_level: str = Field(description="Strategic risk level (High, Moderate, Low) based on competitive gaps.")
     momentum_comparison: str = Field(description="1-2 sentences comparing website momentum to industry competitors.")
     momentum_growth_direction: str = Field(description="Growth direction (Up, Down, Neutral).")
     momentum_ai_insight: str = Field(description="Aggressive AI strategic insight on competitive momentum and technology adoption.")
+
+    ai_strategic_plan: List[StrategicAction] = Field(description="A prioritized roadmap of 3-5 improvement steps based on all analysis data.")
 
 class BattleCardResult(BaseModel):
     seo_winner: str = Field(description="'Primary', 'Competitor', or 'Tie'")
@@ -59,3 +69,4 @@ class BattleCardResult(BaseModel):
     overall_advantage: str = Field(description="A concise summary of who has the advantage and why. Example: 'Primary holds 15% better SEO but Competitor wins on conversion.'")
     overall_winner: str = Field(description="'Primary', 'Competitor', or 'Tie'")
     ai_verdict: str = Field(description="Executive AI verdict. Example: 'Competitor has stronger conversion architecture and clearer CTA positioning, likely resulting in better lead generation performance.'")
+

@@ -28,7 +28,8 @@ export default function LeadResults({ leads }) {
               boxShadow: '0 4px 20px rgba(6, 182, 212, 0.3)'
             }}
             onClick={() => {
-              const csvHeader = 'website,competitor_website,final_score,design,cta,message,trust,speed,schema_score,schema_impact,first_impression_score,first_impression_verdict,mobile_rating,mobile_risk,mobile_insight,momentum_score,momentum_status,momentum_risk,momentum_direction,momentum_insight,revenue_leak,leak_severity,visitors_lost,leads_lost,missing_leads_count,conversion_loss_percent,readiness_level,industry_percentile,industry_tier,industry_competitiveness,keyword_opps,keyword_level,competitor_adv,search_impact,keyword_insight,rebranding_pitch,seo_issues,aeo_quote,battle_winner,battle_verdict,emailfullbody\n';
+              const csvHeader = 'website,competitor_website,final_score,design,cta,message,trust,speed,schema_score,schema_impact,first_impression_score,first_impression_verdict,mobile_rating,mobile_risk,mobile_insight,momentum_score,momentum_status,momentum_risk,momentum_direction,momentum_insight,strategic_action_plan,revenue_leak,leak_severity,visitors_lost,leads_lost,missing_leads_count,conversion_loss_percent,readiness_level,industry_percentile,industry_tier,industry_competitiveness,keyword_opps,keyword_level,competitor_adv,search_impact,keyword_insight,rebranding_pitch,seo_issues,aeo_quote,battle_winner,battle_verdict,emailfullbody\n';
+
 
               const csvRows = leads.map(lead => {
                 const consistencyVal = lead.design === 'Modern' ? 90 : 60;
@@ -107,7 +108,9 @@ Best,
                   escapeCSV(lead.strategic_risk_level || 'Moderate'),
                   escapeCSV(lead.momentum_growth_direction || 'Neutral'),
                   escapeCSV(lead.momentum_ai_insight || ''),
+                  escapeCSV((lead.ai_strategic_plan || []).map(s => `${s.priority}: ${s.action} (Impact: ${s.impact})`).join(' | ')),
                   escapeCSV(`$${lead.revenue_leak_amount || 0}`),
+
                   escapeCSV(lead.revenue_leak_severity || 'Low'),
                   escapeCSV(lead.visitors_lost || 0),
                   escapeCSV(lead.leads_lost || 0),
@@ -261,7 +264,8 @@ Best,
                 <div className="header-actions">
                   <button className="action-btn" onClick={() => window.location.reload()}><RefreshCw size={14} /> Recalculate</button>
                   <button className="action-btn primary" onClick={() => {
-              const csvHeader = 'website,competitor_website,final_score,design,cta,message,trust,speed,schema_score,schema_impact,first_impression_score,first_impression_verdict,mobile_rating,mobile_risk,mobile_insight,momentum_score,momentum_status,momentum_risk,momentum_direction,momentum_insight,revenue_leak,leak_severity,visitors_lost,leads_lost,missing_leads_count,conversion_loss_percent,readiness_level,industry_percentile,industry_tier,industry_competitiveness,keyword_opps,keyword_level,competitor_adv,search_impact,keyword_insight,rebranding_pitch,seo_issues,aeo_quote,battle_winner,battle_verdict,emailfullbody\n';
+              const csvHeader = 'website,competitor_website,final_score,design,cta,message,trust,speed,schema_score,schema_impact,first_impression_score,first_impression_verdict,mobile_rating,mobile_risk,mobile_insight,momentum_score,momentum_status,momentum_risk,momentum_direction,momentum_insight,strategic_action_plan,revenue_leak,leak_severity,visitors_lost,leads_lost,missing_leads_count,conversion_loss_percent,readiness_level,industry_percentile,industry_tier,industry_competitiveness,keyword_opps,keyword_level,competitor_adv,search_impact,keyword_insight,rebranding_pitch,seo_issues,aeo_quote,battle_winner,battle_verdict,emailfullbody\n';
+
                     const trustWarning = [
                       (!lead.seo_ssl ? 'SSL certificate invalid or missing' : (lead.ssl_days_remaining < 30 ? `SSL expires in ${lead.ssl_days_remaining} days` : '')),
                       !lead.has_lead_capture ? 'No contact form detected' : '',
@@ -310,7 +314,9 @@ Best,
                       escapeCSV(lead.strategic_risk_level || 'Moderate'),
                       escapeCSV(lead.momentum_growth_direction || 'Neutral'),
                       escapeCSV(lead.momentum_ai_insight || ''),
+                      escapeCSV((lead.ai_strategic_plan || []).map(s => `${s.priority}: ${s.action} (Impact: ${s.impact})`).join(' | ')),
                       escapeCSV(`$${lead.revenue_leak_amount || 0}`),
+
                       escapeCSV(lead.revenue_leak_severity || 'Low'),
                       escapeCSV(lead.visitors_lost || 0),
                       escapeCSV(lead.leads_lost || 0),
@@ -993,7 +999,51 @@ Best,
                   </div>
                 </div>
 
+                {/* 5.9 AI Strategic Action Plan */}
+                <div className="quad-card action-plan-card animate-slide-up">
+                  <div className="quad-header">
+                    <h2 style={{ color: '#8b5cf6', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                      <Sparkles size={20} /> AI Strategic Action Plan
+                    </h2>
+                    <div className="severity-badge severity-low" style={{ background: 'rgba(139, 92, 246, 0.2)', color: '#a78bfa', borderColor: 'rgba(139, 92, 246, 0.3)' }}>
+                      Execution Roadmap
+                    </div>
+                  </div>
+
+                  <div className="action-steps-list">
+                    {(lead.ai_strategic_plan || []).map((step, i) => (
+                      <div key={i} className="action-step-item">
+                        <div className="action-step-header">
+                          <div className={`action-priority-badge priority-${step.priority.toLowerCase()}`}>
+                            {step.priority} Priority
+                          </div>
+                          {step.is_quick_win && (
+                            <div className="quick-win-tag">
+                              <Zap size={10} fill="#10b981" /> Quick Win
+                            </div>
+                          )}
+                        </div>
+                        <p className="action-text">{step.action}</p>
+                        <div className="action-meta">
+                          <div className="meta-item">
+                            <Target size={12} /> Impact: <span style={{ color: step.impact === 'High' ? '#10b981' : step.impact === 'Medium' ? '#fbbf24' : '#94a3b8', fontWeight: 700 }}>{step.impact}</span>
+                          </div>
+                          <div className="meta-item">
+                            <Settings size={12} /> Difficulty: <span style={{ color: step.difficulty === 'Easy' ? '#10b981' : step.difficulty === 'Moderate' ? '#fbbf24' : '#ef4444', fontWeight: 700 }}>{step.difficulty}</span>
+                          </div>
+                        </div>
+                      </div>
+                    ))}
+                    {(!lead.ai_strategic_plan || lead.ai_strategic_plan.length === 0) && (
+                      <div style={{ padding: '2rem', textAlign: 'center', color: '#64748b', fontSize: '0.9rem' }}>
+                        Generating prioritized execution steps...
+                      </div>
+                    )}
+                  </div>
+                </div>
+
                 {/* 6. AI Search Visibility & Ranking — Full Width */}
+
                 <div className="quad-card aeo-card-wide" style={{ gridColumn: '1 / -1' }}>
                   <div className="quad-header">
                     <h2>AI Search Visibility &amp; Ranking</h2>
