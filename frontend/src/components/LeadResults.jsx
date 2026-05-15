@@ -247,34 +247,64 @@ Best,
             <div className="elite-sidebar">
               <div className="brand-icon">P</div>
 
-              <div className="nav-tooltip-wrap">
-                <LayoutDashboard size={20} className="nav-icon active" onClick={() => document.getElementById(`lead-${index}`).scrollIntoView({ behavior: 'smooth' })} />
-
+              <div className="nav-tooltip-wrap" title="Dashboard">
+                <button
+                  className="nav-btn"
+                  aria-label="Scroll to Dashboard"
+                  onClick={() => document.getElementById(`lead-${index}`).scrollIntoView({ behavior: 'smooth' })}
+                >
+                  <LayoutDashboard size={20} className="nav-icon active" />
+                </button>
               </div>
 
-              <div className="nav-tooltip-wrap">
-                <FileText size={20} className="nav-icon" onClick={() => document.getElementById(`lead-${index}-outreach`).scrollIntoView({ behavior: 'smooth' })} />
-
+              <div className="nav-tooltip-wrap" title="Outreach Email">
+                <button
+                  className="nav-btn"
+                  aria-label="Scroll to Outreach Email"
+                  onClick={() => document.getElementById(`lead-${index}-outreach`).scrollIntoView({ behavior: 'smooth' })}
+                >
+                  <FileText size={20} className="nav-icon" />
+                </button>
               </div>
 
-              <div className="nav-tooltip-wrap">
-                <BarChart3 size={20} className="nav-icon" onClick={() => document.getElementById(`lead-${index}-seo`).scrollIntoView({ behavior: 'smooth' })} />
-
+              <div className="nav-tooltip-wrap" title="SEO Analysis">
+                <button
+                  className="nav-btn"
+                  aria-label="Scroll to SEO Analysis"
+                  onClick={() => document.getElementById(`lead-${index}-seo`).scrollIntoView({ behavior: 'smooth' })}
+                >
+                  <BarChart3 size={20} className="nav-icon" />
+                </button>
               </div>
 
-              <div className="nav-tooltip-wrap">
-                <Activity size={20} className="nav-icon" onClick={() => document.getElementById(`lead-${index}-trust`).scrollIntoView({ behavior: 'smooth' })} />
-
+              <div className="nav-tooltip-wrap" title="Trust Intelligence">
+                <button
+                  className="nav-btn"
+                  aria-label="Scroll to Trust Intelligence"
+                  onClick={() => document.getElementById(`lead-${index}-trust`).scrollIntoView({ behavior: 'smooth' })}
+                >
+                  <Activity size={20} className="nav-icon" />
+                </button>
               </div>
 
-              <div className="nav-tooltip-wrap" style={{ marginTop: 'auto' }}>
-                <Settings size={20} className="nav-icon" onClick={() => alert('Settings coming soon!')} />
-
+              <div className="nav-tooltip-wrap" style={{ marginTop: 'auto' }} title="Settings (Coming soon)">
+                <button
+                  className="nav-btn"
+                  aria-label="Settings"
+                  onClick={() => alert('Settings coming soon!')}
+                >
+                  <Settings size={20} className="nav-icon" />
+                </button>
               </div>
 
-              <div className="nav-tooltip-wrap" style={{ marginBottom: '2rem' }}>
-                <LogOut size={20} className="nav-icon" onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })} />
-
+              <div className="nav-tooltip-wrap" style={{ marginBottom: '2rem' }} title="Back to Top">
+                <button
+                  className="nav-btn"
+                  aria-label="Back to Top"
+                  onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })}
+                >
+                  <LogOut size={20} className="nav-icon" />
+                </button>
               </div>
             </div>
 
@@ -1355,11 +1385,15 @@ Best,
                   <h2 style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
                     <Mail color="var(--accent-color)" size={20} /> Personalized AI Outreach Email
                   </h2>
-                  <button className="action-btn" onClick={(e) => {
-                    navigator.clipboard.writeText(emailBody);
-                    e.currentTarget.innerHTML = '<span style="color:#10b981;display:flex;align-items:center;gap:0.5rem;"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="20 6 9 17 4 12"></polyline></svg> Copied!</span>';
-                    setTimeout(() => e.target.innerHTML = '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg> Copy to Clipboard', 2000);
-                  }}>
+                  <button
+                    className="action-btn"
+                    aria-label="Copy outreach email to clipboard"
+                    onClick={(e) => {
+                      navigator.clipboard.writeText(emailBody);
+                      e.currentTarget.innerHTML = '<span role="status" aria-live="polite" style="color:#10b981;display:flex;align-items:center;gap:0.5rem;"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="20 6 9 17 4 12"></polyline></svg> Copied!</span>';
+                      setTimeout(() => e.target.innerHTML = '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg> Copy to Clipboard', 2000);
+                    }}
+                  >
                     <Copy size={14} /> Copy to Clipboard
                   </button>
                 </div>
