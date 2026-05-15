@@ -741,10 +741,10 @@ def website_analyzer_agent(state: AgentState) -> AgentState:
                 screenshot_bytes = page.screenshot(type="jpeg", quality=60, full_page=True)
                 b64_image = base64.b64encode(screenshot_bytes).decode('utf-8')
                 
-                # Mobile emulation screenshot
-                page.set_viewport_size({"width": 375, "height": 812})
+                # Mobile emulation screenshot (Small Android)
+                page.set_viewport_size({"width": 360, "height": 640})
                 time.sleep(1)
-                mobile_screenshot_bytes = page.screenshot(type="jpeg", quality=60, full_page=True)
+                mobile_screenshot_bytes = page.screenshot(type="jpeg", quality=60, full_page=False)
                 b64_image_mobile = base64.b64encode(mobile_screenshot_bytes).decode('utf-8')
                 
                 browser.close()
@@ -917,6 +917,12 @@ Finally, analyze the `KEYWORD VISIBILITY GAP`:
 - Provide a `keyword_visibility_gap_competitor_advantage`: 1-sentence summary of what competitors are ranking for that this site is not.
 - Set a `keyword_visibility_gap_search_impact` (High, Medium, Low) on AI/Search visibility.
 - Provide a `keyword_visibility_gap_insight`: Short, aggressive AI insight on search intent coverage and visibility gaps.
+
+Finally, analyze the `MOBILE EXPERIENCE REALITY CHECK`:
+- Based on the provided mobile screenshot (360x640), evaluate how the site actually looks on a low-end device.
+- Assign a `mobile_ux_rating` (Excellent, Good, Average, Poor, Critical).
+- Assess the `mobile_conversion_risk` (Low, Moderate, High, Critical) based on CTA visibility and readability on mobile.
+- Provide a `mobile_ai_insight`: A short, punchy AI recommendation to fix mobile conversion leaks (e.g., "Primary CTA is difficult to notice on smaller mobile devices, reducing conversion potential.").
 """)
 
         human_msg_content = [
@@ -1002,7 +1008,10 @@ Finally, analyze the `KEYWORD VISIBILITY GAP`:
                 "keyword_visibility_gap_level": result.keyword_visibility_gap_level,
                 "keyword_visibility_gap_competitor_advantage": result.keyword_visibility_gap_competitor_advantage,
                 "keyword_visibility_gap_search_impact": result.keyword_visibility_gap_search_impact,
-                "keyword_visibility_gap_insight": result.keyword_visibility_gap_insight
+                "keyword_visibility_gap_insight": result.keyword_visibility_gap_insight,
+                "mobile_ux_rating": result.mobile_ux_rating,
+                "mobile_conversion_risk": result.mobile_conversion_risk,
+                "mobile_ai_insight": result.mobile_ai_insight
             }
         except Exception as e:
             print("LLM Error:", e)
@@ -1080,7 +1089,11 @@ Finally, analyze the `KEYWORD VISIBILITY GAP`:
         "keyword_visibility_gap_level": result_dict.get("keyword_visibility_gap_level", "Low"),
         "keyword_visibility_gap_competitor_advantage": result_dict.get("keyword_visibility_gap_competitor_advantage", ""),
         "keyword_visibility_gap_search_impact": result_dict.get("keyword_visibility_gap_search_impact", "Low"),
-        "keyword_visibility_gap_insight": result_dict.get("keyword_visibility_gap_insight", "")
+        "keyword_visibility_gap_insight": result_dict.get("keyword_visibility_gap_insight", ""),
+        "mobile_ux_rating": result_dict.get("mobile_ux_rating", "Average"),
+        "mobile_conversion_risk": result_dict.get("mobile_conversion_risk", "Moderate"),
+        "mobile_ai_insight": result_dict.get("mobile_ai_insight", ""),
+        "b64_image_mobile": b64_image_mobile
     }
 
     # ─── REVENUE LEAK CALCULATION ──────────────────────────────────────────

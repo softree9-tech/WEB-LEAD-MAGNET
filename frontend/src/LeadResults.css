@@ -796,6 +796,135 @@
   gap: 1.5rem;
 }
 
+/* MOBILE REALITY CHECK CARD */
+.mobile-reality-card {
+  background: linear-gradient(135deg, #0f172a 0%, #1e293b 100%);
+  border: 1px solid rgba(59, 130, 246, 0.15);
+  display: flex;
+  flex-direction: column;
+}
+
+.mobile-mockup-container {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  padding: 1.5rem;
+  background: rgba(0, 0, 0, 0.3);
+  border-radius: 16px;
+  margin-bottom: 1.5rem;
+  border: 1px solid rgba(255, 255, 255, 0.03);
+}
+
+.mobile-frame {
+  width: 200px;
+  height: 350px;
+  background: #000;
+  border-radius: 24px;
+  padding: 10px;
+  border: 4px solid #334155;
+  box-shadow: 0 20px 40px rgba(0, 0, 0, 0.6);
+  position: relative;
+  overflow: hidden;
+}
+
+.mobile-frame::after {
+  content: '';
+  position: absolute;
+  top: 6px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 40px;
+  height: 4px;
+  background: #1e293b;
+  border-radius: 2px;
+}
+
+.mobile-screen {
+  width: 100%;
+  height: 100%;
+  background: #1e293b;
+  border-radius: 16px;
+  overflow: hidden;
+}
+
+.mobile-screenshot {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  object-position: top;
+}
+
+.mobile-stats-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 1rem;
+  margin-bottom: 1.5rem;
+}
+
+.mobile-stat-box {
+  background: rgba(255, 255, 255, 0.03);
+  padding: 1rem;
+  border-radius: 12px;
+  border: 1px solid rgba(255, 255, 255, 0.02);
+}
+
+.mobile-stat-label {
+  font-size: 0.7rem;
+  color: #94a3b8;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  margin-bottom: 4px;
+  display: block;
+}
+
+.mobile-stat-value {
+  font-size: 1rem;
+  font-weight: 700;
+  color: #fff;
+}
+
+.rating-excellent { color: #10b981; }
+.rating-good { color: #3b82f6; }
+.rating-average { color: #fbbf24; }
+.rating-poor { color: #f97316; }
+.rating-critical { color: #ef4444; }
+
+.risk-low { color: #10b981; }
+.risk-moderate { color: #fbbf24; }
+.risk-high { color: #f97316; }
+.risk-critical { color: #ef4444; }
+
+.mobile-ai-box {
+  background: rgba(59, 130, 246, 0.05);
+  border-radius: 12px;
+  padding: 1rem;
+  border-left: 4px solid #3b82f6;
+  margin-top: auto;
+}
+
+.mobile-ai-header {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 6px;
+}
+
+.mobile-ai-label {
+  font-size: 0.75rem;
+  font-weight: 800;
+  color: #3b82f6;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+}
+
+.mobile-ai-text {
+  font-size: 0.85rem;
+  color: #94a3b8;
+  margin: 0;
+  font-style: italic;
+  line-height: 1.5;
+}
+
 @media (max-width: 1024px) {
   .aeo-split-layout {
     grid-template-columns: 1fr;

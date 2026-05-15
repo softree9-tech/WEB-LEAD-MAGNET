@@ -28,7 +28,7 @@ export default function LeadResults({ leads }) {
               boxShadow: '0 4px 20px rgba(6, 182, 212, 0.3)'
             }}
             onClick={() => {
-              const csvHeader = 'website,competitor_website,final_score,design,cta,message,trust,speed,schema_score,schema_impact,first_impression_score,first_impression_verdict,revenue_leak,leak_severity,visitors_lost,leads_lost,missing_leads_count,conversion_loss_percent,readiness_level,industry_percentile,industry_tier,industry_competitiveness,keyword_opps,keyword_level,competitor_adv,search_impact,keyword_insight,rebranding_pitch,seo_issues,aeo_quote,battle_winner,battle_verdict,emailfullbody\n';
+              const csvHeader = 'website,competitor_website,final_score,design,cta,message,trust,speed,schema_score,schema_impact,first_impression_score,first_impression_verdict,mobile_rating,mobile_risk,mobile_insight,revenue_leak,leak_severity,visitors_lost,leads_lost,missing_leads_count,conversion_loss_percent,readiness_level,industry_percentile,industry_tier,industry_competitiveness,keyword_opps,keyword_level,competitor_adv,search_impact,keyword_insight,rebranding_pitch,seo_issues,aeo_quote,battle_winner,battle_verdict,emailfullbody\n';
 
               const csvRows = leads.map(lead => {
                 const consistencyVal = lead.design === 'Modern' ? 90 : 60;
@@ -99,6 +99,9 @@ Best,
                   escapeCSV(lead.schema_visibility_impact || 'Low'),
                   escapeCSV(lead.first_impression_score || 0),
                   escapeCSV(lead.first_impression_verdict || 'Unknown'),
+                  escapeCSV(lead.mobile_ux_rating || 'Average'),
+                  escapeCSV(lead.mobile_conversion_risk || 'Moderate'),
+                  escapeCSV(lead.mobile_ai_insight || ''),
                   escapeCSV(`$${lead.revenue_leak_amount || 0}`),
                   escapeCSV(lead.revenue_leak_severity || 'Low'),
                   escapeCSV(lead.visitors_lost || 0),
@@ -253,7 +256,7 @@ Best,
                 <div className="header-actions">
                   <button className="action-btn" onClick={() => window.location.reload()}><RefreshCw size={14} /> Recalculate</button>
                   <button className="action-btn primary" onClick={() => {
-              const csvHeader = 'website,competitor_website,final_score,design,cta,message,trust,speed,schema_score,schema_impact,first_impression_score,first_impression_verdict,revenue_leak,leak_severity,visitors_lost,leads_lost,missing_leads_count,conversion_loss_percent,readiness_level,industry_percentile,industry_tier,industry_competitiveness,keyword_opps,keyword_level,competitor_adv,search_impact,keyword_insight,rebranding_pitch,seo_issues,aeo_quote,battle_winner,battle_verdict,emailfullbody\n';
+              const csvHeader = 'website,competitor_website,final_score,design,cta,message,trust,speed,schema_score,schema_impact,first_impression_score,first_impression_verdict,mobile_rating,mobile_risk,mobile_insight,revenue_leak,leak_severity,visitors_lost,leads_lost,missing_leads_count,conversion_loss_percent,readiness_level,industry_percentile,industry_tier,industry_competitiveness,keyword_opps,keyword_level,competitor_adv,search_impact,keyword_insight,rebranding_pitch,seo_issues,aeo_quote,battle_winner,battle_verdict,emailfullbody\n';
                     const trustWarning = [
                       (!lead.seo_ssl ? 'SSL certificate invalid or missing' : (lead.ssl_days_remaining < 30 ? `SSL expires in ${lead.ssl_days_remaining} days` : '')),
                       !lead.has_lead_capture ? 'No contact form detected' : '',
@@ -294,6 +297,9 @@ Best,
                       escapeCSV(lead.schema_visibility_impact || 'Low'),
                       escapeCSV(lead.first_impression_score || 0),
                       escapeCSV(lead.first_impression_verdict || 'Unknown'),
+                      escapeCSV(lead.mobile_ux_rating || 'Average'),
+                      escapeCSV(lead.mobile_conversion_risk || 'Moderate'),
+                      escapeCSV(lead.mobile_ai_insight || ''),
                       escapeCSV(`$${lead.revenue_leak_amount || 0}`),
                       escapeCSV(lead.revenue_leak_severity || 'Low'),
                       escapeCSV(lead.visitors_lost || 0),
@@ -417,6 +423,58 @@ Best,
                     <div className="factor-tag"><Lock size={12} /> Trust</div>
                     <div className="factor-tag"><Smartphone size={12} /> Mobile Feel</div>
                     <div className="factor-tag"><FileText size={12} /> Readability</div>
+                  </div>
+                </div>
+
+                {/* 0.5. Mobile Experience Reality Check */}
+                <div className="quad-card mobile-reality-card animate-slide-up">
+                  <div className="quad-header">
+                    <h2 style={{ color: '#3b82f6', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                      <Smartphone size={20} /> Mobile Experience Reality Check
+                    </h2>
+                    <div className={`severity-badge severity-${(lead.mobile_conversion_risk || 'Moderate').toLowerCase() === 'critical' || (lead.mobile_conversion_risk || 'Moderate').toLowerCase() === 'high' ? 'critical' : (lead.mobile_conversion_risk || 'Moderate').toLowerCase() === 'moderate' ? 'moderate' : 'low'}`}>
+                      {lead.mobile_conversion_risk || 'Moderate'} Risk
+                    </div>
+                  </div>
+
+                  <div className="mobile-mockup-container">
+                    <div className="mobile-frame">
+                      <div className="mobile-screen">
+                        {lead.b64_image_mobile ? (
+                          <img src={`data:image/jpeg;base64,${lead.b64_image_mobile}`} alt="Mobile View" className="mobile-screenshot" />
+                        ) : (
+                          <div style={{ display: 'flex', flexDirection: 'column', justifyContent: 'center', alignItems: 'center', height: '100%', color: '#475569', textAlign: 'center' }}>
+                            <Smartphone size={32} style={{ marginBottom: '0.5rem' }} />
+                            <span style={{ fontSize: '0.8rem' }}>No mobile preview</span>
+                          </div>
+                        )}
+                      </div>
+                    </div>
+                  </div>
+
+                  <div className="mobile-stats-grid">
+                    <div className="mobile-stat-box">
+                      <span className="mobile-stat-label">UX Rating</span>
+                      <span className={`mobile-stat-value rating-${(lead.mobile_ux_rating || 'Average').toLowerCase()}`}>
+                        {lead.mobile_ux_rating || 'Average'}
+                      </span>
+                    </div>
+                    <div className="mobile-stat-box">
+                      <span className="mobile-stat-label">Conversion Risk</span>
+                      <span className={`mobile-stat-value risk-${(lead.mobile_conversion_risk || 'Moderate').toLowerCase()}`}>
+                        {lead.mobile_conversion_risk || 'Moderate'}
+                      </span>
+                    </div>
+                  </div>
+
+                  <div className="mobile-ai-box">
+                    <div className="mobile-ai-header">
+                      <Bot size={14} color="#3b82f6" />
+                      <span className="mobile-ai-label">Mobile AI Insight</span>
+                    </div>
+                    <p className="mobile-ai-text">
+                      "{lead.mobile_ai_insight || "Primary CTA might be difficult to notice on smaller mobile devices, reducing conversion potential."}"
+                    </p>
                   </div>
                 </div>
 

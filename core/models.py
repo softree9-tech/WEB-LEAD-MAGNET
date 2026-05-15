@@ -36,6 +36,10 @@ class WebsiteAnalyzerOutput(BaseModel):
     keyword_visibility_gap_competitor_advantage: str = Field(description="1-sentence summary of competitor keyword advantages.")
     keyword_visibility_gap_search_impact: str = Field(description="AI visibility and search impact level (High, Medium, Low).")
     keyword_visibility_gap_insight: str = Field(description="Short, aggressive AI insight on search intent coverage and visibility gaps.")
+    
+    mobile_ux_rating: str = Field(description="Mobile UX rating (Excellent, Good, Average, Poor, Critical)")
+    mobile_conversion_risk: str = Field(description="Mobile conversion risk level (Low, Moderate, High, Critical)")
+    mobile_ai_insight: str = Field(description="Short, actionable AI insight about the mobile experience and conversion potential.")
 
 class BattleCardResult(BaseModel):
     seo_winner: str = Field(description="'Primary', 'Competitor', or 'Tie'")
