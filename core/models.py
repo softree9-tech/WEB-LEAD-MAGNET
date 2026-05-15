@@ -96,6 +96,14 @@ class WebsiteAnalyzerOutput(BaseModel):
     cta_effectiveness_insight: str = Field(description="Concise AI conversion effectiveness insight.")
     cta_ai_optimization_recommendation: str = Field(description="Concise AI optimization recommendation for CTA.")
 
+    # Market Position Intelligence
+    lead_quality_score: int = Field(description="AI-powered lead quality score (0-100) based on business potential and website quality.")
+    business_maturity_level: str = Field(description="Business maturity level (e.g., 'Early Stage', 'Growth Phase', 'Established', 'Market Leader').")
+    sales_potential: str = Field(description="Sales potential assessment (High, Moderate, Low).")
+    digital_readiness: str = Field(description="Digital readiness level (High, Moderate, Low).")
+    growth_potential: str = Field(description="Growth potential level (High, Moderate, Low).")
+    market_position_intelligence_insight: str = Field(description="Concise AI strategic insight about the business's market position and potential.")
+
 
 class BattleCardResult(BaseModel):
     seo_winner: str = Field(description="'Primary', 'Competitor', or 'Tie'")

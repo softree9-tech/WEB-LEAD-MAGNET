@@ -988,6 +988,16 @@ Finally, analyze the CONTENT & MESSAGING CLARITY:
   - `value_proposition_analysis`: Concise AI analysis of the value proposition strength and clarity.
   - `messaging_strategic_recommendation`: Strategic AI recommendation for messaging and content clarity.
   - Example: “The website appears visually professional, but the messaging lacks a strong value proposition and does not clearly communicate why customers should choose this business.”
+
+Finally, analyze the MARKET POSITION INTELLIGENCE:
+- Combine industry competitiveness analysis with AI-powered lead quality and business potential scoring.
+- Generate:
+  - `lead_quality_score`: (0-100) based on overall website quality, business maturity, and sales opportunity.
+  - `business_maturity_level`: (Early Stage, Growth Phase, Established, Market Leader).
+  - `sales_potential`: (High, Moderate, Low).
+  - `digital_readiness`: (High, Moderate, Low) based on tech stack, analytics, and optimization.
+  - `growth_potential`: (High, Moderate, Low).
+  - `market_position_intelligence_insight`: A concise, executive AI strategic insight (e.g., “The business demonstrates above-average market competitiveness and strong digital maturity, making it a high-potential sales opportunity.”)
 """)
 
         human_msg_content = [
@@ -1123,7 +1133,13 @@ Finally, analyze the CONTENT & MESSAGING CLARITY:
                 "cta_action_clarity_score": result.cta_action_clarity_score,
                 "cta_persuasiveness_score": result.cta_persuasiveness_score,
                 "cta_effectiveness_insight": result.cta_effectiveness_insight,
-                "cta_ai_optimization_recommendation": result.cta_ai_optimization_recommendation
+                "cta_ai_optimization_recommendation": result.cta_ai_optimization_recommendation,
+                "lead_quality_score": result.lead_quality_score,
+                "business_maturity_level": result.business_maturity_level,
+                "sales_potential": result.sales_potential,
+                "digital_readiness": result.digital_readiness,
+                "growth_potential": result.growth_potential,
+                "market_position_intelligence_insight": result.market_position_intelligence_insight
             }
 
         except Exception as e:
@@ -1280,6 +1296,12 @@ Finally, analyze the CONTENT & MESSAGING CLARITY:
         "cta_persuasiveness_score": result_dict.get("cta_persuasiveness_score", 0),
         "cta_effectiveness_insight": result_dict.get("cta_effectiveness_insight", ""),
         "cta_ai_optimization_recommendation": result_dict.get("cta_ai_optimization_recommendation", ""),
+        "lead_quality_score": result_dict.get("lead_quality_score", 0),
+        "business_maturity_level": result_dict.get("business_maturity_level", "Unknown"),
+        "sales_potential": result_dict.get("sales_potential", "Moderate"),
+        "digital_readiness": result_dict.get("digital_readiness", "Moderate"),
+        "growth_potential": result_dict.get("growth_potential", "Moderate"),
+        "market_position_intelligence_insight": result_dict.get("market_position_intelligence_insight", ""),
         "b64_image_mobile": b64_image_mobile
     }
 

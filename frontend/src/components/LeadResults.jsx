@@ -28,7 +28,7 @@ export default function LeadResults({ leads }) {
               boxShadow: '0 4px 20px rgba(6, 182, 212, 0.3)'
             }}
             onClick={() => {
-              const csvHeader = 'website,competitor_website,final_score,design,cta,message,trust,speed,schema_score,schema_impact,first_impression_score,first_impression_verdict,executive_summary,business_risk_insight,strategic_opportunity_insight,executive_ai_recommendation,brand_credibility_insight,msg_clarity_level,msg_effectiveness_insight,val_prop_analysis,msg_strategic_rec,headline_clarity,val_prop_strength,cta_quality,msg_confidence,audience_clarity,brand_effectiveness,cta_strength,cta_urgency,cta_visibility,cta_placement,cta_clarity,cta_persuasiveness,cta_eff_insight,cta_opt_rec_ai,mobile_rating,mobile_risk,mobile_insight,momentum_score,momentum_status,momentum_risk,momentum_direction,momentum_insight,strategic_action_plan,revenue_leak,leak_severity,annual_loss,urgency_severity,revenue_impact_insight,visitors_lost,leads_lost,missing_leads_count,conversion_loss_percent,readiness_level,cta_opt_rec,conv_imp_sug,funnel_opt_ins,mobile_conv_rec,lead_gen_opp,conv_intel_ins,industry_percentile,industry_tier,industry_competitiveness,keyword_opps,keyword_level,competitor_adv,search_impact,keyword_insight,rebranding_pitch,seo_issues,aeo_quote,battle_winner,battle_verdict,emailfullbody\n';
+              const csvHeader = 'website,competitor_website,final_score,design,cta,message,trust,speed,schema_score,schema_impact,first_impression_score,first_impression_verdict,executive_summary,business_risk_insight,strategic_opportunity_insight,executive_ai_recommendation,brand_credibility_insight,msg_clarity_level,msg_effectiveness_insight,val_prop_analysis,msg_strategic_rec,headline_clarity,val_prop_strength,cta_quality,msg_confidence,audience_clarity,brand_effectiveness,cta_strength,cta_urgency,cta_visibility,cta_placement,cta_clarity,cta_persuasiveness,cta_eff_insight,cta_opt_rec_ai,mobile_rating,mobile_risk,mobile_insight,momentum_score,momentum_status,momentum_risk,momentum_direction,momentum_insight,strategic_action_plan,revenue_leak,leak_severity,annual_loss,urgency_severity,revenue_impact_insight,visitors_lost,leads_lost,missing_leads_count,conversion_loss_percent,readiness_level,cta_opt_rec,conv_imp_sug,funnel_opt_ins,mobile_conv_rec,lead_gen_opp,conv_intel_ins,industry_percentile,industry_tier,industry_competitiveness,lead_quality,maturity_level,sales_potential,digital_readiness,growth_potential,market_insight,keyword_opps,keyword_level,competitor_adv,search_impact,keyword_insight,rebranding_pitch,seo_issues,aeo_quote,battle_winner,battle_verdict,emailfullbody\n';
 
 
               const csvRows = leads.map(lead => {
@@ -143,6 +143,12 @@ Best,
                   escapeCSV(lead.industry_percentile || 0),
                   escapeCSV(lead.industry_tier || 'Unknown'),
                   escapeCSV(lead.industry_competitiveness || 'Unknown'),
+                  escapeCSV(lead.lead_quality_score || 0),
+                  escapeCSV(lead.business_maturity_level || 'Unknown'),
+                  escapeCSV(lead.sales_potential || 'Moderate'),
+                  escapeCSV(lead.digital_readiness || 'Moderate'),
+                  escapeCSV(lead.growth_potential || 'Moderate'),
+                  escapeCSV(lead.market_position_intelligence_insight || ''),
                   escapeCSV(lead.keyword_visibility_gap_opportunities || ''),
                   escapeCSV(lead.keyword_visibility_gap_level || 'Low'),
                   escapeCSV(lead.keyword_visibility_gap_competitor_advantage || ''),
@@ -287,7 +293,7 @@ Best,
                 <div className="header-actions">
                   <button className="action-btn" onClick={() => window.location.reload()}><RefreshCw size={14} /> Recalculate</button>
                   <button className="action-btn primary" onClick={() => {
-              const csvHeader = 'website,competitor_website,final_score,design,cta,message,trust,speed,schema_score,schema_impact,first_impression_score,first_impression_verdict,executive_summary,business_risk_insight,strategic_opportunity_insight,executive_ai_recommendation,brand_credibility_insight,msg_clarity_level,msg_effectiveness_insight,val_prop_analysis,msg_strategic_rec,headline_clarity,val_prop_strength,cta_quality,msg_confidence,audience_clarity,brand_effectiveness,cta_strength,cta_urgency,cta_visibility,cta_placement,cta_clarity,cta_persuasiveness,cta_eff_insight,cta_opt_rec_ai,mobile_rating,mobile_risk,mobile_insight,momentum_score,momentum_status,momentum_risk,momentum_direction,momentum_insight,strategic_action_plan,revenue_leak,leak_severity,annual_loss,urgency_severity,revenue_impact_insight,visitors_lost,leads_lost,missing_leads_count,conversion_loss_percent,readiness_level,cta_opt_rec,conv_imp_sug,funnel_opt_ins,mobile_conv_rec,lead_gen_opp,conv_intel_ins,industry_percentile,industry_tier,industry_competitiveness,keyword_opps,keyword_level,competitor_adv,search_impact,keyword_insight,rebranding_pitch,seo_issues,aeo_quote,battle_winner,battle_verdict,emailfullbody\n';
+              const csvHeader = 'website,competitor_website,final_score,design,cta,message,trust,speed,schema_score,schema_impact,first_impression_score,first_impression_verdict,executive_summary,business_risk_insight,strategic_opportunity_insight,executive_ai_recommendation,brand_credibility_insight,msg_clarity_level,msg_effectiveness_insight,val_prop_analysis,msg_strategic_rec,headline_clarity,val_prop_strength,cta_quality,msg_confidence,audience_clarity,brand_effectiveness,cta_strength,cta_urgency,cta_visibility,cta_placement,cta_clarity,cta_persuasiveness,cta_eff_insight,cta_opt_rec_ai,mobile_rating,mobile_risk,mobile_insight,momentum_score,momentum_status,momentum_risk,momentum_direction,momentum_insight,strategic_action_plan,revenue_leak,leak_severity,annual_loss,urgency_severity,revenue_impact_insight,visitors_lost,leads_lost,missing_leads_count,conversion_loss_percent,readiness_level,cta_opt_rec,conv_imp_sug,funnel_opt_ins,mobile_conv_rec,lead_gen_opp,conv_intel_ins,industry_percentile,industry_tier,industry_competitiveness,lead_quality,maturity_level,sales_potential,digital_readiness,growth_potential,market_insight,keyword_opps,keyword_level,competitor_adv,search_impact,keyword_insight,rebranding_pitch,seo_issues,aeo_quote,battle_winner,battle_verdict,emailfullbody\n';
 
                     const trustWarning = [
                       (!lead.seo_ssl ? 'SSL certificate invalid or missing' : (lead.ssl_days_remaining < 30 ? `SSL expires in ${lead.ssl_days_remaining} days` : '')),
@@ -380,6 +386,12 @@ Best,
                       escapeCSV(lead.industry_percentile || 0),
                       escapeCSV(lead.industry_tier || 'Unknown'),
                       escapeCSV(lead.industry_competitiveness || 'Unknown'),
+                      escapeCSV(lead.lead_quality_score || 0),
+                      escapeCSV(lead.business_maturity_level || 'Unknown'),
+                      escapeCSV(lead.sales_potential || 'Moderate'),
+                      escapeCSV(lead.digital_readiness || 'Moderate'),
+                      escapeCSV(lead.growth_potential || 'Moderate'),
+                      escapeCSV(lead.market_position_intelligence_insight || ''),
                       escapeCSV(lead.keyword_visibility_gap_opportunities || ''),
                       escapeCSV(lead.keyword_visibility_gap_level || 'Low'),
                       escapeCSV(lead.keyword_visibility_gap_competitor_advantage || ''),
@@ -1015,41 +1027,75 @@ Best,
                   </div>
                 </div>
 
-                {/* 5.5 Industry Percentile Rank */}
-                <div className="quad-card industry-rank-card animate-slide-up">
+                {/* 5.5 Market Position Intelligence */}
+                <div className="quad-card market-position-card animate-slide-up">
                   <div className="quad-header">
-                    <h2 style={{ color: '#3b82f6', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-                      <Target size={20} /> Industry Percentile Rank
+                    <h2 style={{ color: '#06b6d4', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                      <TrendingDown size={20} style={{ transform: 'rotate(180deg)' }} /> Market Position Intelligence
                     </h2>
-                    <div className={`severity-badge severity-${(lead.industry_competitiveness || 'Low').toLowerCase() === 'high' ? 'low' : (lead.industry_competitiveness || 'Low').toLowerCase().includes('moderate') ? 'moderate' : 'critical'}`}>
+                    <div className={`status-badge status-${(lead.industry_tier || 'Unknown').toLowerCase().includes('leading') ? 'leading' : (lead.industry_tier || 'Unknown').toLowerCase().includes('competitive') ? 'steady' : 'falling-behind'}`}>
                       {lead.industry_tier || 'Unknown'}
                     </div>
                   </div>
 
-                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.5rem' }}>
-                    <div className="rank-score-box">
-                      <span className="big-score" style={{ color: '#3b82f6', fontSize: '2.5rem', fontWeight: 800 }}>{lead.industry_percentile || 0}</span>
-                      <span style={{ fontSize: '1rem', color: '#64748b', fontWeight: 500 }}>th</span>
-                    </div>
-                    <div className="competitiveness-box" style={{ textAlign: 'right' }}>
-                      <div style={{ color: '#e2e8f0', fontSize: '1.2rem', fontWeight: 700 }}>
-                        {lead.industry_percentile >= 50 ? 'Top' : 'Bottom'} {lead.industry_percentile >= 50 ? 100 - (lead.industry_percentile || 0) : lead.industry_percentile || 0}%
+                  <div className="market-intelligence-grid" style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1.5rem', marginBottom: '1.5rem' }}>
+                    <div className="intelligence-score-section">
+                      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline', marginBottom: '0.5rem' }}>
+                        <span style={{ fontSize: '0.75rem', fontWeight: 700, color: '#94a3b8', textTransform: 'uppercase' }}>Industry Percentile</span>
+                        <span style={{ fontSize: '1.5rem', fontWeight: 800, color: '#06b6d4' }}>{lead.industry_percentile || 0}%</span>
                       </div>
-                      <div style={{ color: '#64748b', fontSize: '0.75rem' }}>Competitiveness: {lead.industry_competitiveness || 'Low'}</div>
+                      <div className="bar-track" style={{ height: '8px', marginBottom: '1rem' }}>
+                        <div className="bar-fill" style={{ width: `${lead.industry_percentile || 0}%`, background: 'linear-gradient(90deg, #06b6d4, #3b82f6)' }}></div>
+                      </div>
+                      <div style={{ fontSize: '0.8rem', color: 'var(--text-secondary)' }}>
+                        Outperforming <span style={{ fontWeight: 700, color: '#e2e8f0' }}>{lead.industry_percentile || 0}%</span> of industry competitors.
+                      </div>
+                    </div>
+
+                    <div className="lead-quality-section">
+                      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline', marginBottom: '0.5rem' }}>
+                        <span style={{ fontSize: '0.75rem', fontWeight: 700, color: '#94a3b8', textTransform: 'uppercase' }}>Lead Quality Score</span>
+                        <span style={{ fontSize: '1.5rem', fontWeight: 800, color: '#10b981' }}>{lead.lead_quality_score || 0}%</span>
+                      </div>
+                      <div className="bar-track" style={{ height: '8px', marginBottom: '1rem' }}>
+                        <div className="bar-fill" style={{ width: `${lead.lead_quality_score || 0}%`, background: 'linear-gradient(90deg, #10b981, #3b82f6)' }}></div>
+                      </div>
+                      <div style={{ fontSize: '0.8rem', color: 'var(--text-secondary)' }}>
+                        Assessment: <span style={{ fontWeight: 700, color: '#e2e8f0' }}>{(lead.lead_quality_score || 0) > 75 ? 'High Value' : (lead.lead_quality_score || 0) > 40 ? 'Moderate Value' : 'Low Value'} Lead</span>
+                      </div>
                     </div>
                   </div>
 
-                  <p style={{ color: 'var(--text-secondary)', fontSize: '0.9rem', marginBottom: '1.5rem', textAlign: 'center' }}>
-                    {lead.industry_percentile >= 50 ? `You outperform ${lead.industry_percentile}% of websites in your category.` : `Industry Rank: Bottom ${lead.industry_percentile}%`}
-                  </p>
-
-                  <div className="ai-insight-box" style={{ marginTop: 'auto', background: 'rgba(59, 130, 246, 0.05)', padding: '1rem', borderRadius: '12px', borderLeft: '4px solid #3b82f6' }}>
-                    <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', marginBottom: '0.5rem' }}>
-                      <Bot size={16} color="#3b82f6" />
-                      <span style={{ fontSize: '0.8rem', fontWeight: 700, color: '#3b82f6', textTransform: 'uppercase' }}>AI Insight</span>
+                  <div className="market-metrics-grid" style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: '0.75rem', marginBottom: '1.5rem' }}>
+                    <div style={{ background: 'rgba(0,0,0,0.2)', padding: '0.75rem', borderRadius: '8px', border: '1px solid rgba(255,255,255,0.05)', textAlign: 'center' }}>
+                      <div style={{ fontSize: '0.65rem', color: '#64748b', fontWeight: 700, textTransform: 'uppercase', marginBottom: '4px' }}>Business Maturity</div>
+                      <div style={{ fontSize: '0.85rem', color: '#e2e8f0', fontWeight: 600 }}>{lead.business_maturity_level || 'Unknown'}</div>
                     </div>
-                    <p style={{ fontSize: '0.85rem', color: 'var(--text-secondary)', margin: 0, fontStyle: 'italic' }}>
-                      "{lead.industry_insight || "Website lacks specific industry competitive advantages in terms of UX and technical performance."}"
+                    <div style={{ background: 'rgba(0,0,0,0.2)', padding: '0.75rem', borderRadius: '8px', border: '1px solid rgba(255,255,255,0.05)', textAlign: 'center' }}>
+                      <div style={{ fontSize: '0.65rem', color: '#64748b', fontWeight: 700, textTransform: 'uppercase', marginBottom: '4px' }}>Sales Potential</div>
+                      <div style={{ fontSize: '0.85rem', color: lead.sales_potential === 'High' ? '#10b981' : lead.sales_potential === 'Moderate' ? '#3b82f6' : '#ef4444', fontWeight: 600 }}>{lead.sales_potential || 'Moderate'}</div>
+                    </div>
+                    <div style={{ background: 'rgba(0,0,0,0.2)', padding: '0.75rem', borderRadius: '8px', border: '1px solid rgba(255,255,255,0.05)', textAlign: 'center' }}>
+                      <div style={{ fontSize: '0.65rem', color: '#64748b', fontWeight: 700, textTransform: 'uppercase', marginBottom: '4px' }}>Growth Potential</div>
+                      <div style={{ fontSize: '0.85rem', color: lead.growth_potential === 'High' ? '#10b981' : lead.growth_potential === 'Moderate' ? '#3b82f6' : '#ef4444', fontWeight: 600 }}>{lead.growth_potential || 'Moderate'}</div>
+                    </div>
+                    <div style={{ background: 'rgba(0,0,0,0.2)', padding: '0.75rem', borderRadius: '8px', border: '1px solid rgba(255,255,255,0.05)', textAlign: 'center' }}>
+                      <div style={{ fontSize: '0.65rem', color: '#64748b', fontWeight: 700, textTransform: 'uppercase', marginBottom: '4px' }}>Digital Readiness</div>
+                      <div style={{ fontSize: '0.85rem', color: lead.digital_readiness === 'High' ? '#10b981' : lead.digital_readiness === 'Moderate' ? '#3b82f6' : '#ef4444', fontWeight: 600 }}>{lead.digital_readiness || 'Moderate'}</div>
+                    </div>
+                    <div style={{ background: 'rgba(0,0,0,0.2)', padding: '0.75rem', borderRadius: '8px', border: '1px solid rgba(255,255,255,0.05)', textAlign: 'center', gridColumn: 'span 2' }}>
+                      <div style={{ fontSize: '0.65rem', color: '#64748b', fontWeight: 700, textTransform: 'uppercase', marginBottom: '4px' }}>Competitiveness</div>
+                      <div style={{ fontSize: '0.85rem', color: '#e2e8f0', fontWeight: 600 }}>{lead.industry_competitiveness || 'Low'}</div>
+                    </div>
+                  </div>
+
+                  <div className="ai-insight-box" style={{ marginTop: 'auto', background: 'rgba(6, 182, 212, 0.05)', padding: '1rem', borderRadius: '12px', borderLeft: '4px solid #06b6d4' }}>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', marginBottom: '0.5rem' }}>
+                      <Sparkles size={16} color="#06b6d4" />
+                      <span style={{ fontSize: '0.8rem', fontWeight: 700, color: '#06b6d4', textTransform: 'uppercase' }}>AI Strategic Recommendation</span>
+                    </div>
+                    <p style={{ fontSize: '0.85rem', color: 'var(--text-secondary)', margin: 0, fontStyle: 'italic', lineHeight: '1.5' }}>
+                      "{lead.market_position_intelligence_insight || lead.industry_insight || "Website lacks specific industry competitive advantages in terms of UX and technical performance."}"
                     </p>
                   </div>
                 </div>
