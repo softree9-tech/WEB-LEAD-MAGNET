@@ -87,6 +87,15 @@ class WebsiteAnalyzerOutput(BaseModel):
     audience_targeting_clarity_score: int = Field(description="Audience targeting clarity score (0-10).")
     brand_communication_effectiveness_score: int = Field(description="Brand communication effectiveness score (0-10).")
 
+    cta_strength_level: str = Field(description="CTA wording strength level (High, Moderate, Low).")
+    cta_urgency_score: int = Field(description="CTA urgency level score (0-10).")
+    cta_visibility_rating: str = Field(description="CTA visibility rating (High, Moderate, Low).")
+    cta_placement_quality: str = Field(description="CTA placement quality (Strategic, Suboptimal, Poor).")
+    cta_action_clarity_score: int = Field(description="CTA action clarity score (0-10).")
+    cta_persuasiveness_score: int = Field(description="CTA conversion persuasiveness score (0-10).")
+    cta_effectiveness_insight: str = Field(description="Concise AI conversion effectiveness insight.")
+    cta_ai_optimization_recommendation: str = Field(description="Concise AI optimization recommendation for CTA.")
+
 
 class BattleCardResult(BaseModel):
     seo_winner: str = Field(description="'Primary', 'Competitor', or 'Tie'")

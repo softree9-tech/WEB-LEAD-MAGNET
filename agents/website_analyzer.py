@@ -966,6 +966,14 @@ Finally, analyze the CONVERSION OPPORTUNITY INTELLIGENCE:
   - `mobile_conversion_recommendation`: Concise AI recommendation specifically for mobile-specific conversion improvements.
   - `lead_gen_improvement_opportunity`: Concise AI insight on lead generation improvement opportunities like forms, chat, or trust signals.
   - `conversion_intelligence_insight`: A strategic, premium, executive-level conversion intelligence insight combining all analysis data (CTA, forms, mobile, trust, AI visibility).
+969:   - `cta_strength_level`: (High, Moderate, Low) Overall CTA wording strength.
+970:   - `cta_urgency_score`: (0-10) How much urgency does the CTA create?
+971:   - `cta_visibility_rating`: (High, Moderate, Low) How visible is the primary CTA?
+972:   - `cta_placement_quality`: (Strategic, Suboptimal, Poor) Quality of CTA placement.
+973:   - `cta_action_clarity_score`: (0-10) How clear is the action required?
+974:   - `cta_persuasiveness_score`: (0-10) How persuasive is the CTA language?
+975:   - `cta_effectiveness_insight`: Concise AI conversion effectiveness insight. Example: "The CTA is visible but lacks urgency and persuasive language, reducing conversion motivation."
+976:   - `cta_ai_optimization_recommendation`: Concise AI optimization recommendation for CTA.
 Finally, analyze the CONTENT & MESSAGING CLARITY:
 - Evaluate the website's messaging across:
   - `headline_clarity_score`: (0-10) How clear and impactful is the primary headline?
@@ -1107,7 +1115,15 @@ Finally, analyze the CONTENT & MESSAGING CLARITY:
                 "cta_communication_quality_score": result.cta_communication_quality_score,
                 "messaging_confidence_score": result.messaging_confidence_score,
                 "audience_targeting_clarity_score": result.audience_targeting_clarity_score,
-                "brand_communication_effectiveness_score": result.brand_communication_effectiveness_score
+                "brand_communication_effectiveness_score": result.brand_communication_effectiveness_score,
+                "cta_strength_level": result.cta_strength_level,
+                "cta_urgency_score": result.cta_urgency_score,
+                "cta_visibility_rating": result.cta_visibility_rating,
+                "cta_placement_quality": result.cta_placement_quality,
+                "cta_action_clarity_score": result.cta_action_clarity_score,
+                "cta_persuasiveness_score": result.cta_persuasiveness_score,
+                "cta_effectiveness_insight": result.cta_effectiveness_insight,
+                "cta_ai_optimization_recommendation": result.cta_ai_optimization_recommendation
             }
 
         except Exception as e:
@@ -1154,7 +1170,15 @@ Finally, analyze the CONTENT & MESSAGING CLARITY:
                 "cta_communication_quality_score": 5,
                 "messaging_confidence_score": 5,
                 "audience_targeting_clarity_score": 5,
-                "brand_communication_effectiveness_score": 5
+                "brand_communication_effectiveness_score": 5,
+                "cta_strength_level": "Moderate",
+                "cta_urgency_score": 5,
+                "cta_visibility_rating": "Moderate",
+                "cta_placement_quality": "Suboptimal",
+                "cta_action_clarity_score": 5,
+                "cta_persuasiveness_score": 5,
+                "cta_effectiveness_insight": "CTA analysis partially failed, but initial signals suggest a lack of urgency.",
+                "cta_ai_optimization_recommendation": "Strengthen CTA wording with action-oriented and urgent language."
             }
 
     # Format the payload directly for the React frontend Lead Magnet report
@@ -1248,6 +1272,14 @@ Finally, analyze the CONTENT & MESSAGING CLARITY:
         "messaging_confidence_score": result_dict.get("messaging_confidence_score", 0),
         "audience_targeting_clarity_score": result_dict.get("audience_targeting_clarity_score", 0),
         "brand_communication_effectiveness_score": result_dict.get("brand_communication_effectiveness_score", 0),
+        "cta_strength_level": result_dict.get("cta_strength_level", "Moderate"),
+        "cta_urgency_score": result_dict.get("cta_urgency_score", 0),
+        "cta_visibility_rating": result_dict.get("cta_visibility_rating", "Moderate"),
+        "cta_placement_quality": result_dict.get("cta_placement_quality", "Suboptimal"),
+        "cta_action_clarity_score": result_dict.get("cta_action_clarity_score", 0),
+        "cta_persuasiveness_score": result_dict.get("cta_persuasiveness_score", 0),
+        "cta_effectiveness_insight": result_dict.get("cta_effectiveness_insight", ""),
+        "cta_ai_optimization_recommendation": result_dict.get("cta_ai_optimization_recommendation", ""),
         "b64_image_mobile": b64_image_mobile
     }
 

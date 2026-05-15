@@ -28,7 +28,7 @@ export default function LeadResults({ leads }) {
               boxShadow: '0 4px 20px rgba(6, 182, 212, 0.3)'
             }}
             onClick={() => {
-              const csvHeader = 'website,competitor_website,final_score,design,cta,message,trust,speed,schema_score,schema_impact,first_impression_score,first_impression_verdict,executive_summary,business_risk_insight,strategic_opportunity_insight,executive_ai_recommendation,brand_credibility_insight,msg_clarity_level,msg_effectiveness_insight,val_prop_analysis,msg_strategic_rec,headline_clarity,val_prop_strength,cta_quality,msg_confidence,audience_clarity,brand_effectiveness,mobile_rating,mobile_risk,mobile_insight,momentum_score,momentum_status,momentum_risk,momentum_direction,momentum_insight,strategic_action_plan,revenue_leak,leak_severity,annual_loss,urgency_severity,revenue_impact_insight,visitors_lost,leads_lost,missing_leads_count,conversion_loss_percent,readiness_level,cta_opt_rec,conv_imp_sug,funnel_opt_ins,mobile_conv_rec,lead_gen_opp,conv_intel_ins,industry_percentile,industry_tier,industry_competitiveness,keyword_opps,keyword_level,competitor_adv,search_impact,keyword_insight,rebranding_pitch,seo_issues,aeo_quote,battle_winner,battle_verdict,emailfullbody\n';
+              const csvHeader = 'website,competitor_website,final_score,design,cta,message,trust,speed,schema_score,schema_impact,first_impression_score,first_impression_verdict,executive_summary,business_risk_insight,strategic_opportunity_insight,executive_ai_recommendation,brand_credibility_insight,msg_clarity_level,msg_effectiveness_insight,val_prop_analysis,msg_strategic_rec,headline_clarity,val_prop_strength,cta_quality,msg_confidence,audience_clarity,brand_effectiveness,cta_strength,cta_urgency,cta_visibility,cta_placement,cta_clarity,cta_persuasiveness,cta_eff_insight,cta_opt_rec_ai,mobile_rating,mobile_risk,mobile_insight,momentum_score,momentum_status,momentum_risk,momentum_direction,momentum_insight,strategic_action_plan,revenue_leak,leak_severity,annual_loss,urgency_severity,revenue_impact_insight,visitors_lost,leads_lost,missing_leads_count,conversion_loss_percent,readiness_level,cta_opt_rec,conv_imp_sug,funnel_opt_ins,mobile_conv_rec,lead_gen_opp,conv_intel_ins,industry_percentile,industry_tier,industry_competitiveness,keyword_opps,keyword_level,competitor_adv,search_impact,keyword_insight,rebranding_pitch,seo_issues,aeo_quote,battle_winner,battle_verdict,emailfullbody\n';
 
 
               const csvRows = leads.map(lead => {
@@ -287,7 +287,7 @@ Best,
                 <div className="header-actions">
                   <button className="action-btn" onClick={() => window.location.reload()}><RefreshCw size={14} /> Recalculate</button>
                   <button className="action-btn primary" onClick={() => {
-              const csvHeader = 'website,competitor_website,final_score,design,cta,message,trust,speed,schema_score,schema_impact,first_impression_score,first_impression_verdict,executive_summary,business_risk_insight,strategic_opportunity_insight,executive_ai_recommendation,brand_credibility_insight,msg_clarity_level,msg_effectiveness_insight,val_prop_analysis,msg_strategic_rec,headline_clarity,val_prop_strength,cta_quality,msg_confidence,audience_clarity,brand_effectiveness,mobile_rating,mobile_risk,mobile_insight,momentum_score,momentum_status,momentum_risk,momentum_direction,momentum_insight,strategic_action_plan,revenue_leak,leak_severity,annual_loss,urgency_severity,revenue_impact_insight,visitors_lost,leads_lost,missing_leads_count,conversion_loss_percent,readiness_level,cta_opt_rec,conv_imp_sug,funnel_opt_ins,mobile_conv_rec,lead_gen_opp,conv_intel_ins,industry_percentile,industry_tier,industry_competitiveness,keyword_opps,keyword_level,competitor_adv,search_impact,keyword_insight,rebranding_pitch,seo_issues,aeo_quote,battle_winner,battle_verdict,emailfullbody\n';
+              const csvHeader = 'website,competitor_website,final_score,design,cta,message,trust,speed,schema_score,schema_impact,first_impression_score,first_impression_verdict,executive_summary,business_risk_insight,strategic_opportunity_insight,executive_ai_recommendation,brand_credibility_insight,msg_clarity_level,msg_effectiveness_insight,val_prop_analysis,msg_strategic_rec,headline_clarity,val_prop_strength,cta_quality,msg_confidence,audience_clarity,brand_effectiveness,cta_strength,cta_urgency,cta_visibility,cta_placement,cta_clarity,cta_persuasiveness,cta_eff_insight,cta_opt_rec_ai,mobile_rating,mobile_risk,mobile_insight,momentum_score,momentum_status,momentum_risk,momentum_direction,momentum_insight,strategic_action_plan,revenue_leak,leak_severity,annual_loss,urgency_severity,revenue_impact_insight,visitors_lost,leads_lost,missing_leads_count,conversion_loss_percent,readiness_level,cta_opt_rec,conv_imp_sug,funnel_opt_ins,mobile_conv_rec,lead_gen_opp,conv_intel_ins,industry_percentile,industry_tier,industry_competitiveness,keyword_opps,keyword_level,competitor_adv,search_impact,keyword_insight,rebranding_pitch,seo_issues,aeo_quote,battle_winner,battle_verdict,emailfullbody\n';
 
                     const trustWarning = [
                       (!lead.seo_ssl ? 'SSL certificate invalid or missing' : (lead.ssl_days_remaining < 30 ? `SSL expires in ${lead.ssl_days_remaining} days` : '')),
@@ -344,6 +344,14 @@ Best,
                       escapeCSV(lead.messaging_confidence_score || 0),
                       escapeCSV(lead.audience_targeting_clarity_score || 0),
                       escapeCSV(lead.brand_communication_effectiveness_score || 0),
+                      escapeCSV(lead.cta_strength_level || 'Moderate'),
+                      escapeCSV(lead.cta_urgency_score || 0),
+                      escapeCSV(lead.cta_visibility_rating || 'Moderate'),
+                      escapeCSV(lead.cta_placement_quality || 'Suboptimal'),
+                      escapeCSV(lead.cta_action_clarity_score || 0),
+                      escapeCSV(lead.cta_persuasiveness_score || 0),
+                      escapeCSV(lead.cta_effectiveness_insight || ''),
+                      escapeCSV(lead.cta_ai_optimization_recommendation || ''),
                       escapeCSV(lead.mobile_ux_rating || 'Average'),
                       escapeCSV(lead.mobile_conversion_risk || 'Moderate'),
                       escapeCSV(lead.mobile_ai_insight || ''),
@@ -919,13 +927,66 @@ Best,
                     </div>
                   </div>
 
-                  <div className="strategic-recs-grid" style={{ display: 'grid', gap: '0.75rem', marginBottom: '1.5rem' }}>
-                    <div style={{ background: 'rgba(0,0,0,0.2)', padding: '0.75rem', borderRadius: '10px', border: '1px solid rgba(255,255,255,0.03)' }}>
-                      <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', marginBottom: '0.25rem' }}>
-                        <Target size={14} color="#f97316" />
-                        <span style={{ fontSize: '0.75rem', fontWeight: 700, color: '#f97316' }}>CTA Optimization</span>
+                  <div className="cta-strength-analysis" style={{ background: 'rgba(0,0,0,0.15)', padding: '1.25rem', borderRadius: '12px', marginBottom: '1.5rem', border: '1px solid rgba(255,255,255,0.03)' }}>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1rem' }}>
+                      <h3 style={{ fontSize: '0.85rem', fontWeight: 700, margin: 0, display: 'flex', alignItems: 'center', gap: '0.5rem', color: '#f97316' }}>
+                        <Zap size={16} /> CTA Strength Analysis
+                      </h3>
+                      <div style={{ fontSize: '0.7rem', fontWeight: 700, padding: '2px 8px', borderRadius: '4px', background: 'rgba(249, 115, 22, 0.1)', color: '#f97316' }}>
+                        Strength: {lead.cta_strength_level || 'Moderate'}
                       </div>
-                      <p style={{ fontSize: '0.8rem', color: '#94a3b8', margin: 0 }}>{lead.cta_optimization_recommendation || "Optimize above-the-fold CTA placement and clarity."}</p>
+                    </div>
+
+                    <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: '0.75rem', marginBottom: '1rem' }}>
+                      <div style={{ textAlign: 'center' }}>
+                        <div style={{ fontSize: '0.65rem', color: '#64748b', fontWeight: 700, textTransform: 'uppercase', marginBottom: '4px' }}>Urgency</div>
+                        <div style={{ fontSize: '1.25rem', fontWeight: 800, color: (lead.cta_urgency_score || 0) > 7 ? '#10b981' : (lead.cta_urgency_score || 0) > 4 ? '#3b82f6' : '#ef4444' }}>{lead.cta_urgency_score || 0}<span style={{ fontSize: '0.8rem', opacity: 0.5 }}>/10</span></div>
+                      </div>
+                      <div style={{ textAlign: 'center' }}>
+                        <div style={{ fontSize: '0.65rem', color: '#64748b', fontWeight: 700, textTransform: 'uppercase', marginBottom: '4px' }}>Placement</div>
+                        <div style={{ fontSize: '0.8rem', fontWeight: 700, color: lead.cta_placement_quality === 'Strategic' ? '#10b981' : lead.cta_placement_quality === 'Suboptimal' ? '#3b82f6' : '#ef4444', marginTop: '6px' }}>{lead.cta_placement_quality || 'Suboptimal'}</div>
+                      </div>
+                      <div style={{ textAlign: 'center' }}>
+                        <div style={{ fontSize: '0.65rem', color: '#64748b', fontWeight: 700, textTransform: 'uppercase', marginBottom: '4px' }}>Visibility</div>
+                        <div style={{ fontSize: '0.8rem', fontWeight: 700, color: lead.cta_visibility_rating === 'High' ? '#10b981' : lead.cta_visibility_rating === 'Moderate' ? '#3b82f6' : '#ef4444', marginTop: '6px' }}>{lead.cta_visibility_rating || 'Moderate'}</div>
+                      </div>
+                    </div>
+
+                    <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '0.75rem', marginBottom: '1rem' }}>
+                      <div style={{ background: 'rgba(255,255,255,0.02)', padding: '0.5rem 0.75rem', borderRadius: '6px', border: '1px solid rgba(255,255,255,0.05)' }}>
+                        <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '4px' }}>
+                          <span style={{ fontSize: '0.7rem', color: '#64748b', fontWeight: 600 }}>Action Clarity</span>
+                          <span style={{ fontSize: '0.7rem', color: '#f97316', fontWeight: 700 }}>{lead.cta_action_clarity_score || 0}/10</span>
+                        </div>
+                        <div className="bar-track" style={{ height: '3px' }}>
+                          <div className="bar-fill" style={{ width: `${(lead.cta_action_clarity_score || 0) * 10}%`, background: '#f97316' }}></div>
+                        </div>
+                      </div>
+                      <div style={{ background: 'rgba(255,255,255,0.02)', padding: '0.5rem 0.75rem', borderRadius: '6px', border: '1px solid rgba(255,255,255,0.05)' }}>
+                        <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '4px' }}>
+                          <span style={{ fontSize: '0.7rem', color: '#64748b', fontWeight: 600 }}>Persuasiveness</span>
+                          <span style={{ fontSize: '0.7rem', color: '#f97316', fontWeight: 700 }}>{lead.cta_persuasiveness_score || 0}/10</span>
+                        </div>
+                        <div className="bar-track" style={{ height: '3px' }}>
+                          <div className="bar-fill" style={{ width: `${(lead.cta_persuasiveness_score || 0) * 10}%`, background: '#f97316' }}></div>
+                        </div>
+                      </div>
+                    </div>
+
+                    <div style={{ background: 'rgba(249, 115, 22, 0.05)', padding: '0.75rem', borderRadius: '8px', borderLeft: '3px solid #f97316' }}>
+                      <p style={{ fontSize: '0.8rem', color: 'var(--text-secondary)', margin: 0, fontStyle: 'italic', lineHeight: '1.4' }}>
+                        "{lead.cta_effectiveness_insight || "The CTA is visible but lacks urgency and persuasive language, reducing conversion motivation."}"
+                      </p>
+                    </div>
+                  </div>
+
+                  <div className="strategic-recs-grid" style={{ display: 'grid', gap: '0.75rem', marginBottom: '1.5rem' }}>
+                    <div style={{ background: 'rgba(249, 115, 22, 0.1)', padding: '0.75rem', borderRadius: '10px', border: '1px solid rgba(249, 115, 22, 0.2)' }}>
+                      <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', marginBottom: '0.25rem' }}>
+                        <Sparkles size={14} color="#f97316" />
+                        <span style={{ fontSize: '0.75rem', fontWeight: 700, color: '#f97316' }}>AI CTA Optimization</span>
+                      </div>
+                      <p style={{ fontSize: '0.8rem', color: '#e2e8f0', margin: 0, fontWeight: 500 }}>{lead.cta_ai_optimization_recommendation || lead.cta_optimization_recommendation || "Optimize above-the-fold CTA placement and clarity."}</p>
                     </div>
                     <div style={{ background: 'rgba(0,0,0,0.2)', padding: '0.75rem', borderRadius: '10px', border: '1px solid rgba(255,255,255,0.03)' }}>
                       <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', marginBottom: '0.25rem' }}>
