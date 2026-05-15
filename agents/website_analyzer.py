@@ -12,6 +12,7 @@ from langchain_google_genai import ChatGoogleGenerativeAI
 from langchain_core.messages import HumanMessage, SystemMessage
 from core.models import WebsiteAnalyzerOutput
 from core.state import AgentState
+from core.security import is_safe_url
 import socket
 import ssl
 from datetime import datetime
@@ -643,6 +644,17 @@ def check_social_links(soup: BeautifulSoup) -> bool:
 def website_analyzer_agent(state: AgentState) -> AgentState:
     url = state.get('raw_website', '').strip()
     print(f"--- Lead Magnet Analyzer processing {url} ---")
+
+    if url and not is_safe_url(url):
+        print(f"⚠️ Security Alert: Blocked access to potentially unsafe URL: {url}")
+        return {"output_row": {
+            "website": url,
+            "final_score": 0,
+            "rebranding_pitch": "Access to this website is blocked for security reasons.",
+            "executive_summary": "Access to this website was blocked due to security policies (potential SSRF).",
+            "business_risk_insight": "Potentially unsafe URL target.",
+            "error": "URL blocked for security reasons"
+        }}
     
     if url and not url.startswith(('http://', 'https://')):
         url = 'https://' + url
