@@ -14,6 +14,7 @@ from pydantic import BaseModel
 from typing import List
 from dotenv import load_dotenv
 from graph import graph_app
+from core.security import is_safe_url
 from fastapi.middleware.cors import CORSMiddleware
 from langchain_google_genai import ChatGoogleGenerativeAI
 from core.models import BattleCardResult
@@ -71,6 +72,9 @@ class BattleInput(BaseModel):
 
 @app.post("/api/process/single")
 def process_single_lead(lead: LeadInput):
+    if not is_safe_url(lead.website):
+        raise HTTPException(status_code=400, detail="Invalid or unsafe website URL")
+
     initial_state = {
         "raw_name": lead.name,
         "raw_email": lead.email,
@@ -102,6 +106,10 @@ async def _process_one_lead(initial_state: dict, label: str) -> dict:
 async def process_batch_leads(payload: LeadList):
     tasks = []
     for lead in payload.leads:
+        if not is_safe_url(lead.website):
+            # Skip unsafe URLs in batch processing
+            continue
+
         initial_state = {
             "raw_name": lead.name,
             "raw_email": lead.email,
@@ -119,6 +127,9 @@ async def process_battle(payload: BattleInput):
     """
     Runs analysis for both primary and competitor websites, then generates a comparison battle card.
     """
+    if not is_safe_url(payload.primary_website) or not is_safe_url(payload.competitor_website):
+        raise HTTPException(status_code=400, detail="One or both website URLs are invalid or unsafe")
+
     primary_state = {
         "raw_name": "Primary",
         "raw_email": "",
@@ -178,7 +189,7 @@ async def process_battle(payload: BattleInput):
         
     except Exception as e:
         print(f"❌ Battle Analysis Error: {e}")
-        raise HTTPException(status_code=500, detail=str(e))
+        raise HTTPException(status_code=500, detail="Internal server error during battle analysis")
 
 @app.post("/api/process/csv")
 async def process_csv(file: UploadFile = File(...)):
@@ -199,6 +210,10 @@ async def process_csv(file: UploadFile = File(...)):
         tasks = []
         for i, row in df.iterrows():
             website = str(row.get("website", ""))
+            if not is_safe_url(website):
+                print(f"--- Skipping unsafe URL: {website} ---")
+                continue
+
             print(f"--- Queuing row {i+1}/{len(df)}: {website} ---")
             initial_state = {
                 "raw_name": str(row.get("name", "")) if "name" in df.columns else "",
