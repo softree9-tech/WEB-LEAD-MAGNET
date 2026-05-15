@@ -85,6 +85,7 @@ def calculate_revenue_leak(metrics: dict) -> dict:
     leak_percent = min(0.85, leak_percent)
     
     amount = int(base_monthly_revenue * leak_percent)
+    annual_loss = amount * 12
     visitors_lost = int(base_monthly_visitors * (leak_percent * 0.6)) # Traffic is only part of the leak
     leads_lost = int((base_monthly_visitors * base_conversion_rate) * leak_percent)
 
@@ -92,6 +93,8 @@ def calculate_revenue_leak(metrics: dict) -> dict:
     if amount > 4000: severity = "Critical"
     elif amount > 2500: severity = "High"
     elif amount > 1000: severity = "Moderate"
+
+    urgency = "Immediate" if severity in ["Critical", "High"] else "30-60 Days" if severity == "Moderate" else "90+ Days"
 
     # Emotional explanation
     explanations = []
@@ -107,7 +110,9 @@ def calculate_revenue_leak(metrics: dict) -> dict:
 
     return {
         "amount": amount,
+        "annual_loss": annual_loss,
         "severity": severity,
+        "urgency": urgency,
         "explanation": f"You are likely losing ~${amount:,}/month {explanation}",
         "visitors_lost": visitors_lost,
         "leads_lost": leads_lost
@@ -933,11 +938,12 @@ Finally, analyze the `COMPETITOR MOMENTUM TRACKER`:
 - Set `momentum_growth_direction` (Up, Down, Neutral).
 - Provide a `momentum_ai_insight`: A high-level AI strategic insight on how they are being outpaced or if they are keeping up with industry technology adoption.
 
-Finally, generate an `AI STRATEGIC ACTION PLAN`:
-- Based on ALL analysis data (SEO, UX, Trust, AI visibility, conversion readiness, schema gaps, mobile UX, and lead capture), generate a prioritized roadmap of 3-5 execution steps.
-- For each step, provide: priority (High, Medium, Low), action, impact (High, Medium, Low), difficulty (Easy, Moderate, Hard), and is_quick_win (True if difficulty is Easy and impact is High).
-- The roadmap should prioritize improvements that offer the highest business impact for SEO, AI visibility, and conversion performance.
 - Example action: "Add FAQ schema and move primary CTA above the fold to improve AI discoverability and lead conversion."
+
+Finally, analyze the REVENUE IMPACT FORECAST:
+- Generate a `revenue_impact_insight`: A high-level, executive AI insight about the long-term business impact of current technical and conversion leaks. Focus on how continued delays in optimization may significantly reduce long-term conversion performance and AI visibility competitiveness.
+- Determine `annual_opportunity_loss`: Based on the technical metrics and current leaks, estimate the total lost business opportunity over the next 12 months.
+- Set `urgency_severity`: (Immediate, 30-60 Days, 90+ Days) based on the severity of current revenue leaks.
 
 """)
 
@@ -1042,7 +1048,10 @@ Finally, generate an `AI STRATEGIC ACTION PLAN`:
                         "difficulty": step.difficulty,
                         "is_quick_win": step.is_quick_win
                     } for step in result.ai_strategic_plan
-                ]
+                ],
+                "annual_opportunity_loss": result.annual_opportunity_loss,
+                "urgency_severity": result.urgency_severity,
+                "revenue_impact_insight": result.revenue_impact_insight
             }
 
         except Exception as e:
@@ -1138,6 +1147,9 @@ Finally, generate an `AI STRATEGIC ACTION PLAN`:
         "momentum_growth_direction": result_dict.get("momentum_growth_direction", "Neutral"),
         "momentum_ai_insight": result_dict.get("momentum_ai_insight", ""),
         "ai_strategic_plan": result_dict.get("ai_strategic_plan", []),
+        "annual_opportunity_loss": result_dict.get("annual_opportunity_loss", 0),
+        "urgency_severity": result_dict.get("urgency_severity", "90+ Days"),
+        "revenue_impact_insight": result_dict.get("revenue_impact_insight", ""),
         "b64_image_mobile": b64_image_mobile
     }
 

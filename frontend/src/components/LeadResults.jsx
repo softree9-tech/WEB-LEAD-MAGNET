@@ -28,7 +28,7 @@ export default function LeadResults({ leads }) {
               boxShadow: '0 4px 20px rgba(6, 182, 212, 0.3)'
             }}
             onClick={() => {
-              const csvHeader = 'website,competitor_website,final_score,design,cta,message,trust,speed,schema_score,schema_impact,first_impression_score,first_impression_verdict,mobile_rating,mobile_risk,mobile_insight,momentum_score,momentum_status,momentum_risk,momentum_direction,momentum_insight,strategic_action_plan,revenue_leak,leak_severity,visitors_lost,leads_lost,missing_leads_count,conversion_loss_percent,readiness_level,industry_percentile,industry_tier,industry_competitiveness,keyword_opps,keyword_level,competitor_adv,search_impact,keyword_insight,rebranding_pitch,seo_issues,aeo_quote,battle_winner,battle_verdict,emailfullbody\n';
+              const csvHeader = 'website,competitor_website,final_score,design,cta,message,trust,speed,schema_score,schema_impact,first_impression_score,first_impression_verdict,mobile_rating,mobile_risk,mobile_insight,momentum_score,momentum_status,momentum_risk,momentum_direction,momentum_insight,strategic_action_plan,revenue_leak,leak_severity,annual_loss,urgency_severity,revenue_impact_insight,visitors_lost,leads_lost,missing_leads_count,conversion_loss_percent,readiness_level,industry_percentile,industry_tier,industry_competitiveness,keyword_opps,keyword_level,competitor_adv,search_impact,keyword_insight,rebranding_pitch,seo_issues,aeo_quote,battle_winner,battle_verdict,emailfullbody\n';
 
 
               const csvRows = leads.map(lead => {
@@ -110,8 +110,10 @@ Best,
                   escapeCSV(lead.momentum_ai_insight || ''),
                   escapeCSV((lead.ai_strategic_plan || []).map(s => `${s.priority}: ${s.action} (Impact: ${s.impact})`).join(' | ')),
                   escapeCSV(`$${lead.revenue_leak_amount || 0}`),
-
                   escapeCSV(lead.revenue_leak_severity || 'Low'),
+                  escapeCSV(`$${lead.annual_opportunity_loss || 0}`),
+                  escapeCSV(lead.urgency_severity || '90+ Days'),
+                  escapeCSV(lead.revenue_impact_insight || ''),
                   escapeCSV(lead.visitors_lost || 0),
                   escapeCSV(lead.leads_lost || 0),
                   escapeCSV(lead.missing_opportunities_count || 0),
@@ -264,7 +266,7 @@ Best,
                 <div className="header-actions">
                   <button className="action-btn" onClick={() => window.location.reload()}><RefreshCw size={14} /> Recalculate</button>
                   <button className="action-btn primary" onClick={() => {
-              const csvHeader = 'website,competitor_website,final_score,design,cta,message,trust,speed,schema_score,schema_impact,first_impression_score,first_impression_verdict,mobile_rating,mobile_risk,mobile_insight,momentum_score,momentum_status,momentum_risk,momentum_direction,momentum_insight,strategic_action_plan,revenue_leak,leak_severity,visitors_lost,leads_lost,missing_leads_count,conversion_loss_percent,readiness_level,industry_percentile,industry_tier,industry_competitiveness,keyword_opps,keyword_level,competitor_adv,search_impact,keyword_insight,rebranding_pitch,seo_issues,aeo_quote,battle_winner,battle_verdict,emailfullbody\n';
+              const csvHeader = 'website,competitor_website,final_score,design,cta,message,trust,speed,schema_score,schema_impact,first_impression_score,first_impression_verdict,mobile_rating,mobile_risk,mobile_insight,momentum_score,momentum_status,momentum_risk,momentum_direction,momentum_insight,strategic_action_plan,revenue_leak,leak_severity,annual_loss,urgency_severity,revenue_impact_insight,visitors_lost,leads_lost,missing_leads_count,conversion_loss_percent,readiness_level,industry_percentile,industry_tier,industry_competitiveness,keyword_opps,keyword_level,competitor_adv,search_impact,keyword_insight,rebranding_pitch,seo_issues,aeo_quote,battle_winner,battle_verdict,emailfullbody\n';
 
                     const trustWarning = [
                       (!lead.seo_ssl ? 'SSL certificate invalid or missing' : (lead.ssl_days_remaining < 30 ? `SSL expires in ${lead.ssl_days_remaining} days` : '')),
@@ -316,8 +318,10 @@ Best,
                       escapeCSV(lead.momentum_ai_insight || ''),
                       escapeCSV((lead.ai_strategic_plan || []).map(s => `${s.priority}: ${s.action} (Impact: ${s.impact})`).join(' | ')),
                       escapeCSV(`$${lead.revenue_leak_amount || 0}`),
-
                       escapeCSV(lead.revenue_leak_severity || 'Low'),
+                      escapeCSV(`$${lead.annual_opportunity_loss || 0}`),
+                      escapeCSV(lead.urgency_severity || '90+ Days'),
+                      escapeCSV(lead.revenue_impact_insight || ''),
                       escapeCSV(lead.visitors_lost || 0),
                       escapeCSV(lead.leads_lost || 0),
                       escapeCSV(lead.missing_opportunities_count || 0),
@@ -696,43 +700,61 @@ Best,
                   </div>
                 </div>
 
-                {/* 4. Revenue Leak Calculator */}
+                {/* 4. Revenue Impact Forecast */}
                 <div className="quad-card revenue-leak-card animate-slide-up">
                   <div className="quad-header">
                     <h2 style={{ color: '#ef4444', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-                      <TrendingDown size={20} /> Estimated Revenue Leakage
+                      <TrendingDown size={20} /> Revenue Impact Forecast
                     </h2>
-                    <div className={`severity-badge severity-${(lead.revenue_leak_severity || 'Low').toLowerCase()}`}>
-                      {lead.revenue_leak_severity || 'Low'} Severity
+                    <div className="impact-badges" style={{ display: 'flex', gap: '0.5rem' }}>
+                      <div className={`severity-badge severity-${(lead.revenue_leak_severity || 'Low').toLowerCase()}`}>
+                        {lead.revenue_leak_severity || 'Low'} Risk
+                      </div>
+                      <div className={`severity-badge severity-${(lead.urgency_severity || '').toLowerCase().includes('immediate') ? 'critical' : (lead.urgency_severity || '').toLowerCase().includes('30') ? 'moderate' : 'low'}`} style={{ background: 'rgba(239, 68, 68, 0.1)', color: '#ef4444', border: '1px solid rgba(239, 68, 68, 0.2)' }}>
+                        Urgency: {lead.urgency_severity || '90+ Days'}
+                      </div>
                     </div>
                   </div>
 
-                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.5rem' }}>
-                    <div className="leak-amount-box">
-                      <div className="leak-amount">
+                  <div className="impact-stats-grid" style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem', marginBottom: '1.5rem' }}>
+                    <div className="leak-amount-box" style={{ padding: '1rem', background: 'rgba(239, 68, 68, 0.05)', borderRadius: '12px', border: '1px solid rgba(239, 68, 68, 0.1)' }}>
+                      <span style={{ fontSize: '0.7rem', color: '#ef4444', fontWeight: 700, textTransform: 'uppercase', display: 'block', marginBottom: '4px' }}>Monthly Impact</span>
+                      <div className="leak-amount" style={{ fontSize: '1.5rem' }}>
                         ${(lead.revenue_leak_amount || 0).toLocaleString()}
-                        <span style={{ fontSize: '1rem', color: '#64748b', marginLeft: '6px', fontWeight: 500 }}>/ mo</span>
+                        <span style={{ fontSize: '0.8rem', color: '#64748b', marginLeft: '4px' }}>/mo</span>
                       </div>
                     </div>
-                    <div className="leak-stats" style={{ textAlign: 'right' }}>
-                      <div className="stat-item" style={{ textAlign: 'right' }}>
-                        <span className="stat-label">Visitors Lost</span>
-                        <span className="stat-value">{lead.visitors_lost || 0}</span>
+                    <div className="leak-amount-box" style={{ padding: '1rem', background: 'rgba(59, 130, 246, 0.05)', borderRadius: '12px', border: '1px solid rgba(59, 130, 246, 0.1)' }}>
+                      <span style={{ fontSize: '0.7rem', color: '#3b82f6', fontWeight: 700, textTransform: 'uppercase', display: 'block', marginBottom: '4px' }}>Yearly Projected Loss</span>
+                      <div className="leak-amount" style={{ fontSize: '1.5rem', color: '#3b82f6' }}>
+                        ${(lead.annual_opportunity_loss || (lead.revenue_leak_amount || 0) * 12).toLocaleString()}
+                        <span style={{ fontSize: '0.8rem', color: '#64748b', marginLeft: '4px' }}>/yr</span>
                       </div>
-                      <div className="stat-item" style={{ borderLeft: '1px solid rgba(255,255,255,0.1)', paddingLeft: '1.25rem', textAlign: 'right' }}>
-                        <span className="stat-label">Missed Leads</span>
-                        <span className="stat-value">{lead.leads_lost || 0}</span>
-                      </div>
+                    </div>
+                  </div>
+
+                  <div className="loss-details-row" style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '1.5rem', padding: '0 0.5rem' }}>
+                    <div className="stat-item">
+                      <span className="stat-label">Visitors Lost</span>
+                      <span className="stat-value" style={{ fontSize: '1.1rem' }}>{lead.visitors_lost || 0}</span>
+                    </div>
+                    <div className="stat-item" style={{ borderLeft: '1px solid rgba(255,255,255,0.1)', paddingLeft: '1.5rem' }}>
+                      <span className="stat-label">Missed Leads</span>
+                      <span className="stat-value" style={{ fontSize: '1.1rem' }}>{lead.leads_lost || 0}</span>
+                    </div>
+                    <div className="stat-item" style={{ borderLeft: '1px solid rgba(255,255,255,0.1)', paddingLeft: '1.5rem' }}>
+                      <span className="stat-label">Strategic Risk</span>
+                      <span className="stat-value" style={{ fontSize: '1.1rem', color: lead.strategic_risk_level === 'High' ? '#ef4444' : '#fbbf24' }}>{lead.strategic_risk_level || 'Moderate'}</span>
                     </div>
                   </div>
 
                   <div className="ai-insight-box" style={{ marginTop: 'auto', background: 'rgba(239, 68, 68, 0.05)', padding: '1rem', borderRadius: '12px', borderLeft: '4px solid #ef4444' }}>
                     <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', marginBottom: '0.5rem' }}>
                       <AlertTriangle size={16} color="#ef4444" />
-                      <span style={{ fontSize: '0.8rem', fontWeight: 700, color: '#ef4444', textTransform: 'uppercase' }}>AI Insight</span>
+                      <span style={{ fontSize: '0.8rem', fontWeight: 700, color: '#ef4444', textTransform: 'uppercase' }}>Executive AI Forecast</span>
                     </div>
-                    <p style={{ fontSize: '0.85rem', color: 'var(--text-secondary)', margin: 0, fontStyle: 'italic' }}>
-                      "{lead.revenue_leak_explanation || "You are likely losing revenue due to technical bottlenecks and conversion gaps."}"
+                    <p style={{ fontSize: '0.85rem', color: 'var(--text-secondary)', margin: 0, fontStyle: 'italic', lineHeight: '1.5' }}>
+                      "{lead.revenue_impact_insight || lead.revenue_leak_explanation || "Continued delays in optimization may significantly reduce long-term conversion performance and AI visibility competitiveness."}"
                     </p>
                   </div>
                 </div>

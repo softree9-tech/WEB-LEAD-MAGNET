@@ -57,6 +57,10 @@ class WebsiteAnalyzerOutput(BaseModel):
     momentum_ai_insight: str = Field(description="Aggressive AI strategic insight on competitive momentum and technology adoption.")
 
     ai_strategic_plan: List[StrategicAction] = Field(description="A prioritized roadmap of 3-5 improvement steps based on all analysis data.")
+    
+    annual_opportunity_loss: int = Field(description="Projected annual business opportunity loss if issues remain unresolved.")
+    urgency_severity: str = Field(description="Urgency level for taking action (e.g., 'Immediate', '30-60 Days', '90+ Days').")
+    revenue_impact_insight: str = Field(description="Executive AI insight on long-term business impact and strategic risks.")
 
 class BattleCardResult(BaseModel):
     seo_winner: str = Field(description="'Primary', 'Competitor', or 'Tie'")
