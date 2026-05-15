@@ -860,6 +860,11 @@ def website_analyzer_agent(state: AgentState) -> AgentState:
             "first_impression_score": 3,
             "first_impression_verdict": "Poor",
             "first_impression_explanation": "Website is unreachable — visitors see nothing, killing trust instantly.",
+            "executive_summary": "Website is offline or blocking access, presenting a critical brand risk.",
+            "business_risk_insight": "Total loss of online presence and credibility.",
+            "strategic_opportunity_insight": "Immediate restoration and technical hardening required.",
+            "executive_ai_recommendation": "Investigate hosting or DNS configuration immediately.",
+            "brand_credibility_insight": "Brand reputation is actively being damaged by downtime.",
             "missing_leads_insight": "Critical: Website is unreachable, preventing any lead generation or conversion.",
             "conversion_readiness_level": "Low"
         }
@@ -905,6 +910,13 @@ Analyze:
 
 Assign a verdict: Excellent (9-10), Good (7-8), Average (5-6), Poor (0-4).
 Provide a short, concise, and emotionally impactful AI explanation (e.g., "Website feels outdated and lacks strong trust signals.").
+
+Additionally, generate an EXECUTIVE PRESENCE INTELLIGENCE assessment. Provide:
+- `executive_summary`: A concise AI summary (e.g. “The website creates a credible first impression, but conversion infrastructure and AI-search optimization remain below industry-leading standards.”) based on SEO, UX, trust signals, AI visibility, conversion readiness, competitor intelligence, mobile experience, and schema analysis.
+- `business_risk_insight`: The biggest business risk insight.
+- `strategic_opportunity_insight`: The top opportunity area insight.
+- `executive_ai_recommendation`: A strategic AI recommendation.
+- `brand_credibility_insight`: An insight into the brand's credibility based on trust signals.
 
 Also provide a `conversion_readiness_level` (High, Medium, Low) based on the conversion elements present.
 
@@ -1019,6 +1031,11 @@ Finally, analyze the REVENUE IMPACT FORECAST:
                 "first_impression_score": result.first_impression_score,
                 "first_impression_verdict": result.first_impression_verdict,
                 "first_impression_explanation": result.first_impression_explanation,
+                "executive_summary": result.executive_summary,
+                "business_risk_insight": result.business_risk_insight,
+                "strategic_opportunity_insight": result.strategic_opportunity_insight,
+                "executive_ai_recommendation": result.executive_ai_recommendation,
+                "brand_credibility_insight": result.brand_credibility_insight,
                 "conversion_readiness_level": result.conversion_readiness_level,
                 "missing_leads_insight": result.missing_leads_insight,
                 "industry_insight": result.industry_insight,
@@ -1069,6 +1086,11 @@ Finally, analyze the REVENUE IMPACT FORECAST:
                 "first_impression_score": 5,
                 "first_impression_verdict": "Average",
                 "first_impression_explanation": "Analysis partially failed — initial signals suggest the site lacks polish and professional trust cues.",
+                "executive_summary": "Analysis partially failed, limiting full executive insights.",
+                "business_risk_insight": "Unknown due to analysis failure.",
+                "strategic_opportunity_insight": "Unknown due to analysis failure.",
+                "executive_ai_recommendation": "Address technical errors to enable full analysis.",
+                "brand_credibility_insight": "Cannot verify credibility signals.",
                 "conversion_readiness_level": "Low",
                 "missing_leads_insight": "Analysis failed to extract specific conversion gaps.",
                 "industry_insight": "Compared to industry leaders, this site lacks the technical infrastructure required for high-level competition.",
@@ -1118,6 +1140,11 @@ Finally, analyze the REVENUE IMPACT FORECAST:
         "first_impression_score": result_dict.get("first_impression_score", 0),
         "first_impression_verdict": result_dict.get("first_impression_verdict", "Unknown"),
         "first_impression_explanation": result_dict.get("first_impression_explanation", ""),
+        "executive_summary": result_dict.get("executive_summary", ""),
+        "business_risk_insight": result_dict.get("business_risk_insight", ""),
+        "strategic_opportunity_insight": result_dict.get("strategic_opportunity_insight", ""),
+        "executive_ai_recommendation": result_dict.get("executive_ai_recommendation", ""),
+        "brand_credibility_insight": result_dict.get("brand_credibility_insight", ""),
         "seo_score": result_dict.get("seo_score", 0),
         "seo_status": result_dict.get("seo_status", ""),
         "seo_improvement": result_dict.get("seo_improvement", ""),

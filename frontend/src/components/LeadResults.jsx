@@ -28,7 +28,7 @@ export default function LeadResults({ leads }) {
               boxShadow: '0 4px 20px rgba(6, 182, 212, 0.3)'
             }}
             onClick={() => {
-              const csvHeader = 'website,competitor_website,final_score,design,cta,message,trust,speed,schema_score,schema_impact,first_impression_score,first_impression_verdict,mobile_rating,mobile_risk,mobile_insight,momentum_score,momentum_status,momentum_risk,momentum_direction,momentum_insight,strategic_action_plan,revenue_leak,leak_severity,annual_loss,urgency_severity,revenue_impact_insight,visitors_lost,leads_lost,missing_leads_count,conversion_loss_percent,readiness_level,industry_percentile,industry_tier,industry_competitiveness,keyword_opps,keyword_level,competitor_adv,search_impact,keyword_insight,rebranding_pitch,seo_issues,aeo_quote,battle_winner,battle_verdict,emailfullbody\n';
+              const csvHeader = 'website,competitor_website,final_score,design,cta,message,trust,speed,schema_score,schema_impact,first_impression_score,first_impression_verdict,executive_summary,business_risk_insight,strategic_opportunity_insight,executive_ai_recommendation,brand_credibility_insight,mobile_rating,mobile_risk,mobile_insight,momentum_score,momentum_status,momentum_risk,momentum_direction,momentum_insight,strategic_action_plan,revenue_leak,leak_severity,annual_loss,urgency_severity,revenue_impact_insight,visitors_lost,leads_lost,missing_leads_count,conversion_loss_percent,readiness_level,industry_percentile,industry_tier,industry_competitiveness,keyword_opps,keyword_level,competitor_adv,search_impact,keyword_insight,rebranding_pitch,seo_issues,aeo_quote,battle_winner,battle_verdict,emailfullbody\n';
 
 
               const csvRows = leads.map(lead => {
@@ -100,6 +100,11 @@ Best,
                   escapeCSV(lead.schema_visibility_impact || 'Low'),
                   escapeCSV(lead.first_impression_score || 0),
                   escapeCSV(lead.first_impression_verdict || 'Unknown'),
+                  escapeCSV(lead.executive_summary || ''),
+                  escapeCSV(lead.business_risk_insight || ''),
+                  escapeCSV(lead.strategic_opportunity_insight || ''),
+                  escapeCSV(lead.executive_ai_recommendation || ''),
+                  escapeCSV(lead.brand_credibility_insight || ''),
                   escapeCSV(lead.mobile_ux_rating || 'Average'),
                   escapeCSV(lead.mobile_conversion_risk || 'Moderate'),
                   escapeCSV(lead.mobile_ai_insight || ''),
@@ -266,7 +271,7 @@ Best,
                 <div className="header-actions">
                   <button className="action-btn" onClick={() => window.location.reload()}><RefreshCw size={14} /> Recalculate</button>
                   <button className="action-btn primary" onClick={() => {
-              const csvHeader = 'website,competitor_website,final_score,design,cta,message,trust,speed,schema_score,schema_impact,first_impression_score,first_impression_verdict,mobile_rating,mobile_risk,mobile_insight,momentum_score,momentum_status,momentum_risk,momentum_direction,momentum_insight,strategic_action_plan,revenue_leak,leak_severity,annual_loss,urgency_severity,revenue_impact_insight,visitors_lost,leads_lost,missing_leads_count,conversion_loss_percent,readiness_level,industry_percentile,industry_tier,industry_competitiveness,keyword_opps,keyword_level,competitor_adv,search_impact,keyword_insight,rebranding_pitch,seo_issues,aeo_quote,battle_winner,battle_verdict,emailfullbody\n';
+              const csvHeader = 'website,competitor_website,final_score,design,cta,message,trust,speed,schema_score,schema_impact,first_impression_score,first_impression_verdict,executive_summary,business_risk_insight,strategic_opportunity_insight,executive_ai_recommendation,brand_credibility_insight,mobile_rating,mobile_risk,mobile_insight,momentum_score,momentum_status,momentum_risk,momentum_direction,momentum_insight,strategic_action_plan,revenue_leak,leak_severity,annual_loss,urgency_severity,revenue_impact_insight,visitors_lost,leads_lost,missing_leads_count,conversion_loss_percent,readiness_level,industry_percentile,industry_tier,industry_competitiveness,keyword_opps,keyword_level,competitor_adv,search_impact,keyword_insight,rebranding_pitch,seo_issues,aeo_quote,battle_winner,battle_verdict,emailfullbody\n';
 
                     const trustWarning = [
                       (!lead.seo_ssl ? 'SSL certificate invalid or missing' : (lead.ssl_days_remaining < 30 ? `SSL expires in ${lead.ssl_days_remaining} days` : '')),
@@ -308,6 +313,11 @@ Best,
                       escapeCSV(lead.schema_visibility_impact || 'Low'),
                       escapeCSV(lead.first_impression_score || 0),
                       escapeCSV(lead.first_impression_verdict || 'Unknown'),
+                      escapeCSV(lead.executive_summary || ''),
+                      escapeCSV(lead.business_risk_insight || ''),
+                      escapeCSV(lead.strategic_opportunity_insight || ''),
+                      escapeCSV(lead.executive_ai_recommendation || ''),
+                      escapeCSV(lead.brand_credibility_insight || ''),
                       escapeCSV(lead.mobile_ux_rating || 'Average'),
                       escapeCSV(lead.mobile_conversion_risk || 'Moderate'),
                       escapeCSV(lead.mobile_ai_insight || ''),
@@ -420,29 +430,61 @@ Best,
                   </div>
                 )}
 
-                {/* 0. First Impression Score */}
+                {/* 0. Executive Presence Intelligence */}
                 <div className="quad-card first-impression-card animate-slide-up">
                   <div className="quad-header">
-                    <h2>Professional Presence Score</h2>
+                    <h2>Executive Presence Intelligence</h2>
                     <div className={`verdict-badge verdict-${(lead.first_impression_verdict || 'Average').toLowerCase()}`}>
                       {lead.first_impression_verdict || 'Average'}
                     </div>
                   </div>
-                  <div style={{ display: 'flex', alignItems: 'center', gap: '1.5rem' }}>
-                    <div className="impression-score-large">
-                      {lead.first_impression_score || 0}<span style={{ fontSize: '1.2rem', color: '#64748b', fontWeight: 500 }}>/10</span>
+                  
+                  <div className="executive-summary-box" style={{ background: 'rgba(59, 130, 246, 0.05)', padding: '1.25rem', borderRadius: '12px', borderLeft: '4px solid #3b82f6', marginBottom: '1.5rem' }}>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', marginBottom: '0.5rem' }}>
+                      <Bot size={16} color="#3b82f6" />
+                      <span style={{ fontSize: '0.85rem', fontWeight: 700, color: '#3b82f6', textTransform: 'uppercase' }}>Executive AI Summary</span>
                     </div>
-                    <div className="impression-explanation">
-                      {lead.first_impression_explanation || "Analyzing website's visual impact and immediate trust signals..."}
+                    <p style={{ fontSize: '0.9rem', color: 'var(--text-secondary)', margin: 0, fontStyle: 'italic', lineHeight: '1.6' }}>
+                      "{lead.executive_summary || lead.first_impression_explanation || "Analyzing website's visual impact and immediate trust signals..."}"
+                    </p>
+                  </div>
+
+                  <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem', marginBottom: '1.5rem' }}>
+                    <div style={{ background: 'rgba(239, 68, 68, 0.05)', padding: '1rem', borderRadius: '8px', border: '1px solid rgba(239, 68, 68, 0.1)' }}>
+                      <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', marginBottom: '0.5rem', color: '#ef4444', fontSize: '0.8rem', fontWeight: 600 }}>
+                        <AlertTriangle size={14} /> Biggest Business Risk
+                      </div>
+                      <div style={{ fontSize: '0.85rem', color: 'var(--text-secondary)' }}>{lead.business_risk_insight || "Conversion leaks due to suboptimal user flow."}</div>
+                    </div>
+                    <div style={{ background: 'rgba(16, 185, 129, 0.05)', padding: '1rem', borderRadius: '8px', border: '1px solid rgba(16, 185, 129, 0.1)' }}>
+                      <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', marginBottom: '0.5rem', color: '#10b981', fontSize: '0.8rem', fontWeight: 600 }}>
+                        <Zap size={14} /> Top Opportunity Area
+                      </div>
+                      <div style={{ fontSize: '0.85rem', color: 'var(--text-secondary)' }}>{lead.strategic_opportunity_insight || "Optimizing above-the-fold CTA placement."}</div>
                     </div>
                   </div>
-                  <div className="impression-factors">
-                    <div className="factor-tag"><Activity size={12} /> Branding</div>
-                    <div className="factor-tag"><LayoutDashboard size={12} /> Layout</div>
-                    <div className="factor-tag"><Target size={12} /> CTA Clarity</div>
-                    <div className="factor-tag"><Lock size={12} /> Trust</div>
-                    <div className="factor-tag"><Smartphone size={12} /> Mobile Feel</div>
-                    <div className="factor-tag"><FileText size={12} /> Readability</div>
+
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '1.5rem', marginBottom: '1.5rem', padding: '1rem', background: 'rgba(0,0,0,0.15)', borderRadius: '12px' }}>
+                    <div style={{ textAlign: 'center', minWidth: '80px' }}>
+                      <div style={{ fontSize: '0.7rem', textTransform: 'uppercase', color: '#64748b', fontWeight: 700, marginBottom: '0.25rem' }}>Presence Score</div>
+                      <div className="impression-score-large" style={{ fontSize: '2rem', display: 'flex', alignItems: 'baseline', justifyContent: 'center' }}>
+                        {lead.first_impression_score || 0}<span style={{ fontSize: '1rem', color: '#64748b', fontWeight: 500, marginLeft: '2px' }}>/10</span>
+                      </div>
+                    </div>
+                    <div style={{ flex: 1, borderLeft: '1px solid rgba(255,255,255,0.05)', paddingLeft: '1.5rem' }}>
+                      <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', marginBottom: '0.25rem', color: '#a855f7', fontSize: '0.8rem', fontWeight: 600 }}>
+                        <Sparkles size={14} /> Strategic AI Recommendation
+                      </div>
+                      <div style={{ fontSize: '0.85rem', color: 'var(--text-secondary)' }}>{lead.executive_ai_recommendation || "Prioritize mobile responsive design and clear value proposition."}</div>
+                    </div>
+                  </div>
+
+                  <div className="impression-factors" style={{ display: 'flex', flexWrap: 'wrap', gap: '0.5rem', justifyContent: 'center' }}>
+                    <div className="factor-tag" style={{ border: '1px solid rgba(59, 130, 246, 0.2)' }}><Activity size={12} /> Branding</div>
+                    <div className="factor-tag" style={{ border: '1px solid rgba(59, 130, 246, 0.2)' }}><LayoutDashboard size={12} /> Layout</div>
+                    <div className="factor-tag" style={{ border: '1px solid rgba(59, 130, 246, 0.2)' }}><Target size={12} /> CTA Clarity</div>
+                    <div className="factor-tag" title={lead.brand_credibility_insight} style={{ border: '1px solid rgba(16, 185, 129, 0.3)', background: 'rgba(16, 185, 129, 0.05)' }}><Lock size={12} color="#10b981" /> Trust Signals Verified</div>
+                    <div className="factor-tag" style={{ border: '1px solid rgba(59, 130, 246, 0.2)' }}><Smartphone size={12} /> Mobile Feel</div>
                   </div>
                 </div>
 

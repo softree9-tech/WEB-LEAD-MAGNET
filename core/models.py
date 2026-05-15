@@ -30,6 +30,12 @@ class WebsiteAnalyzerOutput(BaseModel):
     first_impression_verdict: str = Field(description="Verdict (Excellent, Good, Average, Poor) based on the first impression score.")
     first_impression_explanation: str = Field(description="A short, concise, and emotionally impactful AI explanation of the first impression.")
     
+    executive_summary: str = Field(description="Concise executive AI summary based on SEO, UX, trust signals, AI visibility, conversion readiness, competitor intelligence, mobile experience, and schema analysis.")
+    business_risk_insight: str = Field(description="Insight on the biggest business risk.")
+    strategic_opportunity_insight: str = Field(description="Insight on the top opportunity area.")
+    executive_ai_recommendation: str = Field(description="Strategic AI recommendation.")
+    brand_credibility_insight: str = Field(description="Brand credibility insight.")
+    
     missing_leads_insight: str = Field(description="AI insight about missing lead capture opportunities. Example: 'Visitors have limited conversion paths, reducing lead generation potential.'")
     conversion_readiness_level: str = Field(description="Conversion readiness level (High, Medium, Low) based on existing conversion elements.")
     industry_insight: str = Field(description="1-sentence AI insight comparing their website to top industry performers. Example: 'Website is visually competitive but underperforms in conversion infrastructure compared to top industry performers.'")
