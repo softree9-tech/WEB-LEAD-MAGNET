@@ -12,35 +12,12 @@ export default function SingleLeadForm({ onResult }) {
     setLoading(true);
     setError(null);
 
-    // try {
-    //   const res = await fetch('http://localhost:8000/api/process/single', {
-    //     method: 'POST',
-    //     headers: { 'Content-Type': 'application/json' },
-    //     body: JSON.stringify({
-    //       name: 'Unknown',
-    //       email: 'unknown@example.com',
-    //       company: 'Unknown',
-    //       role: 'Unknown',
-    //       website: url
-    //     })
-    //   });
-
-    //   if (!res.ok) throw new Error('Analysis failed');
-
-    //   const data = await res.json();
-    //   onResult(data);
-    //   setUrl('');
-    // } catch (err) {
-    //   setError(err.message);
-    // } finally {
-    //   setLoading(false);
-    // }
     try {
       const data = await processSingleLead({
-        name: 'Unknown',
-        email: 'unknown@example.com',
-        company: 'Unknown',
-        role: 'Unknown',
+        name: 'Prospect',
+        email: 'prospect@example.com',
+        company: url.replace(/^https?:\/\//i, '').split('/')[0],
+        role: 'Owner',
         website: url
       });
 
@@ -51,33 +28,34 @@ export default function SingleLeadForm({ onResult }) {
     } finally {
       setLoading(false);
     }
-
   };
 
   return (
-    <div className="glass-panel animate-fade-in" style={{ padding: '0.75rem 1.25rem', display: 'flex', alignItems: 'center', gap: '1rem', height: '100%' }}>
-      <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', whiteSpace: 'nowrap' }}>
-        <Globe size={18} color="var(--accent-color)" />
-        <span style={{ fontWeight: 600, fontSize: '0.95rem' }}>Analyze Website</span>
+    <div className="card h-100 shadow-none border-0 bg-transparent">
+      <div className="card-body p-0 d-flex align-items-center gap-3 h-100">
+        <div className="d-flex align-items-center gap-2 text-primary fw-bold text-nowrap">
+          <Globe size={18} />
+          <span className="d-none d-sm-inline small uppercase tracking-wider">Analyze Website</span>
+        </div>
+
+        <form onSubmit={handleSubmit} className="d-flex gap-2 flex-grow-1">
+          <input
+            required
+            type="url"
+            value={url}
+            onChange={(e) => setUrl(e.target.value)}
+            className="form-control form-control-sm border-2"
+            placeholder="Enter website URL (e.g. https://example.com)"
+            style={{ borderRadius: '8px' }}
+          />
+          <button type="submit" className="btn btn-primary btn-sm px-4" disabled={loading}>
+            {loading ? <Loader2 className="spinning me-2" size={14} /> : <Sparkles className="me-2" size={14} />}
+            {loading ? 'Analyzing...' : 'Analyze'}
+          </button>
+        </form>
+
+        {error && <div className="position-absolute text-danger x-small" style={{ top: '-15px' }}>{error}</div>}
       </div>
-
-      <form onSubmit={handleSubmit} style={{ display: 'flex', gap: '0.5rem', flexGrow: 1, margin: 0, width: '100%' }}>
-        <input
-          required
-          type="url"
-          value={url}
-          onChange={(e) => setUrl(e.target.value)}
-          className="input-field"
-          placeholder="https://acme.com"
-          style={{ padding: '0.5rem 1rem', fontSize: '0.9rem', background: 'rgba(15, 23, 42, 0.9)', flexGrow: 1, margin: 0 }}
-        />
-        <button type="submit" className="primary-btn" disabled={loading} style={{ opacity: loading ? 0.7 : 1, padding: '0.5rem 1rem', whiteSpace: 'nowrap', minWidth: '130px' }}>
-          {loading ? <Loader2 className="spinning" size={16} /> : <Sparkles size={16} />}
-          {loading ? ' Analyzing...' : ' Analyze'}
-        </button>
-      </form>
-
-      {error && <div style={{ position: 'absolute', top: '-20px', color: '#ef4444', fontSize: '0.8rem' }}>{error}</div>}
     </div>
   );
 }
