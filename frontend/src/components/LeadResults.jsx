@@ -279,35 +279,25 @@ Best,
             <div className="elite-sidebar">
               <div className="brand-icon">P</div>
 
-              <div className="nav-tooltip-wrap">
-                <LayoutDashboard size={20} className="nav-icon active" onClick={() => document.getElementById(`lead-${index}`).scrollIntoView({ behavior: 'smooth' })} />
-
-              </div>
-
-              <div className="nav-tooltip-wrap">
-                <FileText size={20} className="nav-icon" onClick={() => document.getElementById(`lead-${index}-outreach`).scrollIntoView({ behavior: 'smooth' })} />
-
-              </div>
-
-              <div className="nav-tooltip-wrap">
-                <BarChart3 size={20} className="nav-icon" onClick={() => document.getElementById(`lead-${index}-seo`).scrollIntoView({ behavior: 'smooth' })} />
-
-              </div>
-
-              <div className="nav-tooltip-wrap">
-                <Activity size={20} className="nav-icon" onClick={() => document.getElementById(`lead-${index}-trust`).scrollIntoView({ behavior: 'smooth' })} />
-
-              </div>
-
-              <div className="nav-tooltip-wrap" style={{ marginTop: 'auto' }}>
-                <Settings size={20} className="nav-icon" onClick={() => alert('Settings coming soon!')} />
-
-              </div>
-
-              <div className="nav-tooltip-wrap" style={{ marginBottom: '2rem' }}>
-                <LogOut size={20} className="nav-icon" onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })} />
-
-              </div>
+              {[
+                { id: `lead-${index}`, label: 'Dashboard', Icon: LayoutDashboard, aria: 'Dashboard', active: true },
+                { id: `lead-${index}-outreach`, label: 'Outreach', Icon: FileText, aria: 'Outreach' },
+                { id: `lead-${index}-seo`, label: 'SEO', Icon: BarChart3, aria: 'SEO' },
+                { id: `lead-${index}-trust`, label: 'Trust', Icon: Activity, aria: 'Trust' },
+                { label: 'Settings', Icon: Settings, aria: 'Settings', style: { marginTop: 'auto' }, action: () => alert('Settings coming soon!') },
+                { label: 'Top', Icon: LogOut, aria: 'Top', style: { marginBottom: '2rem' }, action: () => window.scrollTo({ top: 0, behavior: 'smooth' }) }
+              ].map((item, i) => (
+                <div key={i} className="nav-tooltip-wrap" style={item.style}>
+                  <button
+                    className="nav-sidebar-btn"
+                    aria-label={item.aria}
+                    onClick={item.action || (() => document.getElementById(item.id).scrollIntoView({ behavior: 'smooth' }))}
+                  >
+                    <item.Icon size={20} className={`nav-icon ${item.active ? 'active' : ''}`} />
+                  </button>
+                  <span className="nav-tooltip">{item.label}</span>
+                </div>
+              ))}
             </div>
 
             <div className="elite-main" id={`lead-${index}`}>
