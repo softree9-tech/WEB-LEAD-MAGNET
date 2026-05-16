@@ -420,8 +420,7 @@ def check_single_link(link: str) -> str:
         return ""
     return ""
 
-def count_broken_links(html: str, base_url: str) -> list:
-    soup = BeautifulSoup(html, "html.parser")
+def count_broken_links(soup: BeautifulSoup, base_url: str) -> dict:
     raw_links = [a.get('href') for a in soup.find_all('a', href=True)]
     
     valid_links = set()
@@ -703,21 +702,40 @@ def website_analyzer_agent(state: AgentState) -> AgentState:
         try:
             with sync_playwright() as p:
                 browser = p.chromium.launch(headless=True)
-                page = browser.new_page()
-                page.set_extra_http_headers({"User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64)"})
-                
-                response = page.goto(url, wait_until="domcontentloaded", timeout=20000)
-                html = page.content()
-                headers = response.headers if response else {}
+                try:
+                    page = browser.new_page()
+                    page.set_extra_http_headers({"User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64)"})
+
+                    response = page.goto(url, wait_until="domcontentloaded", timeout=20000)
+                    html = page.content()
+                    headers = response.headers if response else {}
+
+                    # Full-page desktop screenshot
+                    screenshot_bytes = page.screenshot(type="jpeg", quality=60, full_page=True)
+                    b64_image = base64.b64encode(screenshot_bytes).decode('utf-8')
+
+                    # Mobile emulation screenshot (Small Android)
+                    page.set_viewport_size({"width": 360, "height": 640})
+                    time.sleep(1)
+                    mobile_screenshot_bytes = page.screenshot(type="jpeg", quality=60, full_page=False)
+                    b64_image_mobile = base64.b64encode(mobile_screenshot_bytes).decode('utf-8')
+                finally:
+                    browser.close()
+
+            # ⚡ OPTIMIZATION: Browser is closed. Now perform CPU-bound DOM analysis.
+            # Perform this block ONLY if html was successfully captured to avoid UnboundLocalError
+            if 'html' in locals() and 'headers' in locals():
                 tech_stack = extract_tech_stack(html, headers)
                 last_modified = extract_last_modified(headers, html)
-                link_data = count_broken_links(html, url)
-                broken_links = link_data["broken_list"]
-                total_links = link_data["total"]
-                
                 analytics_data = check_analytics(html)
                 
                 soup = BeautifulSoup(html, "html.parser")
+
+                # Use pre-parsed soup for all checks to avoid redundant parsing
+                link_data = count_broken_links(soup, url)
+                broken_links = link_data["broken_list"]
+                total_links = link_data["total"]
+
                 has_lead_capture = check_lead_capture(soup, html)
                 has_cta = check_cta_presence(soup, html)
                 has_newsletter = check_newsletter(soup)
@@ -740,20 +758,7 @@ def website_analyzer_agent(state: AgentState) -> AgentState:
                 # Clean for LLM
                 for script in soup(["script", "style", "nav", "footer"]):
                     script.extract()
-                text_content = soup.get_text(separator=' ', strip=True)
-                
-                # Full-page desktop screenshot
-                screenshot_bytes = page.screenshot(type="jpeg", quality=60, full_page=True)
-                b64_image = base64.b64encode(screenshot_bytes).decode('utf-8')
-                
-                # Mobile emulation screenshot (Small Android)
-                page.set_viewport_size({"width": 360, "height": 640})
-                time.sleep(1)
-                mobile_screenshot_bytes = page.screenshot(type="jpeg", quality=60, full_page=False)
-                b64_image_mobile = base64.b64encode(mobile_screenshot_bytes).decode('utf-8')
-                
-                browser.close()
-                text_content = f"--- RAW TEXT CONTENT ---\n{text_content}"
+                text_content = f"--- RAW TEXT CONTENT ---\n{soup.get_text(separator=' ', strip=True)}"
         except Exception as e:
             print(f"Browser scrape failed for {url}: {e}")
             error_msg = str(e)
