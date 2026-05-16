@@ -12,6 +12,7 @@ from langchain_google_genai import ChatGoogleGenerativeAI
 from langchain_core.messages import HumanMessage, SystemMessage
 from core.models import WebsiteAnalyzerOutput
 from core.state import AgentState
+from core.security import is_safe_url
 import socket
 import ssl
 from datetime import datetime
@@ -399,6 +400,8 @@ Be honest - if you don't have specific information about them, say so clearly.""
     return aeo_result
 
 def check_single_link(link: str) -> str:
+    if not is_safe_url(link):
+        return ""
     try:
         headers = {
             "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36",
@@ -646,6 +649,10 @@ def website_analyzer_agent(state: AgentState) -> AgentState:
     
     if url and not url.startswith(('http://', 'https://')):
         url = 'https://' + url
+
+    if url and not is_safe_url(url):
+        print(f"❌ Safety check failed for {url}")
+        url = "" # Setting URL to empty will trigger error handling below
 
     text_content = ""
     b64_image = ""
