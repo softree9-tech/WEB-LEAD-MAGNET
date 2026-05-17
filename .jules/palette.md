@@ -1,0 +1,3 @@
+## 2025-05-17 - Micro-UX Optimization within Persona Constraints
+**Learning:** UX and accessibility improvements must be balanced against strict persona boundaries (e.g., line limits and no custom CSS). Native attributes like `title` and `aria-label` are effective alternatives when design system expansion is restricted. Unused imports in common components (like `CSVUpload.jsx`) can block builds and should be cleaned up as part of routine verification.
+**Action:** Prioritize native HTML/ARIA attributes over custom CSS for small improvements. Always run `pnpm lint` and `pnpm build` early to identify pre-existing blockers.

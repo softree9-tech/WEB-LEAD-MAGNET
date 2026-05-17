@@ -280,33 +280,63 @@ Best,
               <div className="brand-icon">P</div>
 
               <div className="nav-tooltip-wrap">
-                <LayoutDashboard size={20} className="nav-icon active" onClick={() => document.getElementById(`lead-${index}`).scrollIntoView({ behavior: 'smooth' })} />
-
+                <LayoutDashboard
+                  size={20}
+                  className="nav-icon active"
+                  aria-label="Dashboard"
+                  title="Dashboard"
+                  onClick={() => document.getElementById(`lead-${index}`).scrollIntoView({ behavior: 'smooth' })}
+                />
               </div>
 
               <div className="nav-tooltip-wrap">
-                <FileText size={20} className="nav-icon" onClick={() => document.getElementById(`lead-${index}-outreach`).scrollIntoView({ behavior: 'smooth' })} />
-
+                <FileText
+                  size={20}
+                  className="nav-icon"
+                  aria-label="Outreach"
+                  title="Outreach"
+                  onClick={() => document.getElementById(`lead-${index}-outreach`).scrollIntoView({ behavior: 'smooth' })}
+                />
               </div>
 
               <div className="nav-tooltip-wrap">
-                <BarChart3 size={20} className="nav-icon" onClick={() => document.getElementById(`lead-${index}-seo`).scrollIntoView({ behavior: 'smooth' })} />
-
+                <BarChart3
+                  size={20}
+                  className="nav-icon"
+                  aria-label="SEO"
+                  title="SEO"
+                  onClick={() => document.getElementById(`lead-${index}-seo`).scrollIntoView({ behavior: 'smooth' })}
+                />
               </div>
 
               <div className="nav-tooltip-wrap">
-                <Activity size={20} className="nav-icon" onClick={() => document.getElementById(`lead-${index}-trust`).scrollIntoView({ behavior: 'smooth' })} />
-
+                <Activity
+                  size={20}
+                  className="nav-icon"
+                  aria-label="Trust"
+                  title="Trust"
+                  onClick={() => document.getElementById(`lead-${index}-trust`).scrollIntoView({ behavior: 'smooth' })}
+                />
               </div>
 
               <div className="nav-tooltip-wrap" style={{ marginTop: 'auto' }}>
-                <Settings size={20} className="nav-icon" onClick={() => alert('Settings coming soon!')} />
-
+                <Settings
+                  size={20}
+                  className="nav-icon"
+                  aria-label="Settings"
+                  title="Settings"
+                  onClick={() => alert('Settings coming soon!')}
+                />
               </div>
 
               <div className="nav-tooltip-wrap" style={{ marginBottom: '2rem' }}>
-                <LogOut size={20} className="nav-icon" onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })} />
-
+                <LogOut
+                  size={20}
+                  className="nav-icon"
+                  aria-label="Log Out"
+                  title="Log Out"
+                  onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })}
+                />
               </div>
             </div>
 
