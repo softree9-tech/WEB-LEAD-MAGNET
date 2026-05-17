@@ -420,8 +420,7 @@ def check_single_link(link: str) -> str:
         return ""
     return ""
 
-def count_broken_links(html: str, base_url: str) -> list:
-    soup = BeautifulSoup(html, "html.parser")
+def count_broken_links(soup: BeautifulSoup, base_url: str) -> dict:
     raw_links = [a.get('href') for a in soup.find_all('a', href=True)]
     
     valid_links = set()
@@ -702,29 +701,44 @@ def website_analyzer_agent(state: AgentState) -> AgentState:
         # ─── PLAYWRIGHT BROWSER SCRAPE (may fail on Cloudflare sites) ─────────
         try:
             with sync_playwright() as p:
-                browser = p.chromium.launch(headless=True)
-                page = browser.new_page()
-                page.set_extra_http_headers({"User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64)"})
-                
-                response = page.goto(url, wait_until="domcontentloaded", timeout=20000)
-                html = page.content()
-                headers = response.headers if response else {}
+                # Use memory-optimized flags for limited RAM environments
+                browser = p.chromium.launch(
+                    headless=True,
+                    args=[
+                        '--disable-dev-shm-usage',
+                        '--no-sandbox',
+                        '--disable-setuid-sandbox',
+                        '--disable-gpu',
+                        '--disable-web-security',
+                        '--memory-pressure-off'
+                    ]
+                )
+                try:
+                    page = browser.new_page()
+                    page.set_extra_http_headers({"User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64)"})
+
+                    response = page.goto(url, wait_until="domcontentloaded", timeout=20000)
+                    html = page.content()
+                    headers = response.headers if response else {}
+
+                    # Full-page desktop screenshot
+                    screenshot_bytes = page.screenshot(type="jpeg", quality=60, full_page=True)
+                    b64_image = base64.b64encode(screenshot_bytes).decode('utf-8')
+
+                    # Mobile emulation screenshot (Small Android)
+                    page.set_viewport_size({"width": 360, "height": 640})
+                    time.sleep(1)
+                    mobile_screenshot_bytes = page.screenshot(type="jpeg", quality=60, full_page=False)
+                    b64_image_mobile = base64.b64encode(mobile_screenshot_bytes).decode('utf-8')
+                finally:
+                    browser.close()
+
+                # Perform analysis after browser closure to free up memory
                 tech_stack = extract_tech_stack(html, headers)
                 last_modified = extract_last_modified(headers, html)
-                link_data = count_broken_links(html, url)
-                broken_links = link_data["broken_list"]
-                total_links = link_data["total"]
-                
                 analytics_data = check_analytics(html)
                 
                 soup = BeautifulSoup(html, "html.parser")
-                has_lead_capture = check_lead_capture(soup, html)
-                has_cta = check_cta_presence(soup, html)
-                has_newsletter = check_newsletter(soup)
-                image_alt_data = check_image_alt_tags(soup)
-                has_dead_socials = check_social_links(soup)
-                conversion_elements = check_conversion_elements(soup, html)
-                schema_data = check_schema_markup(soup)
                 
                 # Extract SEO Metrics before stripping code
                 seo_mobile = bool(soup.find("meta", attrs={"name": "viewport"}))
@@ -737,22 +751,23 @@ def website_analyzer_agent(state: AgentState) -> AgentState:
                 # Check for duplicate meta tags
                 has_duplicate_meta = len(soup.find_all("title")) > 1 or len(soup.find_all("meta", attrs={"name": "description"})) > 1
                 
+                # Independent network tasks can run while parsing continues
+                link_data = count_broken_links(soup, url)
+                broken_links = link_data["broken_list"]
+                total_links = link_data["total"]
+
+                has_lead_capture = check_lead_capture(soup, html)
+                has_cta = check_cta_presence(soup, html)
+                has_newsletter = check_newsletter(soup)
+                image_alt_data = check_image_alt_tags(soup)
+                has_dead_socials = check_social_links(soup)
+                conversion_elements = check_conversion_elements(soup, html)
+                schema_data = check_schema_markup(soup)
+
                 # Clean for LLM
                 for script in soup(["script", "style", "nav", "footer"]):
                     script.extract()
                 text_content = soup.get_text(separator=' ', strip=True)
-                
-                # Full-page desktop screenshot
-                screenshot_bytes = page.screenshot(type="jpeg", quality=60, full_page=True)
-                b64_image = base64.b64encode(screenshot_bytes).decode('utf-8')
-                
-                # Mobile emulation screenshot (Small Android)
-                page.set_viewport_size({"width": 360, "height": 640})
-                time.sleep(1)
-                mobile_screenshot_bytes = page.screenshot(type="jpeg", quality=60, full_page=False)
-                b64_image_mobile = base64.b64encode(mobile_screenshot_bytes).decode('utf-8')
-                
-                browser.close()
                 text_content = f"--- RAW TEXT CONTENT ---\n{text_content}"
         except Exception as e:
             print(f"Browser scrape failed for {url}: {e}")
