@@ -1,0 +1,3 @@
+## 2025-05-15 - Accessible Navigation Tooltips
+**Learning:** Icon-only navigation elements must be semantic `<button>` tags with `aria-label` for screen readers. Custom tooltips should be triggered by `:focus-within` (or `:focus`) in addition to `:hover` to ensure keyboard accessibility. Redundant `title` attributes should be removed when using custom tooltips to prevent "double tooltips" in some browsers. Always provide `:focus-visible` styles if the default focus ring is suppressed.
+**Action:** Use the `.nav-sidebar-btn` and `.nav-tooltip` pattern for all sidebar-like navigation components. Ensure `:focus-within` is used in CSS to show tooltips on tab navigation.
