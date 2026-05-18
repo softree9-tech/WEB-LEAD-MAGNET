@@ -12,12 +12,15 @@ from langchain_google_genai import ChatGoogleGenerativeAI
 from langchain_core.messages import HumanMessage, SystemMessage
 from core.models import WebsiteAnalyzerOutput
 from core.state import AgentState
+from core.security import is_safe_url
 import socket
 import ssl
 from datetime import datetime
 import json
 
 def check_ssl_certificate(url: str) -> dict:
+    if not is_safe_url(url):
+        return {"valid": False, "days_remaining": 0, "https_enforced": False}
     try:
         from urllib.parse import urlparse
         parsed = urlparse(url if url.startswith('http') else f"https://{url}")
@@ -399,6 +402,8 @@ Be honest - if you don't have specific information about them, say so clearly.""
     return aeo_result
 
 def check_single_link(link: str) -> str:
+    if not is_safe_url(link):
+        return ""
     try:
         headers = {
             "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36",
@@ -642,6 +647,11 @@ def check_social_links(soup: BeautifulSoup) -> bool:
 
 def website_analyzer_agent(state: AgentState) -> AgentState:
     url = state.get('raw_website', '').strip()
+
+    if not is_safe_url(url):
+        print(f"--- Lead Magnet Analyzer skipping unsafe URL: {url} ---")
+        return {"output_row": {"website": url, "error": "Unsafe URL"}}
+
     print(f"--- Lead Magnet Analyzer processing {url} ---")
     
     if url and not url.startswith(('http://', 'https://')):
