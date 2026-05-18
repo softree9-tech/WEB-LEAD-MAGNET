@@ -1,0 +1,3 @@
+## 2025-05-14 - [Website Analyzer Lifecycle & DOM Parsing Optimization]
+**Learning:** In memory-constrained environments (like Render's free tier), keeping a Playwright browser instance open while performing heavy CPU/Network tasks (like `BeautifulSoup` parsing and link checking) leads to high memory pressure and potential crashes. Additionally, re-parsing the same HTML into a `BeautifulSoup` object across multiple helper functions is a significant CPU bottleneck.
+**Action:** Always capture all required data (HTML, screenshots) first, close the browser immediately in a `finally` block, and pass the pre-parsed `BeautifulSoup` object to all downstream analysis functions. Avoid using `locals()` for building final payloads as it is less efficient and prone to silent errors.

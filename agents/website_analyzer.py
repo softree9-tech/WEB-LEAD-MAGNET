@@ -420,8 +420,7 @@ def check_single_link(link: str) -> str:
         return ""
     return ""
 
-def count_broken_links(html: str, base_url: str) -> list:
-    soup = BeautifulSoup(html, "html.parser")
+def count_broken_links(soup: BeautifulSoup, base_url: str) -> dict:
     raw_links = [a.get('href') for a in soup.find_all('a', href=True)]
     
     valid_links = set()
@@ -657,6 +656,10 @@ def website_analyzer_agent(state: AgentState) -> AgentState:
     seo_mobile = False
     seo_meta_desc = False
     seo_h1 = False
+    seo_title = False
+    seo_canonical = False
+    seo_og = False
+    has_duplicate_meta = False
     load_time = 0.0
     lighthouse_seo = 0
     lighthouse_performance = 0
@@ -671,6 +674,8 @@ def website_analyzer_agent(state: AgentState) -> AgentState:
     has_newsletter = False
     image_alt_data = {"total": 0, "missing_alt": 0, "percent_missing": 0}
     has_dead_socials = False
+    broken_links = []
+    total_links = 0
     conversion_elements = {
         "cta_presence": False,
         "contact_form": False,
@@ -702,22 +707,49 @@ def website_analyzer_agent(state: AgentState) -> AgentState:
         # ─── PLAYWRIGHT BROWSER SCRAPE (may fail on Cloudflare sites) ─────────
         try:
             with sync_playwright() as p:
-                browser = p.chromium.launch(headless=True)
-                page = browser.new_page()
-                page.set_extra_http_headers({"User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64)"})
+                browser = p.chromium.launch(
+                    headless=True,
+                    args=[
+                        '--disable-dev-shm-usage',
+                        '--no-sandbox',
+                        '--disable-setuid-sandbox',
+                        '--disable-gpu',
+                        '--disable-web-security',
+                        '--memory-pressure-off'
+                    ]
+                )
+                try:
+                    page = browser.new_page()
+                    page.set_extra_http_headers({"User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64)"})
+
+                    response = page.goto(url, wait_until="domcontentloaded", timeout=20000)
+                    html = page.content()
+                    headers = response.headers if response else {}
+
+                    # Full-page desktop screenshot
+                    screenshot_bytes = page.screenshot(type="jpeg", quality=60, full_page=True)
+                    b64_image = base64.b64encode(screenshot_bytes).decode('utf-8')
+
+                    # Mobile emulation screenshot (Small Android)
+                    page.set_viewport_size({"width": 360, "height": 640})
+                    time.sleep(1)
+                    mobile_screenshot_bytes = page.screenshot(type="jpeg", quality=60, full_page=False)
+                    b64_image_mobile = base64.b64encode(mobile_screenshot_bytes).decode('utf-8')
+                finally:
+                    browser.close()
                 
-                response = page.goto(url, wait_until="domcontentloaded", timeout=20000)
-                html = page.content()
-                headers = response.headers if response else {}
+                # ─── POST-BROWSER ANALYSIS (Conserves memory) ─────────────────
                 tech_stack = extract_tech_stack(html, headers)
                 last_modified = extract_last_modified(headers, html)
-                link_data = count_broken_links(html, url)
-                broken_links = link_data["broken_list"]
-                total_links = link_data["total"]
-                
                 analytics_data = check_analytics(html)
                 
                 soup = BeautifulSoup(html, "html.parser")
+
+                # Perform heavy DOM analysis after closing the browser
+                link_data = count_broken_links(soup, url)
+                broken_links = link_data["broken_list"]
+                total_links = link_data["total"]
+
                 has_lead_capture = check_lead_capture(soup, html)
                 has_cta = check_cta_presence(soup, html)
                 has_newsletter = check_newsletter(soup)
@@ -740,20 +772,7 @@ def website_analyzer_agent(state: AgentState) -> AgentState:
                 # Clean for LLM
                 for script in soup(["script", "style", "nav", "footer"]):
                     script.extract()
-                text_content = soup.get_text(separator=' ', strip=True)
-                
-                # Full-page desktop screenshot
-                screenshot_bytes = page.screenshot(type="jpeg", quality=60, full_page=True)
-                b64_image = base64.b64encode(screenshot_bytes).decode('utf-8')
-                
-                # Mobile emulation screenshot (Small Android)
-                page.set_viewport_size({"width": 360, "height": 640})
-                time.sleep(1)
-                mobile_screenshot_bytes = page.screenshot(type="jpeg", quality=60, full_page=False)
-                b64_image_mobile = base64.b64encode(mobile_screenshot_bytes).decode('utf-8')
-                
-                browser.close()
-                text_content = f"--- RAW TEXT CONTENT ---\n{text_content}"
+                text_content = f"--- RAW TEXT CONTENT ---\n{soup.get_text(separator=' ', strip=True)}"
         except Exception as e:
             print(f"Browser scrape failed for {url}: {e}")
             error_msg = str(e)
@@ -788,11 +807,11 @@ def website_analyzer_agent(state: AgentState) -> AgentState:
                 print(f"HTTP fallback also failed for {url}: {e2}")
 
         # ─── COLLECT INDEPENDENT API RESULTS (with safety) ───────────────────
+        pagespeed_data = {"speed": 0.0, "lighthouse_seo": 0, "lighthouse_performance": 0, "lighthouse_accessibility": 0, "mobile_performance": 0, "issues": {}, "api_success": False}
         try:
             pagespeed_data = lighthouse_future.result(timeout=70)
         except Exception as e:
             print(f"Lighthouse Future Error: {e}")
-            pagespeed_data = {"speed": 0.0, "lighthouse_seo": 0, "lighthouse_performance": 0, "lighthouse_accessibility": 0, "mobile_performance": 0, "issues": {}, "api_success": False}
             
         try:
             aeo_probe = aeo_future.result(timeout=30)
@@ -1257,9 +1276,9 @@ Finally, analyze the TRUST DECAY & CREDIBILITY:
         "speed": result_dict.get("speed", ""),
         "seo_meta_desc": seo_meta_desc,
         "seo_h1": seo_h1,
-        "seo_title": locals().get('seo_title', False),
-        "seo_canonical": locals().get('seo_canonical', False),
-        "seo_og": locals().get('seo_og', False),
+        "seo_title": seo_title,
+        "seo_canonical": seo_canonical,
+        "seo_og": seo_og,
         "seo_mobile": seo_mobile,
         "seo_ssl": seo_ssl.get("valid", False) if isinstance(seo_ssl, dict) else False,
         "ssl_days_remaining": seo_ssl.get("days_remaining", 0) if isinstance(seo_ssl, dict) else 0,
@@ -1269,17 +1288,17 @@ Finally, analyze the TRUST DECAY & CREDIBILITY:
         "lighthouse_performance": lighthouse_performance,
         "lighthouse_accessibility": lighthouse_accessibility,
         "mobile_performance": mobile_performance,
-        "lighthouse_issues": locals().get("pagespeed_data", {}).get("issues", {}),
-        "lighthouse_api_success": locals().get("pagespeed_data", {}).get("api_success", False),
+        "lighthouse_issues": pagespeed_data.get("issues", {}),
+        "lighthouse_api_success": pagespeed_data.get("api_success", False),
         "tech_stack": tech_stack,
         "last_modified": last_modified,
-        "broken_links": locals().get('broken_links', []),
-        "total_links": locals().get('total_links', 0),
-        "has_analytics": locals().get('analytics_data', {}),
-        "has_lead_capture": locals().get('has_lead_capture', False),
-        "has_newsletter": locals().get('has_newsletter', False),
-        "image_percent_missing_alt": locals().get('image_alt_data', {}).get('percent_missing', 0),
-        "has_dead_socials": locals().get('has_dead_socials', False),
+        "broken_links": broken_links,
+        "total_links": total_links,
+        "has_analytics": analytics_data,
+        "has_lead_capture": has_lead_capture,
+        "has_newsletter": has_newsletter,
+        "image_percent_missing_alt": image_alt_data.get('percent_missing', 0) if isinstance(image_alt_data, dict) else 0,
+        "has_dead_socials": has_dead_socials,
         "rebranding_pitch": result_dict.get("rebranding_pitch", ""),
         "first_impression_score": result_dict.get("first_impression_score", 0),
         "first_impression_verdict": result_dict.get("first_impression_verdict", "Unknown"),
@@ -1297,7 +1316,7 @@ Finally, analyze the TRUST DECAY & CREDIBILITY:
         "aeo_improvement": result_dict.get("aeo_improvement", ""),
         "aeo_probe_response": aeo_probe.get("aeo_raw_response", ""),
         "has_cta": has_cta,
-        "has_duplicate_meta": locals().get('has_duplicate_meta', False),
+        "has_duplicate_meta": has_duplicate_meta,
         "schema_data": schema_data,
         "schema_coverage_score": result_dict.get("schema_coverage_score", 0),
         "schema_gap_insight": result_dict.get("schema_gap_insight", ""),
