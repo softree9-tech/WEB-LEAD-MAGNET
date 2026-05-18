@@ -46,6 +46,70 @@
   color: #fff;
 }
 
+.nav-sidebar-btn {
+  background: transparent;
+  border: none;
+  padding: 4px;
+  margin: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: inherit;
+  cursor: pointer;
+  border-radius: 8px;
+  transition: all 0.2s;
+}
+
+.nav-sidebar-btn:focus-visible {
+  outline: 2px solid var(--accent-color);
+  background: rgba(255, 255, 255, 0.05);
+}
+
+.nav-tooltip-wrap {
+  position: relative;
+  display: flex;
+  justify-content: center;
+  width: 100%;
+}
+
+.nav-tooltip {
+  position: absolute;
+  left: 100%;
+  margin-left: 12px;
+  background: #1e293b;
+  color: #fff;
+  padding: 6px 12px;
+  border-radius: 6px;
+  font-size: 0.75rem;
+  font-weight: 600;
+  white-space: nowrap;
+  opacity: 0;
+  visibility: hidden;
+  transition: all 0.2s ease;
+  pointer-events: none;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.4);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  z-index: 100;
+}
+
+.nav-tooltip::before {
+  content: '';
+  position: absolute;
+  right: 100%;
+  top: 50%;
+  transform: translateY(-50%);
+  border-width: 6px;
+  border-style: solid;
+  border-color: transparent #1e293b transparent transparent;
+}
+
+.nav-tooltip-wrap:hover .nav-tooltip,
+.nav-tooltip-wrap:focus-within .nav-tooltip {
+  opacity: 1;
+  visibility: visible;
+  transform: translateX(4px);
+}
+
 .elite-main {
   flex: 1;
   padding: 2rem;

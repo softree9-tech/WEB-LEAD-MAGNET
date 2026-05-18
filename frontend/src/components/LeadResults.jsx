@@ -280,33 +280,69 @@ Best,
               <div className="brand-icon">P</div>
 
               <div className="nav-tooltip-wrap">
-                <LayoutDashboard size={20} className="nav-icon active" onClick={() => document.getElementById(`lead-${index}`).scrollIntoView({ behavior: 'smooth' })} />
-
+                <button
+                  className="nav-sidebar-btn"
+                  aria-label="Dashboard"
+                  onClick={() => document.getElementById(`lead-${index}`).scrollIntoView({ behavior: 'smooth' })}
+                >
+                  <LayoutDashboard size={20} className="nav-icon active" />
+                </button>
+                <span className="nav-tooltip">Dashboard</span>
               </div>
 
               <div className="nav-tooltip-wrap">
-                <FileText size={20} className="nav-icon" onClick={() => document.getElementById(`lead-${index}-outreach`).scrollIntoView({ behavior: 'smooth' })} />
-
+                <button
+                  className="nav-sidebar-btn"
+                  aria-label="Outreach"
+                  onClick={() => document.getElementById(`lead-${index}-outreach`).scrollIntoView({ behavior: 'smooth' })}
+                >
+                  <FileText size={20} className="nav-icon" />
+                </button>
+                <span className="nav-tooltip">Outreach</span>
               </div>
 
               <div className="nav-tooltip-wrap">
-                <BarChart3 size={20} className="nav-icon" onClick={() => document.getElementById(`lead-${index}-seo`).scrollIntoView({ behavior: 'smooth' })} />
-
+                <button
+                  className="nav-sidebar-btn"
+                  aria-label="SEO Metrics"
+                  onClick={() => document.getElementById(`lead-${index}-seo`).scrollIntoView({ behavior: 'smooth' })}
+                >
+                  <BarChart3 size={20} className="nav-icon" />
+                </button>
+                <span className="nav-tooltip">SEO Metrics</span>
               </div>
 
               <div className="nav-tooltip-wrap">
-                <Activity size={20} className="nav-icon" onClick={() => document.getElementById(`lead-${index}-trust`).scrollIntoView({ behavior: 'smooth' })} />
-
+                <button
+                  className="nav-sidebar-btn"
+                  aria-label="Trust Intelligence"
+                  onClick={() => document.getElementById(`lead-${index}-trust`).scrollIntoView({ behavior: 'smooth' })}
+                >
+                  <Activity size={20} className="nav-icon" />
+                </button>
+                <span className="nav-tooltip">Trust Intelligence</span>
               </div>
 
               <div className="nav-tooltip-wrap" style={{ marginTop: 'auto' }}>
-                <Settings size={20} className="nav-icon" onClick={() => alert('Settings coming soon!')} />
-
+                <button
+                  className="nav-sidebar-btn"
+                  aria-label="Settings"
+                  onClick={() => alert('Settings coming soon!')}
+                >
+                  <Settings size={20} className="nav-icon" />
+                </button>
+                <span className="nav-tooltip">Settings</span>
               </div>
 
               <div className="nav-tooltip-wrap" style={{ marginBottom: '2rem' }}>
-                <LogOut size={20} className="nav-icon" onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })} />
-
+                <button
+                  className="nav-sidebar-btn"
+                  aria-label="Back to Top"
+                  onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })}
+                >
+                  <LogOut size={20} className="nav-icon" />
+                </button>
+                <span className="nav-tooltip">Back to Top</span>
               </div>
             </div>
 
