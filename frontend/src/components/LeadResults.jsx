@@ -1,6 +1,6 @@
 import React from 'react';
 import '../LeadResults.css';
-import { ExternalLink, RefreshCw, Download, Monitor, Mail, Lock, FileCode, Check, X, Search, Activity, BarChart3, Settings, LogOut, LayoutDashboard, FileText, Bot, Target, Smartphone, Copy, TrendingDown, AlertTriangle, Sword, Trophy, Zap, Sparkles } from 'lucide-react';
+import { ExternalLink, RefreshCw, Download, Monitor, Mail, Lock, FileCode, Check, X, Search, Activity, BarChart3, Settings, ChevronUp, LayoutDashboard, FileText, Bot, Target, Smartphone, Copy, TrendingDown, AlertTriangle, Sword, Trophy, Zap, Sparkles } from 'lucide-react';
 
 export default function LeadResults({ leads }) {
   if (!leads || leads.length === 0) {
@@ -280,33 +280,69 @@ Best,
               <div className="brand-icon">P</div>
 
               <div className="nav-tooltip-wrap">
-                <LayoutDashboard size={20} className="nav-icon active" onClick={() => document.getElementById(`lead-${index}`).scrollIntoView({ behavior: 'smooth' })} />
-
+                <button
+                  aria-label="Dashboard Overview"
+                  title="Dashboard Overview"
+                  className="nav-btn-reset"
+                  onClick={() => document.getElementById(`lead-${index}`).scrollIntoView({ behavior: 'smooth' })}
+                >
+                  <LayoutDashboard size={20} className="nav-icon active" />
+                </button>
               </div>
 
               <div className="nav-tooltip-wrap">
-                <FileText size={20} className="nav-icon" onClick={() => document.getElementById(`lead-${index}-outreach`).scrollIntoView({ behavior: 'smooth' })} />
-
+                <button
+                  aria-label="AI Outreach Email"
+                  title="AI Outreach Email"
+                  className="nav-btn-reset"
+                  onClick={() => document.getElementById(`lead-${index}-outreach`).scrollIntoView({ behavior: 'smooth' })}
+                >
+                  <FileText size={20} className="nav-icon" />
+                </button>
               </div>
 
               <div className="nav-tooltip-wrap">
-                <BarChart3 size={20} className="nav-icon" onClick={() => document.getElementById(`lead-${index}-seo`).scrollIntoView({ behavior: 'smooth' })} />
-
+                <button
+                  aria-label="SEO Performance"
+                  title="SEO Performance"
+                  className="nav-btn-reset"
+                  onClick={() => document.getElementById(`lead-${index}-seo`).scrollIntoView({ behavior: 'smooth' })}
+                >
+                  <BarChart3 size={20} className="nav-icon" />
+                </button>
               </div>
 
               <div className="nav-tooltip-wrap">
-                <Activity size={20} className="nav-icon" onClick={() => document.getElementById(`lead-${index}-trust`).scrollIntoView({ behavior: 'smooth' })} />
-
+                <button
+                  aria-label="Trust Intelligence"
+                  title="Trust Intelligence"
+                  className="nav-btn-reset"
+                  onClick={() => document.getElementById(`lead-${index}-trust`).scrollIntoView({ behavior: 'smooth' })}
+                >
+                  <Activity size={20} className="nav-icon" />
+                </button>
               </div>
 
               <div className="nav-tooltip-wrap" style={{ marginTop: 'auto' }}>
-                <Settings size={20} className="nav-icon" onClick={() => alert('Settings coming soon!')} />
-
+                <button
+                  aria-label="Settings"
+                  title="Settings"
+                  className="nav-btn-reset"
+                  onClick={() => alert('Settings coming soon!')}
+                >
+                  <Settings size={20} className="nav-icon" />
+                </button>
               </div>
 
               <div className="nav-tooltip-wrap" style={{ marginBottom: '2rem' }}>
-                <LogOut size={20} className="nav-icon" onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })} />
-
+                <button
+                  aria-label="Return to Top"
+                  title="Return to Top"
+                  className="nav-btn-reset"
+                  onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })}
+                >
+                  <ChevronUp size={20} className="nav-icon" />
+                </button>
               </div>
             </div>
 
