@@ -51,6 +51,7 @@ export default function SingleLeadForm({ onResult }) {
         
         <button 
           onClick={() => setIsBattleMode(!isBattleMode)}
+          aria-pressed={isBattleMode}
           className={`action-btn ${isBattleMode ? 'active' : ''}`}
           style={{ 
             fontSize: '0.75rem', 
