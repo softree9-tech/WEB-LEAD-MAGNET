@@ -1,8 +1,10 @@
-import React from 'react';
+import React, { useState } from 'react';
 import '../LeadResults.css';
 import { ExternalLink, RefreshCw, Download, Monitor, Mail, Lock, FileCode, Check, X, Search, Activity, BarChart3, Settings, ChevronUp, LayoutDashboard, FileText, Bot, Target, Smartphone, Copy, TrendingDown, AlertTriangle, Sword, Trophy, Zap, Sparkles } from 'lucide-react';
 
 export default function LeadResults({ leads }) {
+  const [copiedIndex, setCopiedIndex] = useState(null);
+
   if (!leads || leads.length === 0) {
     return (
       <div className="glass-panel animate-fade-in" style={{ padding: '3rem 2rem', textAlign: 'center' }}>
@@ -1576,12 +1578,23 @@ Best,
                   <h2 style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
                     <Mail color="var(--accent-color)" size={20} /> Personalized AI Outreach Email
                   </h2>
-                  <button className="action-btn" onClick={(e) => {
+                  <button className="action-btn" onClick={() => {
                     navigator.clipboard.writeText(emailBody);
-                    e.currentTarget.innerHTML = '<span style="color:#10b981;display:flex;align-items:center;gap:0.5rem;"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="20 6 9 17 4 12"></polyline></svg> Copied!</span>';
-                    setTimeout(() => e.target.innerHTML = '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg> Copy to Clipboard', 2000);
-                  }}>
-                    <Copy size={14} /> Copy to Clipboard
+                    setCopiedIndex(index);
+                    setTimeout(() => setCopiedIndex(null), 2000);
+                  }}
+                  role="status"
+                  aria-live="polite"
+                  >
+                    {copiedIndex === index ? (
+                      <span style={{ color: '#10b981', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                        <Check size={14} /> Copied!
+                      </span>
+                    ) : (
+                      <>
+                        <Copy size={14} /> Copy to Clipboard
+                      </>
+                    )}
                   </button>
                 </div>
                 <div style={{ position: 'relative' }}>
