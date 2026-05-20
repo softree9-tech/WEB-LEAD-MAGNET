@@ -1,0 +1,3 @@
+## 2026-05-20 - Early Browser Closure Optimization
+**Learning:** In memory-constrained environments (like Render's 512MB RAM), keeping a Playwright browser instance open while performing downstream DOM or network analysis is a significant resource bottleneck. Releasing the browser immediately after raw data/screenshot capture prevents OOM errors during peak concurrency.
+**Action:** Always capture HTML and screenshots first, call `browser.close()`, and then execute analysis functions (BeautifulSoup, Regex) on the static content. Pass pre-parsed `BeautifulSoup` objects to sub-functions to avoid redundant OOM-prone parsing.
