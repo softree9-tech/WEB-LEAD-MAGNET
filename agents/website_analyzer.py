@@ -429,8 +429,13 @@ def check_single_link(link: str) -> str:
         return ""
     return ""
 
-def count_broken_links(html: str, base_url: str) -> list:
-    soup = BeautifulSoup(html, "html.parser")
+def count_broken_links(html_or_soup: str | BeautifulSoup, base_url: str) -> dict:
+    """Checks for broken links. Accepts raw HTML string or a BeautifulSoup object for optimization."""
+    if isinstance(html_or_soup, str):
+        soup = BeautifulSoup(html_or_soup, "html.parser")
+    else:
+        soup = html_or_soup
+
     raw_links = [a.get('href') for a in soup.find_all('a', href=True)]
     
     valid_links = set()
@@ -715,22 +720,33 @@ def website_analyzer_agent(state: AgentState) -> AgentState:
         # ─── PLAYWRIGHT BROWSER SCRAPE (may fail on Cloudflare sites) ─────────
         try:
             with sync_playwright() as p:
-                browser = p.chromium.launch(headless=True)
+                # memory-optimization flags for limited RAM environments
+                browser = p.chromium.launch(
+                    headless=True,
+                    args=[
+                        '--disable-dev-shm-usage',
+                        '--disable-setuid-sandbox',
+                        '--disable-gpu',
+                        '--memory-pressure-off'
+                    ]
+                )
                 page = browser.new_page()
                 page.set_extra_http_headers({"User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64)"})
                 
                 response = page.goto(url, wait_until="domcontentloaded", timeout=20000)
                 html = page.content()
                 headers = response.headers if response else {}
+
+                soup = BeautifulSoup(html, "html.parser")
+
                 tech_stack = extract_tech_stack(html, headers)
                 last_modified = extract_last_modified(headers, html)
-                link_data = count_broken_links(html, url)
+                link_data = count_broken_links(soup, url)
                 broken_links = link_data["broken_list"]
                 total_links = link_data["total"]
                 
                 analytics_data = check_analytics(html)
                 
-                soup = BeautifulSoup(html, "html.parser")
                 has_lead_capture = check_lead_capture(soup, html)
                 has_cta = check_cta_presence(soup, html)
                 has_newsletter = check_newsletter(soup)
