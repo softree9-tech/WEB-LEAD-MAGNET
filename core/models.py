@@ -8,6 +8,11 @@ class StrategicAction(BaseModel):
     difficulty: str = Field(description="Implementation difficulty (Easy, Moderate, Hard)")
     is_quick_win: bool = Field(description="True if this is a quick win (low difficulty, high impact)")
 
+class MobileSection(BaseModel):
+    name: str = Field(description="Descriptive name of the mobile section (e.g. 'Hero Section', 'About Section', 'Services', 'CTA Area', 'Testimonials', 'Contact', 'Footer')")
+    insight: str = Field(description="UX critique or risk analysis specific to this section on mobile. Be concise.")
+    risk: str = Field(description="Risk level on mobile: Low, Moderate, High, Critical")
+
 class WebsiteAnalyzerOutput(BaseModel):
     design: str = Field(description="Design quality (Modern, Outdated, Clean, Cluttered)")
     cta: str = Field(description="CTA presence and focus (Strong, Weak, Missing)")
@@ -54,6 +59,7 @@ class WebsiteAnalyzerOutput(BaseModel):
     mobile_ux_rating: str = Field(description="Mobile UX rating (Excellent, Good, Average, Poor, Critical)")
     mobile_conversion_risk: str = Field(description="Mobile conversion risk level (Low, Moderate, High, Critical)")
     mobile_ai_insight: str = Field(description="Short, actionable AI insight about the mobile experience and conversion potential.")
+    mobile_sections: List[MobileSection] = Field(description="Sequence of mobile sections for the walkthrough carousel.")
     
     momentum_score: int = Field(description="Competitor Momentum Score (0-100) based on optimization speed and technology adoption.")
     competitive_growth_status: str = Field(description="Growth status relative to competitors (e.g., 'Leading', 'Steady', 'Falling Behind')")

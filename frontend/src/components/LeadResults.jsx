@@ -1,6 +1,208 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
+import { motion, AnimatePresence } from 'framer-motion';
 import '../LeadResults.css';
 import { ExternalLink, RefreshCw, Download, Monitor, Mail, Lock, FileCode, Check, X, Search, Activity, BarChart3, Settings, LogOut, LayoutDashboard, FileText, Bot, Target, Smartphone, Copy, TrendingDown, AlertTriangle, Sword, Trophy, Zap, Sparkles } from 'lucide-react';
+
+function MobileWalkthrough({ lead }) {
+  const sections = lead.mobile_sections && lead.mobile_sections.length > 0
+    ? lead.mobile_sections
+    : [
+        {
+          name: "Mobile Overview",
+          insight: lead.mobile_ai_insight || "Primary CTA might be difficult to notice on smaller mobile devices, reducing conversion potential.",
+          risk: lead.mobile_conversion_risk || "Moderate",
+          b64_image: lead.b64_image_mobile || ""
+        }
+      ];
+
+  const [currentIndex, setCurrentIndex] = useState(0);
+  const [direction, setDirection] = useState(1);
+  const [isPaused, setIsPaused] = useState(false);
+
+  useEffect(() => {
+    if (sections.length <= 1 || isPaused) return;
+
+    const timer = setInterval(() => {
+      setDirection(1);
+      setCurrentIndex((prevIndex) => (prevIndex + 1) % sections.length);
+    }, 3000);
+
+    return () => clearInterval(timer);
+  }, [sections.length, isPaused]);
+
+  const handleDotClick = (index) => {
+    setDirection(index > currentIndex ? 1 : -1);
+    setCurrentIndex(index);
+  };
+
+  const currentSection = sections[currentIndex];
+  const riskValue = currentSection.risk || 'Moderate';
+  const riskClass = riskValue.toLowerCase() === 'critical' || riskValue.toLowerCase() === 'high' 
+    ? 'critical' 
+    : riskValue.toLowerCase() === 'moderate' 
+      ? 'moderate' 
+      : 'low';
+
+  const slideVariants = {
+    enter: (dir) => ({
+      y: dir > 0 ? '100%' : '-100%',
+      opacity: 0,
+      scale: 1.02,
+    }),
+    center: {
+      y: 0,
+      opacity: 1,
+      scale: 1,
+      transition: {
+        y: { type: 'spring', stiffness: 120, damping: 20 },
+        opacity: { duration: 0.3 },
+        scale: { duration: 0.4 }
+      }
+    },
+    exit: (dir) => ({
+      y: dir > 0 ? '-100%' : '100%',
+      opacity: 0,
+      scale: 0.98,
+      transition: {
+        y: { type: 'spring', stiffness: 120, damping: 20 },
+        opacity: { duration: 0.3 },
+        scale: { duration: 0.4 }
+      }
+    })
+  };
+
+  return (
+    <div 
+      className="mobile-walkthrough-carousel"
+      style={{ display: 'flex', flexDirection: 'column', height: '100%' }}
+      onMouseEnter={() => setIsPaused(true)}
+      onMouseLeave={() => setIsPaused(false)}
+    >
+      <div className="quad-header" style={{ marginBottom: '1.25rem' }}>
+        <h2 style={{ color: '#3b82f6', display: 'flex', alignItems: 'center', gap: '0.5rem', margin: 0 }}>
+          <Smartphone size={20} /> Mobile Experience Walkthrough
+        </h2>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
+          <span style={{ fontSize: '0.75rem', color: 'var(--text-secondary)', background: 'rgba(255,255,255,0.05)', padding: '2px 8px', borderRadius: '4px' }}>
+            {currentIndex + 1} / {sections.length}
+          </span>
+          <div className={`severity-badge severity-${riskClass}`}>
+            {riskValue} Risk
+          </div>
+        </div>
+      </div>
+
+      <div className="mobile-mockup-container" style={{ position: 'relative', flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center' }}>
+        <div className="mobile-frame">
+          <div className="mobile-screen" style={{ position: 'relative', overflow: 'hidden' }}>
+            <div className="mobile-section-overlay-badge">
+              {currentSection.name || `Section ${currentIndex + 1}`}
+            </div>
+
+            <AnimatePresence initial={false} custom={direction}>
+              <motion.div
+                key={currentIndex}
+                custom={direction}
+                variants={slideVariants}
+                initial="enter"
+                animate="center"
+                exit="exit"
+                style={{
+                  position: 'absolute',
+                  top: 0,
+                  left: 0,
+                  width: '100%',
+                  height: '100%',
+                  display: 'flex',
+                  justifyContent: 'center',
+                  alignItems: 'flex-start',
+                }}
+              >
+                {currentSection.b64_image ? (
+                  <img 
+                    src={`data:image/jpeg;base64,${currentSection.b64_image}`} 
+                    alt={currentSection.name} 
+                    className="mobile-screenshot"
+                    style={{
+                      width: '100%',
+                      height: '100%',
+                      objectFit: 'cover',
+                      objectPosition: 'top',
+                    }}
+                  />
+                ) : (
+                  <div style={{ display: 'flex', flexDirection: 'column', justifyContent: 'center', alignItems: 'center', height: '100%', color: '#475569', textAlign: 'center', padding: '1.5rem', background: '#090d16' }}>
+                    <Smartphone size={32} style={{ marginBottom: '0.5rem', color: '#1e293b' }} />
+                    <span style={{ fontSize: '0.8rem', fontWeight: 600 }}>{currentSection.name}</span>
+                    <span style={{ fontSize: '0.7rem', color: '#334155', marginTop: '4px' }}>Mock Viewport</span>
+                  </div>
+                )}
+              </motion.div>
+            </AnimatePresence>
+          </div>
+        </div>
+
+        {sections.length > 1 && (
+          <div className="carousel-dots-container" style={{ display: 'flex', justifyContent: 'center', gap: '8px', marginTop: '1rem' }}>
+            {sections.map((_, idx) => (
+              <button
+                key={idx}
+                onClick={() => handleDotClick(idx)}
+                className={`carousel-dot ${idx === currentIndex ? 'active' : ''}`}
+                aria-label={`Go to section ${idx + 1}`}
+                style={{
+                  width: idx === currentIndex ? '24px' : '8px',
+                  height: '8px',
+                  borderRadius: '4px',
+                  border: 'none',
+                  backgroundColor: idx === currentIndex ? '#3b82f6' : 'rgba(255,255,255,0.15)',
+                  cursor: 'pointer',
+                  transition: 'all 0.3s ease',
+                  padding: 0,
+                }}
+              />
+            ))}
+          </div>
+        )}
+      </div>
+
+      <div className="mobile-stats-grid" style={{ marginTop: '1rem' }}>
+        <div className="mobile-stat-box">
+          <span className="mobile-stat-label">Walkthrough Focus</span>
+          <span className="mobile-stat-value" style={{ color: '#3b82f6', fontSize: '0.9rem', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', display: 'block' }}>
+            {currentSection.name || `Section ${currentIndex + 1}`}
+          </span>
+        </div>
+        <div className="mobile-stat-box">
+          <span className="mobile-stat-label">Section Risk</span>
+          <span className={`mobile-stat-value risk-${riskClass}`} style={{ fontSize: '0.9rem' }}>
+            {riskValue}
+          </span>
+        </div>
+      </div>
+
+      <div className="mobile-ai-box" style={{ minHeight: '90px', display: 'flex', flexDirection: 'column', justifyContent: 'flex-start' }}>
+        <div className="mobile-ai-header">
+          <Bot size={14} color="#3b82f6" />
+          <span className="mobile-ai-label">Live Screen Critique</span>
+        </div>
+        <AnimatePresence mode="wait">
+          <motion.p 
+            key={currentIndex}
+            initial={{ opacity: 0, y: 5 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: -5 }}
+            transition={{ duration: 0.2 }}
+            className="mobile-ai-text"
+            style={{ margin: 0 }}
+          >
+            "{currentSection.insight || "No specific mobile critiques compiled for this section."}"
+          </motion.p>
+        </AnimatePresence>
+      </div>
+    </div>
+  );
+}
 
 export default function LeadResults({ leads }) {
   if (!leads || leads.length === 0) {
@@ -631,56 +833,9 @@ Best,
                   </div>
                 </div>
 
-                {/* 0.5. Mobile Experience Reality Check */}
+                {/* 0.5. Mobile Experience Walkthrough Carousel */}
                 <div className="quad-card mobile-reality-card animate-slide-up">
-                  <div className="quad-header">
-                    <h2 style={{ color: '#3b82f6', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-                      <Smartphone size={20} /> Mobile Experience Reality Check
-                    </h2>
-                    <div className={`severity-badge severity-${(lead.mobile_conversion_risk || 'Moderate').toLowerCase() === 'critical' || (lead.mobile_conversion_risk || 'Moderate').toLowerCase() === 'high' ? 'critical' : (lead.mobile_conversion_risk || 'Moderate').toLowerCase() === 'moderate' ? 'moderate' : 'low'}`}>
-                      {lead.mobile_conversion_risk || 'Moderate'} Risk
-                    </div>
-                  </div>
-
-                  <div className="mobile-mockup-container">
-                    <div className="mobile-frame">
-                      <div className="mobile-screen">
-                        {lead.b64_image_mobile ? (
-                          <img src={`data:image/jpeg;base64,${lead.b64_image_mobile}`} alt="Mobile View" className="mobile-screenshot" />
-                        ) : (
-                          <div style={{ display: 'flex', flexDirection: 'column', justifyContent: 'center', alignItems: 'center', height: '100%', color: '#475569', textAlign: 'center' }}>
-                            <Smartphone size={32} style={{ marginBottom: '0.5rem' }} />
-                            <span style={{ fontSize: '0.8rem' }}>No mobile preview</span>
-                          </div>
-                        )}
-                      </div>
-                    </div>
-                  </div>
-
-                  <div className="mobile-stats-grid">
-                    <div className="mobile-stat-box">
-                      <span className="mobile-stat-label">UX Rating</span>
-                      <span className={`mobile-stat-value rating-${(lead.mobile_ux_rating || 'Average').toLowerCase()}`}>
-                        {lead.mobile_ux_rating || 'Average'}
-                      </span>
-                    </div>
-                    <div className="mobile-stat-box">
-                      <span className="mobile-stat-label">Conversion Risk</span>
-                      <span className={`mobile-stat-value risk-${(lead.mobile_conversion_risk || 'Moderate').toLowerCase()}`}>
-                        {lead.mobile_conversion_risk || 'Moderate'}
-                      </span>
-                    </div>
-                  </div>
-
-                  <div className="mobile-ai-box">
-                    <div className="mobile-ai-header">
-                      <Bot size={14} color="#3b82f6" />
-                      <span className="mobile-ai-label">Mobile AI Insight</span>
-                    </div>
-                    <p className="mobile-ai-text">
-                      "{lead.mobile_ai_insight || "Primary CTA might be difficult to notice on smaller mobile devices, reducing conversion potential."}"
-                    </p>
-                  </div>
+                  <MobileWalkthrough lead={lead} />
                 </div>
 
                 {/* 1. UX Scorecard */}

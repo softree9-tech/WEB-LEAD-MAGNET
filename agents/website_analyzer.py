@@ -650,6 +650,7 @@ def website_analyzer_agent(state: AgentState) -> AgentState:
     text_content = ""
     b64_image = ""
     b64_image_mobile = ""
+    captured_screenshots = []
     error_msg = None
     
     # SEO Variables
@@ -751,6 +752,93 @@ def website_analyzer_agent(state: AgentState) -> AgentState:
                 time.sleep(1)
                 mobile_screenshot_bytes = page.screenshot(type="jpeg", quality=60, full_page=False)
                 b64_image_mobile = base64.b64encode(mobile_screenshot_bytes).decode('utf-8')
+
+                # Section-by-section mobile walkthrough screenshot capture
+                captured_screenshots = []
+                try:
+                    sections_js = """() => {
+                        const els = Array.from(document.querySelectorAll('header, footer, section, [role="main"] > div, body > div'));
+                        const results = [];
+                        const processed = new Set();
+                        
+                        const isVisible = (el) => {
+                            const style = window.getComputedStyle(el);
+                            return style.display !== 'none' && style.visibility !== 'hidden' && style.opacity !== '0' && el.getBoundingClientRect().height > 50;
+                        };
+                        
+                        for (const el of els) {
+                            if (!isVisible(el)) continue;
+                            
+                            let hasParentProcessed = false;
+                            for (const p of processed) {
+                                if (p.contains(el)) {
+                                    hasParentProcessed = true;
+                                    break;
+                                }
+                            }
+                            if (hasParentProcessed) continue;
+                            
+                            const rect = el.getBoundingClientRect();
+                            const y = rect.top + window.scrollY;
+                            const height = rect.height;
+                            const text = el.innerText.trim().replace(/\\s+/g, ' ');
+                            
+                            results.push({
+                                tagName: el.tagName.toLowerCase(),
+                                id: el.id || '',
+                                className: el.className || '',
+                                text: text.substring(0, 400),
+                                y: y,
+                                height: height
+                            });
+                            processed.add(el);
+                        }
+                        
+                        results.sort((a, b) => a.y - b.y);
+                        
+                        if (results.length < 3) {
+                            const totalHeight = document.documentElement.scrollHeight;
+                            const viewportHeight = 640;
+                            const slices = [];
+                            for (let y = 0; y < totalHeight; y += viewportHeight) {
+                                slices.push({
+                                    tagName: 'div',
+                                    id: `slice-${y}`,
+                                    className: '',
+                                    text: `Scroll position ${y}px`,
+                                    y: y,
+                                    height: Math.min(viewportHeight, totalHeight - y)
+                                });
+                            }
+                            return slices;
+                        }
+                        
+                        return results;
+                    }"""
+                    sections = page.evaluate(sections_js)
+                    sections = sections[:10]  # Limit to 10 sections max
+                    
+                    for idx, sec in enumerate(sections):
+                        page.evaluate(f"window.scrollTo(0, {sec['y']})")
+                        time.sleep(0.3)
+                        sec_screenshot = page.screenshot(type="jpeg", quality=45, full_page=False)
+                        b64_sec = base64.b64encode(sec_screenshot).decode('utf-8')
+                        captured_screenshots.append({
+                            "index": idx,
+                            "tagName": sec["tagName"],
+                            "text": sec["text"],
+                            "b64_image": b64_sec
+                        })
+                except Exception as ex:
+                    print("Error capturing mobile sections:", ex)
+
+                if not captured_screenshots:
+                    captured_screenshots.append({
+                        "index": 0,
+                        "tagName": "div",
+                        "text": "Mobile Home Screen",
+                        "b64_image": b64_image_mobile
+                    })
                 
                 browser.close()
                 text_content = f"--- RAW TEXT CONTENT ---\n{text_content}"
@@ -866,7 +954,21 @@ def website_analyzer_agent(state: AgentState) -> AgentState:
             "executive_ai_recommendation": "Investigate hosting or DNS configuration immediately.",
             "brand_credibility_insight": "Brand reputation is actively being damaged by downtime.",
             "missing_leads_insight": "Critical: Website is unreachable, preventing any lead generation or conversion.",
-            "conversion_readiness_level": "Low"
+            "conversion_readiness_level": "Low",
+            "mobile_sections": [
+                {
+                    "name": "Hero Section",
+                    "insight": "Website is unreachable. Mobile viewport hero section could not be analyzed.",
+                    "risk": "Critical",
+                    "b64_image": ""
+                },
+                {
+                    "name": "Conversion CTA",
+                    "insight": "No active mobile forms or buttons could be evaluated.",
+                    "risk": "Critical",
+                    "b64_image": ""
+                }
+            ]
         }
     else:
         # Adjust system message based on whether we have screenshots or only text
@@ -940,6 +1042,8 @@ Finally, analyze the `MOBILE EXPERIENCE REALITY CHECK`:
 - Assign a `mobile_ux_rating` (Excellent, Good, Average, Poor, Critical).
 - Assess the `mobile_conversion_risk` (Low, Moderate, High, Critical) based on CTA visibility and readability on mobile.
 - Provide a `mobile_ai_insight`: A short, punchy AI recommendation to fix mobile conversion leaks (e.g., "Primary CTA is difficult to notice on smaller mobile devices, reducing conversion potential.").
+- Generate a list of `mobile_sections` that correspond EXACTLY in order to the sections listed under 'MOBILE WEBSITE SECTIONS TO AUDIT SEQUENTIALLY'.
+- For each section, provide a descriptive `name` (e.g. 'Hero Section', 'Services Section'), a critique `insight` (1-2 sentences, professional, specific to what content or risk is in that section), and a `risk` level (Low, Moderate, High, Critical).
 
 Finally, analyze the `COMPETITOR MOMENTUM TRACKER`:
 - Compare this website's current state (SEO, UX, AI visibility, trust signals, schema, lead capture, content freshness, conversion readiness) against rapid industry changes.
@@ -1031,6 +1135,13 @@ Finally, analyze the TRUST DECAY & CREDIBILITY:
   - Example: "The website design is modern overall, but stale content and inactive trust signals may weaken perceived professionalism."
 """)
 
+        mobile_sections_prompt = ""
+        if 'captured_screenshots' in locals() and captured_screenshots:
+            for idx, sec in enumerate(captured_screenshots):
+                mobile_sections_prompt += f"Section {idx+1} (tag: {sec['tagName']}): {sec['text'][:300]}\n"
+        else:
+            mobile_sections_prompt = "No sections extracted. Analyze using standard fallback."
+
         human_msg_content = [
             {
                 "type": "text", 
@@ -1068,6 +1179,9 @@ Finally, analyze the TRUST DECAY & CREDIBILITY:
                 
                 SCHEMA MARKUP DETECTED:
                 {json.dumps(schema_data, indent=2)}
+                
+                MOBILE WEBSITE SECTIONS TO AUDIT SEQUENTIALLY:
+                {mobile_sections_prompt}
                 
                 VISIBLE TEXT (Top 8000 chars):
                 {text_content[:8000]}"""
@@ -1188,7 +1302,26 @@ Finally, analyze the TRUST DECAY & CREDIBILITY:
                 "maintenance_confidence": result.maintenance_confidence,
                 "outdated_signal_indicators": result.outdated_signal_indicators,
                 "credibility_impact_insight": result.credibility_impact_insight,
-                "ai_trust_recommendation": result.ai_trust_recommendation
+                "ai_trust_recommendation": result.ai_trust_recommendation,
+                "mobile_sections": [
+                    {
+                        "name": item.name,
+                        "insight": item.insight,
+                        "risk": item.risk,
+                        "b64_image": captured_screenshots[idx]["b64_image"] if 'captured_screenshots' in locals() and idx < len(captured_screenshots) else ""
+                    }
+                    for idx, item in enumerate(result.mobile_sections)
+                ] if hasattr(result, 'mobile_sections') and result.mobile_sections else (
+                    [
+                        {
+                            "name": f"Section {idx+1}",
+                            "insight": "Suboptimal mobile UX flow and conversion friction detected.",
+                            "risk": "Moderate",
+                            "b64_image": sec["b64_image"]
+                        }
+                        for idx, sec in enumerate(captured_screenshots)
+                    ] if 'captured_screenshots' in locals() and captured_screenshots else []
+                )
             }
 
         except Exception as e:
@@ -1243,7 +1376,23 @@ Finally, analyze the TRUST DECAY & CREDIBILITY:
                 "cta_action_clarity_score": 5,
                 "cta_persuasiveness_score": 5,
                 "cta_effectiveness_insight": "CTA analysis partially failed, but initial signals suggest a lack of urgency.",
-                "cta_ai_optimization_recommendation": "Strengthen CTA wording with action-oriented and urgent language."
+                "cta_ai_optimization_recommendation": "Strengthen CTA wording with action-oriented and urgent language.",
+                "mobile_sections": [
+                    {
+                        "name": f"Section {idx+1}",
+                        "insight": "Suboptimal mobile UX flow and conversion friction detected.",
+                        "risk": "Moderate",
+                        "b64_image": sec["b64_image"]
+                    }
+                    for idx, sec in enumerate(captured_screenshots)
+                ] if 'captured_screenshots' in locals() and captured_screenshots else [
+                    {
+                        "name": "Hero Section",
+                        "insight": "Failed to analyze mobile experience details.",
+                        "risk": "Moderate",
+                        "b64_image": ""
+                    }
+                ]
             }
 
     # Format the payload directly for the React frontend Lead Magnet report
@@ -1368,7 +1517,8 @@ Finally, analyze the TRUST DECAY & CREDIBILITY:
         "outdated_signal_indicators": result_dict.get("outdated_signal_indicators", ""),
         "credibility_impact_insight": result_dict.get("credibility_impact_insight", ""),
         "ai_trust_recommendation": result_dict.get("ai_trust_recommendation", ""),
-        "b64_image_mobile": b64_image_mobile
+        "b64_image_mobile": b64_image_mobile,
+        "mobile_sections": result_dict.get("mobile_sections", [])
     }
 
 
