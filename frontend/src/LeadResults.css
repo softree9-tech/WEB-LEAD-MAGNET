@@ -62,6 +62,51 @@
   border-radius: 4px;
 }
 
+.nav-tooltip-wrap {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.nav-tooltip {
+  position: absolute;
+  left: 100%;
+  margin-left: 12px;
+  background: #1e293b;
+  color: #fff;
+  padding: 6px 10px;
+  border-radius: 6px;
+  font-size: 0.75rem;
+  font-weight: 600;
+  white-space: nowrap;
+  opacity: 0;
+  visibility: hidden;
+  pointer-events: none;
+  transition: all 0.2s ease;
+  z-index: 100;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+}
+
+.nav-tooltip::before {
+  content: '';
+  position: absolute;
+  left: -5px;
+  top: 50%;
+  transform: translateY(-50%);
+  border-width: 5px 5px 5px 0;
+  border-style: solid;
+  border-color: transparent #1e293b transparent transparent;
+}
+
+.nav-tooltip-wrap:hover .nav-tooltip,
+.nav-tooltip-wrap:focus-within .nav-tooltip {
+  opacity: 1;
+  visibility: visible;
+  transform: translateX(4px);
+}
+
 .elite-main {
   flex: 1;
   padding: 2rem;
