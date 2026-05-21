@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
+import { motion as Motion, AnimatePresence } from 'framer-motion';
 import '../LeadResults.css';
 import { ExternalLink, RefreshCw, Download, Monitor, Mail, Lock, FileCode, Check, X, Search, Activity, BarChart3, Settings, ChevronUp, LayoutDashboard, FileText, Bot, Target, Smartphone, Copy, TrendingDown, AlertTriangle, Sword, Trophy, Zap, Sparkles } from 'lucide-react';
 
@@ -100,7 +100,7 @@ function MobileWalkthrough({ lead }) {
             </div>
 
             <AnimatePresence initial={false} custom={direction}>
-              <motion.div
+              <Motion.div
                 key={currentIndex}
                 custom={direction}
                 variants={slideVariants}
@@ -137,7 +137,7 @@ function MobileWalkthrough({ lead }) {
                     <span style={{ fontSize: '0.7rem', color: '#334155', marginTop: '4px' }}>Mock Viewport</span>
                   </div>
                 )}
-              </motion.div>
+              </Motion.div>
             </AnimatePresence>
           </div>
         </div>
@@ -187,7 +187,7 @@ function MobileWalkthrough({ lead }) {
           <span className="mobile-ai-label">Live Screen Critique</span>
         </div>
         <AnimatePresence mode="wait">
-          <motion.p 
+          <Motion.p
             key={currentIndex}
             initial={{ opacity: 0, y: 5 }}
             animate={{ opacity: 1, y: 0 }}
@@ -197,7 +197,7 @@ function MobileWalkthrough({ lead }) {
             style={{ margin: 0 }}
           >
             "{currentSection.insight || "No specific mobile critiques compiled for this section."}"
-          </motion.p>
+          </Motion.p>
         </AnimatePresence>
       </div>
     </div>
@@ -287,7 +287,11 @@ I've put together a comprehensive technical audit outlining exactly how we can r
 Best,
 [Your Name]`;
 
-                const escapeCSV = (str) => `"${String(str || '').replace(/"/g, '""')}"`;
+                const escapeCSV = (str) => {
+                  const val = String(str || '');
+                  const sanitized = (val.startsWith('=') || val.startsWith('+') || val.startsWith('-') || val.startsWith('@')) ? "'" + val : val;
+                  return `"${sanitized.replace(/"/g, '""')}"`;
+                };
 
                 return [
                   escapeCSV(lead.website),
@@ -584,7 +588,11 @@ Best,
                     ].filter(Boolean).slice(0, 5).join(' | ') || 'No major SEO issues detected';
 
                     // Preserve newlines inside quoted fields — RFC 4180 compliant
-                    const escapeCSV = (str) => `"${String(str || '').replace(/"/g, '""')}"`;
+                    const escapeCSV = (str) => {
+                      const val = String(str || '');
+                      const sanitized = (val.startsWith('=') || val.startsWith('+') || val.startsWith('-') || val.startsWith('@')) ? "'" + val : val;
+                      return `"${sanitized.replace(/"/g, '""')}"`;
+                    };
 
                     const csvRow = [
                       escapeCSV(lead.website),
