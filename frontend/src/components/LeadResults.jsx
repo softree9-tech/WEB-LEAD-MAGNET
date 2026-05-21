@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
+import { motion as Motion, AnimatePresence } from 'framer-motion';
 import '../LeadResults.css';
 import { ExternalLink, RefreshCw, Download, Monitor, Mail, Lock, FileCode, Check, X, Search, Activity, BarChart3, Settings, ChevronUp, LayoutDashboard, FileText, Bot, Target, Smartphone, Copy, TrendingDown, AlertTriangle, Sword, Trophy, Zap, Sparkles } from 'lucide-react';
 
@@ -100,7 +100,7 @@ function MobileWalkthrough({ lead }) {
             </div>
 
             <AnimatePresence initial={false} custom={direction}>
-              <motion.div
+              <Motion.div
                 key={currentIndex}
                 custom={direction}
                 variants={slideVariants}
@@ -137,7 +137,7 @@ function MobileWalkthrough({ lead }) {
                     <span style={{ fontSize: '0.7rem', color: '#334155', marginTop: '4px' }}>Mock Viewport</span>
                   </div>
                 )}
-              </motion.div>
+              </Motion.div>
             </AnimatePresence>
           </div>
         </div>
@@ -187,7 +187,7 @@ function MobileWalkthrough({ lead }) {
           <span className="mobile-ai-label">Live Screen Critique</span>
         </div>
         <AnimatePresence mode="wait">
-          <motion.p 
+          <Motion.p
             key={currentIndex}
             initial={{ opacity: 0, y: 5 }}
             animate={{ opacity: 1, y: 0 }}
@@ -197,7 +197,7 @@ function MobileWalkthrough({ lead }) {
             style={{ margin: 0 }}
           >
             "{currentSection.insight || "No specific mobile critiques compiled for this section."}"
-          </motion.p>
+          </Motion.p>
         </AnimatePresence>
       </div>
     </div>
@@ -484,67 +484,67 @@ Best,
               <div className="nav-tooltip-wrap">
                 <button
                   aria-label="Dashboard Overview"
-                  title="Dashboard Overview"
                   className="nav-btn-reset"
                   onClick={() => document.getElementById(`lead-${index}`).scrollIntoView({ behavior: 'smooth' })}
                 >
                   <LayoutDashboard size={20} className="nav-icon active" />
                 </button>
+                <span className="nav-tooltip" aria-hidden="true">Dashboard Overview</span>
               </div>
 
               <div className="nav-tooltip-wrap">
                 <button
                   aria-label="AI Outreach Email"
-                  title="AI Outreach Email"
                   className="nav-btn-reset"
                   onClick={() => document.getElementById(`lead-${index}-outreach`).scrollIntoView({ behavior: 'smooth' })}
                 >
                   <FileText size={20} className="nav-icon" />
                 </button>
+                <span className="nav-tooltip" aria-hidden="true">AI Outreach Email</span>
               </div>
 
               <div className="nav-tooltip-wrap">
                 <button
                   aria-label="SEO Performance"
-                  title="SEO Performance"
                   className="nav-btn-reset"
                   onClick={() => document.getElementById(`lead-${index}-seo`).scrollIntoView({ behavior: 'smooth' })}
                 >
                   <BarChart3 size={20} className="nav-icon" />
                 </button>
+                <span className="nav-tooltip" aria-hidden="true">SEO Performance</span>
               </div>
 
               <div className="nav-tooltip-wrap">
                 <button
                   aria-label="Trust Intelligence"
-                  title="Trust Intelligence"
                   className="nav-btn-reset"
                   onClick={() => document.getElementById(`lead-${index}-trust`).scrollIntoView({ behavior: 'smooth' })}
                 >
                   <Activity size={20} className="nav-icon" />
                 </button>
+                <span className="nav-tooltip" aria-hidden="true">Trust Intelligence</span>
               </div>
 
               <div className="nav-tooltip-wrap" style={{ marginTop: 'auto' }}>
                 <button
                   aria-label="Settings"
-                  title="Settings"
                   className="nav-btn-reset"
                   onClick={() => alert('Settings coming soon!')}
                 >
                   <Settings size={20} className="nav-icon" />
                 </button>
+                <span className="nav-tooltip" aria-hidden="true">Settings</span>
               </div>
 
               <div className="nav-tooltip-wrap" style={{ marginBottom: '2rem' }}>
                 <button
                   aria-label="Return to Top"
-                  title="Return to Top"
                   className="nav-btn-reset"
                   onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })}
                 >
                   <ChevronUp size={20} className="nav-icon" />
                 </button>
+                <span className="nav-tooltip" aria-hidden="true">Return to Top</span>
               </div>
             </div>
 
