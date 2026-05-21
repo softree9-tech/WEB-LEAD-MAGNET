@@ -12,12 +12,15 @@ from langchain_google_genai import ChatGoogleGenerativeAI
 from langchain_core.messages import HumanMessage, SystemMessage
 from core.models import WebsiteAnalyzerOutput
 from core.state import AgentState
+from core.security import is_safe_url
 import socket
 import ssl
 from datetime import datetime
 import json
 
 def check_ssl_certificate(url: str) -> dict:
+    if not is_safe_url(url):
+        return {"valid": False, "days_remaining": 0, "https_enforced": False}
     try:
         from urllib.parse import urlparse
         parsed = urlparse(url if url.startswith('http') else f"https://{url}")
@@ -276,6 +279,8 @@ def extract_last_modified(headers: dict, html: str) -> str:
 
 def _run_lighthouse(url: str, strategy: str, categories: list) -> dict:
     """Runs a single Lighthouse audit via the PageSpeed API."""
+    if not is_safe_url(url):
+        return {}
     try:
         api_key = os.environ.get("GOOGLE_API_KEY", "")
         cat_params = "&".join([f"category={c}" for c in categories])
@@ -352,6 +357,8 @@ def get_google_pagespeed(url: str) -> dict:
 
 def verify_aeo_visibility(company_name: str, url: str) -> dict:
     """Makes a live Gemini-Flash probe to test if AI engines recognize this brand."""
+    if not is_safe_url(url):
+        return {"aeo_recognized": False, "aeo_confidence": "low", "aeo_raw_response": "Unsafe URL"}
     aeo_result = {"aeo_recognized": False, "aeo_confidence": "low", "aeo_raw_response": ""}
     try:
         probe_llm = ChatGoogleGenerativeAI(
@@ -399,6 +406,8 @@ Be honest - if you don't have specific information about them, say so clearly.""
     return aeo_result
 
 def check_single_link(link: str) -> str:
+    if not is_safe_url(link):
+        return ""
     try:
         headers = {
             "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36",
@@ -646,6 +655,10 @@ def website_analyzer_agent(state: AgentState) -> AgentState:
     
     if url and not url.startswith(('http://', 'https://')):
         url = 'https://' + url
+
+    if not is_safe_url(url):
+        print(f"--- Unsafe URL blocked: {url} ---")
+        return {"output_row": {"error": "Invalid or unsafe website URL", "website": url}}
 
     text_content = ""
     b64_image = ""

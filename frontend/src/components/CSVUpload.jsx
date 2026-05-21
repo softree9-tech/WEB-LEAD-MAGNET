@@ -1,6 +1,5 @@
 import React, { useState, useRef } from 'react';
 import { UploadCloud, File, Loader2 } from 'lucide-react';
-import { processCSV } from "../api/api"
 
 export default function CSVUpload({ onResult }) {
   const [file, setFile] = useState(null);
