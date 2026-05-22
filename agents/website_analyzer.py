@@ -17,6 +17,7 @@ import socket
 import ssl
 from datetime import datetime
 import json
+from typing import Union
 
 def check_ssl_certificate(url: str) -> dict:
     if not is_safe_url(url):
@@ -429,8 +430,12 @@ def check_single_link(link: str) -> str:
         return ""
     return ""
 
-def count_broken_links(html: str, base_url: str) -> list:
-    soup = BeautifulSoup(html, "html.parser")
+def count_broken_links(html: Union[str, BeautifulSoup], base_url: str) -> dict:
+    """Accepts either raw HTML string or a pre-parsed BeautifulSoup object."""
+    if isinstance(html, BeautifulSoup):
+        soup = html
+    else:
+        soup = BeautifulSoup(html, "html.parser")
     raw_links = [a.get('href') for a in soup.find_all('a', href=True)]
     
     valid_links = set()
@@ -722,16 +727,15 @@ def website_analyzer_agent(state: AgentState) -> AgentState:
                 
                 response = page.goto(url, wait_until="domcontentloaded", timeout=20000)
                 html = page.content()
+                soup = BeautifulSoup(html, "html.parser")
                 headers = response.headers if response else {}
                 tech_stack = extract_tech_stack(html, headers)
                 last_modified = extract_last_modified(headers, html)
-                link_data = count_broken_links(html, url)
+                link_data = count_broken_links(soup, url)
                 broken_links = link_data["broken_list"]
                 total_links = link_data["total"]
                 
                 analytics_data = check_analytics(html)
-                
-                soup = BeautifulSoup(html, "html.parser")
                 has_lead_capture = check_lead_capture(soup, html)
                 has_cta = check_cta_presence(soup, html)
                 has_newsletter = check_newsletter(soup)
@@ -862,11 +866,11 @@ def website_analyzer_agent(state: AgentState) -> AgentState:
             try:
                 fallback_res = requests.get(url, timeout=10, headers={"User-Agent": "Mozilla/5.0"})
                 html = fallback_res.text
+                soup = BeautifulSoup(html, "html.parser")
                 headers = dict(fallback_res.headers)
                 tech_stack = extract_tech_stack(html, headers)
                 last_modified = extract_last_modified(headers, html)
                 analytics_data = check_analytics(html)
-                soup = BeautifulSoup(html, "html.parser")
                 has_lead_capture = check_lead_capture(soup, html)
                 has_cta = check_cta_presence(soup, html)
                 has_newsletter = check_newsletter(soup)
