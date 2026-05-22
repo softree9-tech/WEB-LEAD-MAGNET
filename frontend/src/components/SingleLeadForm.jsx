@@ -74,6 +74,7 @@ export default function SingleLeadForm({ onResult }) {
           <input
             required
             type="url"
+            aria-label="Primary Website URL"
             value={url}
             onChange={(e) => setUrl(e.target.value)}
             className="input-field"
@@ -85,6 +86,7 @@ export default function SingleLeadForm({ onResult }) {
             <input
               required
               type="url"
+              aria-label="Competitor Website URL"
               value={competitorUrl}
               onChange={(e) => setCompetitorUrl(e.target.value)}
               className="input-field animate-slide-up"
