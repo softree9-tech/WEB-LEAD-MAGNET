@@ -429,8 +429,9 @@ def check_single_link(link: str) -> str:
         return ""
     return ""
 
-def count_broken_links(html: str, base_url: str) -> list:
-    soup = BeautifulSoup(html, "html.parser")
+def count_broken_links(html: str, base_url: str, soup: BeautifulSoup = None) -> dict:
+    if not soup:
+        soup = BeautifulSoup(html, "html.parser")
     raw_links = [a.get('href') for a in soup.find_all('a', href=True)]
     
     valid_links = set()
@@ -708,15 +709,21 @@ def website_analyzer_agent(state: AgentState) -> AgentState:
         company_name = state.get('raw_company', '') or url
 
         # ─── INDEPENDENT ASYNC I/O (runs regardless of browser success) ───────
-        executor = concurrent.futures.ThreadPoolExecutor(max_workers=3)
+        # Using 5 workers to parallelize PageSpeed, AEO, SSL, and link checking
+        executor = concurrent.futures.ThreadPoolExecutor(max_workers=5)
         lighthouse_future = executor.submit(get_google_pagespeed, url)
         aeo_future = executor.submit(verify_aeo_visibility, company_name, url)
         ssl_future = executor.submit(check_ssl_certificate, url)
+        broken_links_future = None
 
         # ─── PLAYWRIGHT BROWSER SCRAPE (may fail on Cloudflare sites) ─────────
         try:
             with sync_playwright() as p:
-                browser = p.chromium.launch(headless=True)
+                # Optimized browser launch with memory-efficient flags
+                browser = p.chromium.launch(
+                    headless=True,
+                    args=['--disable-dev-shm-usage', '--disable-setuid-sandbox', '--disable-gpu', '--memory-pressure-off']
+                )
                 page = browser.new_page()
                 page.set_extra_http_headers({"User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64)"})
                 
@@ -725,13 +732,14 @@ def website_analyzer_agent(state: AgentState) -> AgentState:
                 headers = response.headers if response else {}
                 tech_stack = extract_tech_stack(html, headers)
                 last_modified = extract_last_modified(headers, html)
-                link_data = count_broken_links(html, url)
-                broken_links = link_data["broken_list"]
-                total_links = link_data["total"]
                 
-                analytics_data = check_analytics(html)
-                
+                # Performance: Parse BeautifulSoup once and reuse for all DOM tasks
                 soup = BeautifulSoup(html, "html.parser")
+
+                # Async link checking to run in parallel with screenshot process
+                broken_links_future = executor.submit(count_broken_links, html, url, soup)
+
+                analytics_data = check_analytics(html)
                 has_lead_capture = check_lead_capture(soup, html)
                 has_cta = check_cta_presence(soup, html)
                 has_newsletter = check_newsletter(soup)
@@ -854,6 +862,18 @@ def website_analyzer_agent(state: AgentState) -> AgentState:
                     })
                 
                 browser.close()
+
+                # Retrieve async link check results
+                if broken_links_future:
+                    try:
+                        link_data = broken_links_future.result(timeout=15)
+                        broken_links = link_data["broken_list"]
+                        total_links = link_data["total"]
+                    except Exception as le:
+                        print(f"Async Link Check Error: {le}")
+                        broken_links = []
+                        total_links = 0
+
                 text_content = f"--- RAW TEXT CONTENT ---\n{text_content}"
         except Exception as e:
             print(f"Browser scrape failed for {url}: {e}")
