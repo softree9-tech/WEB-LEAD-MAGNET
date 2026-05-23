@@ -98,6 +98,7 @@ export default function CSVUpload({ onResult }) {
           type="file"
           accept=".csv"
           ref={fileInputRef}
+          aria-label="Upload CSV file"
           onChange={(e) => setFile(e.target.files[0])}
           style={{ fontSize: '0.8rem', flexGrow: 1, color: 'var(--text-secondary)' }}
         />
