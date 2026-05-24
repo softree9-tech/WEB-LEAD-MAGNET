@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
+import { motion as Motion, AnimatePresence } from 'framer-motion';
 import '../LeadResults.css';
 import { ExternalLink, RefreshCw, Download, Monitor, Mail, Lock, FileCode, Check, X, Search, Activity, BarChart3, Settings, ChevronUp, LayoutDashboard, FileText, Bot, Target, Smartphone, Copy, TrendingDown, AlertTriangle, Sword, Trophy, Zap, Sparkles } from 'lucide-react';
 
@@ -30,15 +30,9 @@ function calculateMobileResponsivenessScore(lead) {
   const conversionRisk = (lead.mobile_conversion_risk || 'Moderate').toLowerCase();
   const hasViewport = !!lead.seo_mobile;
   const mobilePerf = parseInt(lead.mobile_performance || 0);
-  const lighthousePerf = parseInt(lead.lighthouse_performance || 0);
   const loadTime = parseFloat(lead.load_time || 0);
   const hasCta = !!lead.has_cta;
-  const hasLeadCapture = !!lead.has_lead_capture;
-  const ctaVisibility = (lead.cta_visibility_rating || 'Moderate').toLowerCase();
-  const ctaPlacement = (lead.cta_placement_quality || 'Suboptimal').toLowerCase();
-  const designQuality = (lead.design || 'Outdated').toLowerCase();
   const ctaStrength = (lead.cta || 'Weak').toLowerCase();
-  const messageClarity = (lead.message || 'Confusing').toLowerCase();
 
   let criticalSections = 0;
   let highRiskSections = 0;
@@ -148,9 +142,6 @@ function calculateMobileResponsivenessScore(lead) {
     }
   });
 
-  const totalSections = sections.length || 1;
-  const problematicSections = criticalSections + highRiskSections;
-  const problematicRatio = problematicSections / totalSections;
 
   // ================================================================
   // CATEGORY 1: Breakpoint Config (20 points max)
@@ -440,7 +431,7 @@ function MobileWalkthrough({ lead }) {
             </div>
 
             <AnimatePresence initial={false} custom={direction}>
-              <motion.div
+              <Motion.div
                 key={currentIndex}
                 custom={direction}
                 variants={slideVariants}
@@ -477,7 +468,7 @@ function MobileWalkthrough({ lead }) {
                     <span style={{ fontSize: '0.7rem', color: '#334155', marginTop: '4px' }}>Mock Viewport</span>
                   </div>
                 )}
-              </motion.div>
+              </Motion.div>
             </AnimatePresence>
           </div>
         </div>
@@ -599,7 +590,7 @@ function MobileWalkthrough({ lead }) {
           <span className="mobile-ai-label">Live Screen Critique</span>
         </div>
         <AnimatePresence mode="wait">
-          <motion.p 
+          <Motion.p
             key={currentIndex}
             initial={{ opacity: 0, y: 5 }}
             animate={{ opacity: 1, y: 0 }}
@@ -609,7 +600,7 @@ function MobileWalkthrough({ lead }) {
             style={{ margin: 0 }}
           >
             "{currentSection.insight || "No specific mobile critiques compiled for this section."}"
-          </motion.p>
+          </Motion.p>
         </AnimatePresence>
       </div>
     </div>
