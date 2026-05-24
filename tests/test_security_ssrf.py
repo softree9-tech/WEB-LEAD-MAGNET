@@ -23,7 +23,11 @@ def test_unsafe_urls():
         "http://0.0.0.0",
         "file:///etc/passwd",
         "ftp://example.com",
-        "http://[::1]"
+        "http://[::1]",
+        "http://[fd00::1]", # Private IPv6
+        "http://[fe80::1]", # Link-local IPv6
+        "http://127.1",     # Shortened IPv4 loopback
+        "http://0x7f000001" # Hexadecimal IPv4 loopback
     ]
     for url in unsafe_urls:
         assert is_safe_url(url) is False, f"URL should be unsafe: {url}"

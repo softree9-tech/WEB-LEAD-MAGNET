@@ -26,14 +26,15 @@ def is_safe_url(url: str) -> bool:
         if hostname.lower() in ('localhost', '127.0.0.1', '0.0.0.0', '::1'):
             return False
 
-        # Resolve hostname to IP
-        # This provides protection against standard SSRF.
-        # DNS rebinding protection would require pinning the IP for the subsequent request.
-        ip_addr = socket.gethostbyname(hostname)
-        ip = ipaddress.ip_address(ip_addr)
-
-        if ip.is_private or ip.is_loopback or ip.is_reserved or ip.is_multicast or ip.is_link_local:
-            return False
+        # Resolve hostname to all associated IPs (IPv4 and IPv6)
+        # Using getaddrinfo prevents bypasses where a hostname resolves to multiple IPs,
+        # some of which might be internal/private.
+        addr_info = socket.getaddrinfo(hostname, None)
+        for item in addr_info:
+            ip_addr = item[4][0]
+            ip = ipaddress.ip_address(ip_addr)
+            if ip.is_private or ip.is_loopback or ip.is_reserved or ip.is_multicast or ip.is_link_local:
+                return False
 
         return True
     except Exception:
