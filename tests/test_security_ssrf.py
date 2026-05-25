@@ -23,9 +23,14 @@ def test_unsafe_urls():
         "http://0.0.0.0",
         "file:///etc/passwd",
         "ftp://example.com",
-        "http://[::1]"
+        "http://[::1]",
+        "http://[0:0:0:0:0:ffff:7f00:1]", # IPv4-mapped IPv6 for 127.0.0.1
+        "http://[fe80::1]", # Link-local
     ]
     for url in unsafe_urls:
+        # Clear cache to ensure each test is fresh if needed,
+        # but for SSRF tests we want to be sure.
+        is_safe_url.cache_clear()
         assert is_safe_url(url) is False, f"URL should be unsafe: {url}"
 
 if __name__ == "__main__":
