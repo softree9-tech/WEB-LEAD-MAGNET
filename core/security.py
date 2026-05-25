@@ -1,6 +1,28 @@
 import socket
 from urllib.parse import urlparse
 import ipaddress
+from functools import lru_cache
+
+@lru_cache(maxsize=128)
+def _is_safe_hostname(hostname: str) -> bool:
+    """
+    Checks if a hostname resolves only to safe (public) IP addresses.
+    Cached to prevent redundant DNS lookups.
+    """
+    if hostname.lower() in ('localhost', '127.0.0.1', '0.0.0.0', '::1'):
+        return False
+
+    try:
+        # getaddrinfo handles both IPv4 and IPv6 and returns all associated IPs
+        addr_info = socket.getaddrinfo(hostname, None)
+        for info in addr_info:
+            ip_str = info[4][0]
+            ip = ipaddress.ip_address(ip_str)
+            if ip.is_private or ip.is_loopback or ip.is_reserved or ip.is_multicast or ip.is_link_local:
+                return False
+        return True
+    except Exception:
+        return False
 
 def is_safe_url(url: str) -> bool:
     """
@@ -22,19 +44,6 @@ def is_safe_url(url: str) -> bool:
         if not hostname:
             return False
 
-        # Basic check for common local hostnames
-        if hostname.lower() in ('localhost', '127.0.0.1', '0.0.0.0', '::1'):
-            return False
-
-        # Resolve hostname to IP
-        # This provides protection against standard SSRF.
-        # DNS rebinding protection would require pinning the IP for the subsequent request.
-        ip_addr = socket.gethostbyname(hostname)
-        ip = ipaddress.ip_address(ip_addr)
-
-        if ip.is_private or ip.is_loopback or ip.is_reserved or ip.is_multicast or ip.is_link_local:
-            return False
-
-        return True
+        return _is_safe_hostname(hostname)
     except Exception:
         return False
