@@ -1,0 +1,3 @@
+## 2025-05-22 - Optimized URL validation and DOM parsing
+**Learning:** Redundant DNS lookups during link-heavy analysis (like broken link checking) and repeated HTML parsing into BeautifulSoup objects are significant bottlenecks. Caching hostname safety results and reusing the pre-parsed DOM object yielded massive performance gains. Switching to `socket.getaddrinfo` also improved security by validating all resolved IPs (IPv4 and IPv6).
+**Action:** Always check for high-frequency utility calls (like URL validation) that can be cached with `@lru_cache`, and ensure expensive objects like BeautifulSoup are passed down the call stack instead of being re-instantiated.
