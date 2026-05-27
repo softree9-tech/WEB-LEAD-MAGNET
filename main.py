@@ -6,6 +6,15 @@ import asyncio
 if sys.platform == 'win32':
     asyncio.set_event_loop_policy(asyncio.WindowsProactorEventLoopPolicy())
 
+# CRITICAL: Resolve the LangGraph LangChainPendingDeprecationWarning by explicitly setting allowed_objects in Reviver
+from langchain_core.load.load import Reviver
+_original_reviver_init = Reviver.__init__
+def _patched_reviver_init(self, *args, **kwargs):
+    if len(args) < 2 and 'allowed_objects' not in kwargs:
+        kwargs['allowed_objects'] = 'core'
+    return _original_reviver_init(self, *args, **kwargs)
+Reviver.__init__ = _patched_reviver_init
+
 import pandas as pd
 from fastapi import FastAPI, UploadFile, File, HTTPException
 from fastapi.responses import JSONResponse, StreamingResponse
@@ -15,7 +24,7 @@ from typing import List
 from dotenv import load_dotenv
 from graph import graph_app
 from fastapi.middleware.cors import CORSMiddleware
-from langchain_google_genai import ChatGoogleGenerativeAI
+from langchain_openai import ChatOpenAI
 from core.models import BattleCardResult
 from core.security import is_safe_url
 
@@ -157,10 +166,10 @@ async def process_battle(payload: BattleInput):
         competitor_data = results[1].get("output_row", {})
         
         # Generate the Battle Card Comparison using AI
-        llm = ChatGoogleGenerativeAI(
-            model="gemini-3.1-flash-lite-preview", 
+        llm = ChatOpenAI(
+            model="gpt-4.1-mini", 
             temperature=0,
-            api_key=os.environ.get("GEMINI_API_KEY")
+            api_key=os.environ.get("OPENAI_API_KEY")
         )
         structured_llm = llm.with_structured_output(BattleCardResult)
         

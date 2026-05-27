@@ -8,7 +8,7 @@ from urllib.parse import urljoin
 from bs4 import BeautifulSoup
 from playwright.sync_api import sync_playwright, TimeoutError as PlaywrightTimeoutError
 from core.llm import generate_response
-from langchain_google_genai import ChatGoogleGenerativeAI
+from langchain_openai import ChatOpenAI
 from langchain_core.messages import HumanMessage, SystemMessage
 from core.models import WebsiteAnalyzerOutput
 from core.state import AgentState
@@ -356,16 +356,16 @@ def get_google_pagespeed(url: str) -> dict:
     return result
 
 def verify_aeo_visibility(company_name: str, url: str) -> dict:
-    """Makes a live Gemini-Flash probe to test if AI engines recognize this brand."""
+    """Makes a live GPT-4o probe to test if AI engines recognize this brand."""
     if not is_safe_url(url):
         return {"aeo_recognized": False, "aeo_confidence": "low", "aeo_raw_response": "Unsafe URL"}
     aeo_result = {"aeo_recognized": False, "aeo_confidence": "low", "aeo_raw_response": ""}
     try:
-        probe_llm = ChatGoogleGenerativeAI(
-            model="gemini-3.1-flash-lite-preview", 
+        probe_llm = ChatOpenAI(
+            model="gpt-4.1-mini", 
             temperature=0, 
             max_tokens=300,
-            api_key=os.environ.get("GEMINI_API_KEY")
+            api_key=os.environ.get("OPENAI_API_KEY")
         )
         probe_msg = HumanMessage(content=f"""What do you know about the company "{company_name}" with the website {url}? 
 Would you confidently recommend them to a user looking for their services? 
@@ -924,10 +924,10 @@ def website_analyzer_agent(state: AgentState) -> AgentState:
         error_msg = "No URL provided."
 
 
-    llm = ChatGoogleGenerativeAI(
-        model="gemini-3.1-flash-lite-preview", 
+    llm = ChatOpenAI(
+        model="gpt-4.1-mini", 
         temperature=0,
-        api_key=os.environ.get("GEMINI_API_KEY")
+        api_key=os.environ.get("OPENAI_API_KEY")
     )
     structured_llm = llm.with_structured_output(WebsiteAnalyzerOutput)
 
