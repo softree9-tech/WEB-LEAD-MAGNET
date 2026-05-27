@@ -11,6 +11,7 @@ def test_safe_urls():
         "https://github.com/trending"
     ]
     for url in safe_urls:
+        # Clear cache for testing if needed, though here we just want to ensure it works
         assert is_safe_url(url) is True, f"URL should be safe: {url}"
 
 def test_unsafe_urls():
@@ -23,7 +24,10 @@ def test_unsafe_urls():
         "http://0.0.0.0",
         "file:///etc/passwd",
         "ftp://example.com",
-        "http://[::1]"
+        "http://[::1]",
+        "http://[::ffff:7f00:1]", # IPv4-mapped IPv6 loopback
+        "http://[0:0:0:0:0:ffff:127.0.0.1]", # Another form of IPv4-mapped IPv6
+        "http://[fe80::1]", # Link-local
     ]
     for url in unsafe_urls:
         assert is_safe_url(url) is False, f"URL should be unsafe: {url}"
