@@ -1,7 +1,9 @@
 import socket
 from urllib.parse import urlparse
 import ipaddress
+from functools import lru_cache
 
+@lru_cache(maxsize=128)
 def is_safe_url(url: str) -> bool:
     """
     Validates that a URL is safe to request.
