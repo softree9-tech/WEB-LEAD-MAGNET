@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
+import { motion as Motion, AnimatePresence } from 'framer-motion';
 import '../LeadResults.css';
 import { ExternalLink, RefreshCw, Download, Monitor, Mail, Lock, FileCode, Check, X, Search, Activity, BarChart3, Settings, ChevronUp, LayoutDashboard, FileText, Bot, Target, Smartphone, Copy, TrendingDown, AlertTriangle, Sword, Trophy, Zap, Sparkles } from 'lucide-react';
 
@@ -30,15 +30,15 @@ function calculateMobileResponsivenessScore(lead) {
   const conversionRisk = (lead.mobile_conversion_risk || 'Moderate').toLowerCase();
   const hasViewport = !!lead.seo_mobile;
   const mobilePerf = parseInt(lead.mobile_performance || 0);
-  const lighthousePerf = parseInt(lead.lighthouse_performance || 0);
+  const _lighthousePerf = parseInt(lead.lighthouse_performance || 0);
   const loadTime = parseFloat(lead.load_time || 0);
   const hasCta = !!lead.has_cta;
-  const hasLeadCapture = !!lead.has_lead_capture;
-  const ctaVisibility = (lead.cta_visibility_rating || 'Moderate').toLowerCase();
-  const ctaPlacement = (lead.cta_placement_quality || 'Suboptimal').toLowerCase();
-  const designQuality = (lead.design || 'Outdated').toLowerCase();
+  const _hasLeadCapture = !!lead.has_lead_capture;
+  const _ctaVisibility = (lead.cta_visibility_rating || 'Moderate').toLowerCase();
+  const _ctaPlacement = (lead.cta_placement_quality || 'Suboptimal').toLowerCase();
+  const _designQuality = (lead.design || 'Outdated').toLowerCase();
   const ctaStrength = (lead.cta || 'Weak').toLowerCase();
-  const messageClarity = (lead.message || 'Confusing').toLowerCase();
+  const _messageClarity = (lead.message || 'Confusing').toLowerCase();
 
   let criticalSections = 0;
   let highRiskSections = 0;
@@ -151,7 +151,7 @@ function calculateMobileResponsivenessScore(lead) {
 
   const totalSections = sections.length || 1;
   const problematicSections = criticalSections + highRiskSections;
-  const problematicRatio = problematicSections / totalSections;
+  const _problematicRatio = problematicSections / totalSections;
 
   // ================================================================
   // CATEGORY 1: Breakpoint Config (20 points max)
@@ -444,7 +444,7 @@ function MobileWalkthrough({ lead }) {
             </div>
 
             <AnimatePresence initial={false} custom={direction}>
-              <motion.div
+              <Motion.div
                 key={currentIndex}
                 custom={direction}
                 variants={slideVariants}
@@ -481,7 +481,7 @@ function MobileWalkthrough({ lead }) {
                     <span style={{ fontSize: '0.7rem', color: '#334155', marginTop: '4px' }}>Mock Viewport</span>
                   </div>
                 )}
-              </motion.div>
+              </Motion.div>
             </AnimatePresence>
           </div>
         </div>
@@ -603,7 +603,7 @@ function MobileWalkthrough({ lead }) {
           <span className="mobile-ai-label">Live Screen Critique</span>
         </div>
         <AnimatePresence mode="wait">
-          <motion.p 
+          <Motion.p
             key={currentIndex}
             initial={{ opacity: 0, y: 5 }}
             animate={{ opacity: 1, y: 0 }}
@@ -613,12 +613,19 @@ function MobileWalkthrough({ lead }) {
             style={{ margin: 0 }}
           >
             "{currentSection.insight || "No specific mobile critiques compiled for this section."}"
-          </motion.p>
+          </Motion.p>
         </AnimatePresence>
       </div>
     </div>
   );
 }
+
+const hardenedEscapeCSV = (str) => {
+  const s = String(str || '');
+  // Harden against Formula Injection: prefix with ' if value starts with =, +, -, or @
+  const hardened = /^[=+\-@]/.test(s) ? `'${s}` : s;
+  return `"${hardened.replace(/"/g, '""')}"`;
+};
 
 export default function LeadResults({ leads }) {
   if (!leads || leads.length === 0) {
@@ -703,107 +710,105 @@ I've put together a comprehensive technical audit outlining exactly how we can r
 Best,
 [Your Name]`;
 
-                const escapeCSV = (str) => `"${String(str || '').replace(/"/g, '""')}"`;
-
                 return [
-                  escapeCSV(lead.website),
-                  escapeCSV(lead.competitor_data?.website || 'N/A'),
+                  hardenedEscapeCSV(lead.website),
+                  hardenedEscapeCSV(lead.competitor_data?.website || 'N/A'),
                   uxScore,
-                  escapeCSV(lead.design),
-                  escapeCSV(lead.cta),
-                  escapeCSV(lead.message),
-                  escapeCSV(lead.trust),
-                  escapeCSV(lead.speed),
-                  escapeCSV(lead.schema_coverage_score || 0),
-                  escapeCSV(lead.schema_visibility_impact || 'Low'),
-                  escapeCSV(lead.first_impression_score || 0),
-                  escapeCSV(lead.first_impression_verdict || 'Unknown'),
-                  escapeCSV(lead.executive_summary || ''),
-                  escapeCSV(lead.business_risk_insight || ''),
-                  escapeCSV(lead.strategic_opportunity_insight || ''),
-                  escapeCSV(lead.executive_ai_recommendation || ''),
-                   escapeCSV(lead.brand_credibility_insight || ''),
-                  escapeCSV(lead.messaging_clarity_level || 'Moderate'),
-                  escapeCSV(lead.communication_effectiveness_insight || ''),
-                  escapeCSV(lead.value_proposition_analysis || ''),
-                  escapeCSV(lead.messaging_strategic_recommendation || ''),
-                  escapeCSV(lead.headline_clarity_score || 0),
-                  escapeCSV(lead.value_prop_strength_score || 0),
-                  escapeCSV(lead.cta_communication_quality_score || 0),
-                  escapeCSV(lead.messaging_confidence_score || 0),
-                  escapeCSV(lead.audience_targeting_clarity_score || 0),
-                  escapeCSV(lead.brand_communication_effectiveness_score || 0),
-                  escapeCSV(lead.cta_strength_level || 'Moderate'),
-                  escapeCSV(lead.cta_urgency_score || 0),
-                  escapeCSV(lead.cta_visibility_rating || 'Moderate'),
-                  escapeCSV(lead.cta_placement_quality || 'Suboptimal'),
-                  escapeCSV(lead.cta_action_clarity_score || 0),
-                  escapeCSV(lead.cta_persuasiveness_score || 0),
-                  escapeCSV(lead.cta_effectiveness_insight || ''),
-                  escapeCSV(lead.cta_ai_optimization_recommendation || ''),
-                  escapeCSV(lead.mobile_ux_rating || 'Average'),
-                  escapeCSV(lead.mobile_conversion_risk || 'Moderate'),
-                  escapeCSV(lead.mobile_ai_insight || ''),
-                  escapeCSV(lead.momentum_score || 0),
-                  escapeCSV(lead.competitive_growth_status || 'Steady'),
-                  escapeCSV(lead.strategic_risk_level || 'Moderate'),
-                  escapeCSV(lead.momentum_growth_direction || 'Neutral'),
-                  escapeCSV(lead.momentum_ai_insight || ''),
-                  escapeCSV((lead.ai_strategic_plan || []).map(s => `${s?.priority || ''}: ${s?.action || ''} (Impact: ${s?.impact || ''})`).join(' | ')),
-                  escapeCSV(`$${lead.revenue_leak_amount || 0}`),
-                  escapeCSV(lead.revenue_leak_severity || 'Low'),
-                  escapeCSV(`$${lead.annual_opportunity_loss || 0}`),
-                  escapeCSV(lead.urgency_severity || '90+ Days'),
-                  escapeCSV(lead.revenue_impact_insight || ''),
-                  escapeCSV(lead.visitors_lost || 0),
-                  escapeCSV(lead.leads_lost || 0),
-                  escapeCSV(lead.missing_opportunities_count || 0),
-                  escapeCSV(`${lead.estimated_conversion_loss_percent || 0}%`),
-                  escapeCSV(lead.conversion_readiness_level || 'Low'),
-                  escapeCSV(lead.cta_optimization_recommendation || ''),
-                  escapeCSV(lead.conversion_improvement_suggestion || ''),
-                  escapeCSV(lead.funnel_optimization_insight || ''),
-                  escapeCSV(lead.mobile_conversion_recommendation || ''),
-                  escapeCSV(lead.lead_gen_improvement_opportunity || ''),
-                  escapeCSV(lead.conversion_intelligence_insight || ''),
-                  escapeCSV(lead.industry_percentile || 0),
-                  escapeCSV(lead.industry_tier || 'Unknown'),
-                  escapeCSV(lead.industry_competitiveness || 'Unknown'),
-                  escapeCSV(lead.lead_quality_score || 0),
-                  escapeCSV(lead.business_maturity_level || 'Unknown'),
-                  escapeCSV(lead.sales_potential || 'Moderate'),
-                  escapeCSV(lead.digital_readiness || 'Moderate'),
-                  escapeCSV(lead.growth_potential || 'Moderate'),
-                  escapeCSV(lead.market_position_intelligence_insight || ''),
-                  escapeCSV(lead.buyer_intent_strength || 'Moderate'),
-                  escapeCSV(lead.transactional_service_intent_score || 0),
-                  escapeCSV(lead.enterprise_sales_orientation_score || 0),
-                  escapeCSV(lead.lead_generation_focus_score || 0),
-                  escapeCSV(lead.conversion_oriented_positioning_score || 0),
-                  escapeCSV(lead.commercial_readiness_maturity || 'Moderate'),
-                  escapeCSV(lead.primary_website_type || 'informational'),
-                  escapeCSV(lead.commercial_insights || ''),
-                  escapeCSV(lead.sales_positioning_maturity_score || 0),
-                  escapeCSV(lead.commercial_readiness_level_score || 0),
-                  escapeCSV(lead.conversion_targeting_insight || ''),
-                  escapeCSV(lead.market_position_ai_strategic_recommendation || ''),
-                  escapeCSV(lead.keyword_visibility_gap_opportunities || ''),
-                  escapeCSV(lead.keyword_visibility_gap_level || 'Low'),
-                  escapeCSV(lead.keyword_visibility_gap_competitor_advantage || ''),
-                  escapeCSV(lead.keyword_visibility_gap_search_impact || 'Low'),
-                  escapeCSV(lead.keyword_visibility_gap_insight || ''),
-                  escapeCSV(lead.trust_decay_level || 'Low'),
-                  escapeCSV(lead.maintenance_confidence || 100),
-                  escapeCSV(lead.outdated_signal_indicators || ''),
-                  escapeCSV(lead.credibility_impact_insight || ''),
-                  escapeCSV(lead.ai_trust_recommendation || ''),
-                  escapeCSV(lead.rebranding_pitch),
-                  escapeCSV(trustWarning),
-                  escapeCSV(seoIssues),
-                  escapeCSV((lead.aeo_probe_response || 'No AI recognition data.').substring(0, 1000)),
-                  escapeCSV(lead.battle_data?.overall_winner || 'N/A'),
-                  escapeCSV(lead.battle_data?.ai_verdict || 'N/A'),
-                  escapeCSV(batchEmailBody)
+                  hardenedEscapeCSV(lead.design),
+                  hardenedEscapeCSV(lead.cta),
+                  hardenedEscapeCSV(lead.message),
+                  hardenedEscapeCSV(lead.trust),
+                  hardenedEscapeCSV(lead.speed),
+                  hardenedEscapeCSV(lead.schema_coverage_score || 0),
+                  hardenedEscapeCSV(lead.schema_visibility_impact || 'Low'),
+                  hardenedEscapeCSV(lead.first_impression_score || 0),
+                  hardenedEscapeCSV(lead.first_impression_verdict || 'Unknown'),
+                  hardenedEscapeCSV(lead.executive_summary || ''),
+                  hardenedEscapeCSV(lead.business_risk_insight || ''),
+                  hardenedEscapeCSV(lead.strategic_opportunity_insight || ''),
+                  hardenedEscapeCSV(lead.executive_ai_recommendation || ''),
+                  hardenedEscapeCSV(lead.brand_credibility_insight || ''),
+                  hardenedEscapeCSV(lead.messaging_clarity_level || 'Moderate'),
+                  hardenedEscapeCSV(lead.communication_effectiveness_insight || ''),
+                  hardenedEscapeCSV(lead.value_proposition_analysis || ''),
+                  hardenedEscapeCSV(lead.messaging_strategic_recommendation || ''),
+                  hardenedEscapeCSV(lead.headline_clarity_score || 0),
+                  hardenedEscapeCSV(lead.value_prop_strength_score || 0),
+                  hardenedEscapeCSV(lead.cta_communication_quality_score || 0),
+                  hardenedEscapeCSV(lead.messaging_confidence_score || 0),
+                  hardenedEscapeCSV(lead.audience_targeting_clarity_score || 0),
+                  hardenedEscapeCSV(lead.brand_communication_effectiveness_score || 0),
+                  hardenedEscapeCSV(lead.cta_strength_level || 'Moderate'),
+                  hardenedEscapeCSV(lead.cta_urgency_score || 0),
+                  hardenedEscapeCSV(lead.cta_visibility_rating || 'Moderate'),
+                  hardenedEscapeCSV(lead.cta_placement_quality || 'Suboptimal'),
+                  hardenedEscapeCSV(lead.cta_action_clarity_score || 0),
+                  hardenedEscapeCSV(lead.cta_persuasiveness_score || 0),
+                  hardenedEscapeCSV(lead.cta_effectiveness_insight || ''),
+                  hardenedEscapeCSV(lead.cta_ai_optimization_recommendation || ''),
+                  hardenedEscapeCSV(lead.mobile_ux_rating || 'Average'),
+                  hardenedEscapeCSV(lead.mobile_conversion_risk || 'Moderate'),
+                  hardenedEscapeCSV(lead.mobile_ai_insight || ''),
+                  hardenedEscapeCSV(lead.momentum_score || 0),
+                  hardenedEscapeCSV(lead.competitive_growth_status || 'Steady'),
+                  hardenedEscapeCSV(lead.strategic_risk_level || 'Moderate'),
+                  hardenedEscapeCSV(lead.momentum_growth_direction || 'Neutral'),
+                  hardenedEscapeCSV(lead.momentum_ai_insight || ''),
+                  hardenedEscapeCSV((lead.ai_strategic_plan || []).map(s => `${s?.priority || ''}: ${s?.action || ''} (Impact: ${s?.impact || ''})`).join(' | ')),
+                  hardenedEscapeCSV(`$${lead.revenue_leak_amount || 0}`),
+                  hardenedEscapeCSV(lead.revenue_leak_severity || 'Low'),
+                  hardenedEscapeCSV(`$${lead.annual_opportunity_loss || 0}`),
+                  hardenedEscapeCSV(lead.urgency_severity || '90+ Days'),
+                  hardenedEscapeCSV(lead.revenue_impact_insight || ''),
+                  hardenedEscapeCSV(lead.visitors_lost || 0),
+                  hardenedEscapeCSV(lead.leads_lost || 0),
+                  hardenedEscapeCSV(lead.missing_opportunities_count || 0),
+                  hardenedEscapeCSV(`${lead.estimated_conversion_loss_percent || 0}%`),
+                  hardenedEscapeCSV(lead.conversion_readiness_level || 'Low'),
+                  hardenedEscapeCSV(lead.cta_optimization_recommendation || ''),
+                  hardenedEscapeCSV(lead.conversion_improvement_suggestion || ''),
+                  hardenedEscapeCSV(lead.funnel_optimization_insight || ''),
+                  hardenedEscapeCSV(lead.mobile_conversion_recommendation || ''),
+                  hardenedEscapeCSV(lead.lead_gen_improvement_opportunity || ''),
+                  hardenedEscapeCSV(lead.conversion_intelligence_insight || ''),
+                  hardenedEscapeCSV(lead.industry_percentile || 0),
+                  hardenedEscapeCSV(lead.industry_tier || 'Unknown'),
+                  hardenedEscapeCSV(lead.industry_competitiveness || 'Unknown'),
+                  hardenedEscapeCSV(lead.lead_quality_score || 0),
+                  hardenedEscapeCSV(lead.business_maturity_level || 'Unknown'),
+                  hardenedEscapeCSV(lead.sales_potential || 'Moderate'),
+                  hardenedEscapeCSV(lead.digital_readiness || 'Moderate'),
+                  hardenedEscapeCSV(lead.growth_potential || 'Moderate'),
+                  hardenedEscapeCSV(lead.market_position_intelligence_insight || ''),
+                  hardenedEscapeCSV(lead.buyer_intent_strength || 'Moderate'),
+                  hardenedEscapeCSV(lead.transactional_service_intent_score || 0),
+                  hardenedEscapeCSV(lead.enterprise_sales_orientation_score || 0),
+                  hardenedEscapeCSV(lead.lead_generation_focus_score || 0),
+                  hardenedEscapeCSV(lead.conversion_oriented_positioning_score || 0),
+                  hardenedEscapeCSV(lead.commercial_readiness_maturity || 'Moderate'),
+                  hardenedEscapeCSV(lead.primary_website_type || 'informational'),
+                  hardenedEscapeCSV(lead.commercial_insights || ''),
+                  hardenedEscapeCSV(lead.sales_positioning_maturity_score || 0),
+                  hardenedEscapeCSV(lead.commercial_readiness_level_score || 0),
+                  hardenedEscapeCSV(lead.conversion_targeting_insight || ''),
+                  hardenedEscapeCSV(lead.market_position_ai_strategic_recommendation || ''),
+                  hardenedEscapeCSV(lead.keyword_visibility_gap_opportunities || ''),
+                  hardenedEscapeCSV(lead.keyword_visibility_gap_level || 'Low'),
+                  hardenedEscapeCSV(lead.keyword_visibility_gap_competitor_advantage || ''),
+                  hardenedEscapeCSV(lead.keyword_visibility_gap_search_impact || 'Low'),
+                  hardenedEscapeCSV(lead.keyword_visibility_gap_insight || ''),
+                  hardenedEscapeCSV(lead.trust_decay_level || 'Low'),
+                  hardenedEscapeCSV(lead.maintenance_confidence || 100),
+                  hardenedEscapeCSV(lead.outdated_signal_indicators || ''),
+                  hardenedEscapeCSV(lead.credibility_impact_insight || ''),
+                  hardenedEscapeCSV(lead.ai_trust_recommendation || ''),
+                  hardenedEscapeCSV(lead.rebranding_pitch),
+                  hardenedEscapeCSV(trustWarning),
+                  hardenedEscapeCSV(seoIssues),
+                  hardenedEscapeCSV((lead.aeo_probe_response || 'No AI recognition data.').substring(0, 1000)),
+                  hardenedEscapeCSV(lead.battle_data?.overall_winner || 'N/A'),
+                  hardenedEscapeCSV(lead.battle_data?.ai_verdict || 'N/A'),
+                  hardenedEscapeCSV(batchEmailBody)
                 ].join(',');
 
               }).join('\n');
@@ -1000,107 +1005,105 @@ Best,
                     ].filter(Boolean).slice(0, 5).join(' | ') || 'No major SEO issues detected';
 
                     // Preserve newlines inside quoted fields — RFC 4180 compliant
-                    const escapeCSV = (str) => `"${String(str || '').replace(/"/g, '""')}"`;
-
                     const csvRow = [
-                      escapeCSV(lead.website),
-                      escapeCSV(lead.competitor_data?.website || 'N/A'),
+                      hardenedEscapeCSV(lead.website),
+                      hardenedEscapeCSV(lead.competitor_data?.website || 'N/A'),
                       uxScore,
-                      escapeCSV(lead.design),
-                      escapeCSV(lead.cta),
-                      escapeCSV(lead.message),
-                      escapeCSV(lead.trust),
-                      escapeCSV(lead.speed),
-                      escapeCSV(lead.schema_coverage_score || 0),
-                      escapeCSV(lead.schema_visibility_impact || 'Low'),
-                      escapeCSV(lead.first_impression_score || 0),
-                      escapeCSV(lead.first_impression_verdict || 'Unknown'),
-                      escapeCSV(lead.executive_summary || ''),
-                      escapeCSV(lead.business_risk_insight || ''),
-                      escapeCSV(lead.strategic_opportunity_insight || ''),
-                      escapeCSV(lead.executive_ai_recommendation || ''),
-                       escapeCSV(lead.brand_credibility_insight || ''),
-                      escapeCSV(lead.messaging_clarity_level || 'Moderate'),
-                      escapeCSV(lead.communication_effectiveness_insight || ''),
-                      escapeCSV(lead.value_proposition_analysis || ''),
-                      escapeCSV(lead.messaging_strategic_recommendation || ''),
-                      escapeCSV(lead.headline_clarity_score || 0),
-                      escapeCSV(lead.value_prop_strength_score || 0),
-                      escapeCSV(lead.cta_communication_quality_score || 0),
-                      escapeCSV(lead.messaging_confidence_score || 0),
-                      escapeCSV(lead.audience_targeting_clarity_score || 0),
-                      escapeCSV(lead.brand_communication_effectiveness_score || 0),
-                      escapeCSV(lead.cta_strength_level || 'Moderate'),
-                      escapeCSV(lead.cta_urgency_score || 0),
-                      escapeCSV(lead.cta_visibility_rating || 'Moderate'),
-                      escapeCSV(lead.cta_placement_quality || 'Suboptimal'),
-                      escapeCSV(lead.cta_action_clarity_score || 0),
-                      escapeCSV(lead.cta_persuasiveness_score || 0),
-                      escapeCSV(lead.cta_effectiveness_insight || ''),
-                      escapeCSV(lead.cta_ai_optimization_recommendation || ''),
-                      escapeCSV(lead.mobile_ux_rating || 'Average'),
-                      escapeCSV(lead.mobile_conversion_risk || 'Moderate'),
-                      escapeCSV(lead.mobile_ai_insight || ''),
-                      escapeCSV(lead.momentum_score || 0),
-                      escapeCSV(lead.competitive_growth_status || 'Steady'),
-                      escapeCSV(lead.strategic_risk_level || 'Moderate'),
-                      escapeCSV(lead.momentum_growth_direction || 'Neutral'),
-                      escapeCSV(lead.momentum_ai_insight || ''),
-                      escapeCSV((lead.ai_strategic_plan || []).map(s => `${s?.priority || ''}: ${s?.action || ''} (Impact: ${s?.impact || ''})`).join(' | ')),
-                      escapeCSV(`$${lead.revenue_leak_amount || 0}`),
-                      escapeCSV(lead.revenue_leak_severity || 'Low'),
-                      escapeCSV(`$${lead.annual_opportunity_loss || 0}`),
-                      escapeCSV(lead.urgency_severity || '90+ Days'),
-                      escapeCSV(lead.revenue_impact_insight || ''),
-                      escapeCSV(lead.visitors_lost || 0),
-                      escapeCSV(lead.leads_lost || 0),
-                      escapeCSV(lead.missing_opportunities_count || 0),
-                      escapeCSV(`${lead.estimated_conversion_loss_percent || 0}%`),
-                      escapeCSV(lead.conversion_readiness_level || 'Low'),
-                      escapeCSV(lead.cta_optimization_recommendation || ''),
-                      escapeCSV(lead.conversion_improvement_suggestion || ''),
-                      escapeCSV(lead.funnel_optimization_insight || ''),
-                      escapeCSV(lead.mobile_conversion_recommendation || ''),
-                      escapeCSV(lead.lead_gen_improvement_opportunity || ''),
-                      escapeCSV(lead.conversion_intelligence_insight || ''),
-                      escapeCSV(lead.industry_percentile || 0),
-                      escapeCSV(lead.industry_tier || 'Unknown'),
-                      escapeCSV(lead.industry_competitiveness || 'Unknown'),
-                      escapeCSV(lead.lead_quality_score || 0),
-                      escapeCSV(lead.business_maturity_level || 'Unknown'),
-                      escapeCSV(lead.sales_potential || 'Moderate'),
-                      escapeCSV(lead.digital_readiness || 'Moderate'),
-                      escapeCSV(lead.growth_potential || 'Moderate'),
-                      escapeCSV(lead.market_position_intelligence_insight || ''),
-                      escapeCSV(lead.buyer_intent_strength || 'Moderate'),
-                      escapeCSV(lead.transactional_service_intent_score || 0),
-                      escapeCSV(lead.enterprise_sales_orientation_score || 0),
-                      escapeCSV(lead.lead_generation_focus_score || 0),
-                      escapeCSV(lead.conversion_oriented_positioning_score || 0),
-                      escapeCSV(lead.commercial_readiness_maturity || 'Moderate'),
-                      escapeCSV(lead.primary_website_type || 'informational'),
-                      escapeCSV(lead.commercial_insights || ''),
-                      escapeCSV(lead.sales_positioning_maturity_score || 0),
-                      escapeCSV(lead.commercial_readiness_level_score || 0),
-                      escapeCSV(lead.conversion_targeting_insight || ''),
-                      escapeCSV(lead.market_position_ai_strategic_recommendation || ''),
-                      escapeCSV(lead.keyword_visibility_gap_opportunities || ''),
-                      escapeCSV(lead.keyword_visibility_gap_level || 'Low'),
-                      escapeCSV(lead.keyword_visibility_gap_competitor_advantage || ''),
-                      escapeCSV(lead.keyword_visibility_gap_search_impact || 'Low'),
-                      escapeCSV(lead.keyword_visibility_gap_insight || ''),
-                      escapeCSV(lead.trust_decay_level || 'Low'),
-                      escapeCSV(lead.maintenance_confidence || 100),
-                      escapeCSV(lead.outdated_signal_indicators || ''),
-                      escapeCSV(lead.credibility_impact_insight || ''),
-                      escapeCSV(lead.ai_trust_recommendation || ''),
-                      escapeCSV(lead.rebranding_pitch),
-                      escapeCSV(trustWarning),
-                      escapeCSV(seoIssues),
-                      escapeCSV((lead.aeo_probe_response || 'No AI recognition data.').substring(0, 500)),
-                      escapeCSV(lead.battle_data?.overall_winner || 'N/A'),
-                      escapeCSV(lead.battle_data?.ai_verdict || 'N/A'),
-                      escapeCSV(emailBody)
+                      hardenedEscapeCSV(lead.design),
+                      hardenedEscapeCSV(lead.cta),
+                      hardenedEscapeCSV(lead.message),
+                      hardenedEscapeCSV(lead.trust),
+                      hardenedEscapeCSV(lead.speed),
+                      hardenedEscapeCSV(lead.schema_coverage_score || 0),
+                      hardenedEscapeCSV(lead.schema_visibility_impact || 'Low'),
+                      hardenedEscapeCSV(lead.first_impression_score || 0),
+                      hardenedEscapeCSV(lead.first_impression_verdict || 'Unknown'),
+                      hardenedEscapeCSV(lead.executive_summary || ''),
+                      hardenedEscapeCSV(lead.business_risk_insight || ''),
+                      hardenedEscapeCSV(lead.strategic_opportunity_insight || ''),
+                      hardenedEscapeCSV(lead.executive_ai_recommendation || ''),
+                      hardenedEscapeCSV(lead.brand_credibility_insight || ''),
+                      hardenedEscapeCSV(lead.messaging_clarity_level || 'Moderate'),
+                      hardenedEscapeCSV(lead.communication_effectiveness_insight || ''),
+                      hardenedEscapeCSV(lead.value_proposition_analysis || ''),
+                      hardenedEscapeCSV(lead.messaging_strategic_recommendation || ''),
+                      hardenedEscapeCSV(lead.headline_clarity_score || 0),
+                      hardenedEscapeCSV(lead.value_prop_strength_score || 0),
+                      hardenedEscapeCSV(lead.cta_communication_quality_score || 0),
+                      hardenedEscapeCSV(lead.messaging_confidence_score || 0),
+                      hardenedEscapeCSV(lead.audience_targeting_clarity_score || 0),
+                      hardenedEscapeCSV(lead.brand_communication_effectiveness_score || 0),
+                      hardenedEscapeCSV(lead.cta_strength_level || 'Moderate'),
+                      hardenedEscapeCSV(lead.cta_urgency_score || 0),
+                      hardenedEscapeCSV(lead.cta_visibility_rating || 'Moderate'),
+                      hardenedEscapeCSV(lead.cta_placement_quality || 'Suboptimal'),
+                      hardenedEscapeCSV(lead.cta_action_clarity_score || 0),
+                      hardenedEscapeCSV(lead.cta_persuasiveness_score || 0),
+                      hardenedEscapeCSV(lead.cta_effectiveness_insight || ''),
+                      hardenedEscapeCSV(lead.cta_ai_optimization_recommendation || ''),
+                      hardenedEscapeCSV(lead.mobile_ux_rating || 'Average'),
+                      hardenedEscapeCSV(lead.mobile_conversion_risk || 'Moderate'),
+                      hardenedEscapeCSV(lead.mobile_ai_insight || ''),
+                      hardenedEscapeCSV(lead.momentum_score || 0),
+                      hardenedEscapeCSV(lead.competitive_growth_status || 'Steady'),
+                      hardenedEscapeCSV(lead.strategic_risk_level || 'Moderate'),
+                      hardenedEscapeCSV(lead.momentum_growth_direction || 'Neutral'),
+                      hardenedEscapeCSV(lead.momentum_ai_insight || ''),
+                      hardenedEscapeCSV((lead.ai_strategic_plan || []).map(s => `${s?.priority || ''}: ${s?.action || ''} (Impact: ${s?.impact || ''})`).join(' | ')),
+                      hardenedEscapeCSV(`$${lead.revenue_leak_amount || 0}`),
+                      hardenedEscapeCSV(lead.revenue_leak_severity || 'Low'),
+                      hardenedEscapeCSV(`$${lead.annual_opportunity_loss || 0}`),
+                      hardenedEscapeCSV(lead.urgency_severity || '90+ Days'),
+                      hardenedEscapeCSV(lead.revenue_impact_insight || ''),
+                      hardenedEscapeCSV(lead.visitors_lost || 0),
+                      hardenedEscapeCSV(lead.leads_lost || 0),
+                      hardenedEscapeCSV(lead.missing_opportunities_count || 0),
+                      hardenedEscapeCSV(`${lead.estimated_conversion_loss_percent || 0}%`),
+                      hardenedEscapeCSV(lead.conversion_readiness_level || 'Low'),
+                      hardenedEscapeCSV(lead.cta_optimization_recommendation || ''),
+                      hardenedEscapeCSV(lead.conversion_improvement_suggestion || ''),
+                      hardenedEscapeCSV(lead.funnel_optimization_insight || ''),
+                      hardenedEscapeCSV(lead.mobile_conversion_recommendation || ''),
+                      hardenedEscapeCSV(lead.lead_gen_improvement_opportunity || ''),
+                      hardenedEscapeCSV(lead.conversion_intelligence_insight || ''),
+                      hardenedEscapeCSV(lead.industry_percentile || 0),
+                      hardenedEscapeCSV(lead.industry_tier || 'Unknown'),
+                      hardenedEscapeCSV(lead.industry_competitiveness || 'Unknown'),
+                      hardenedEscapeCSV(lead.lead_quality_score || 0),
+                      hardenedEscapeCSV(lead.business_maturity_level || 'Unknown'),
+                      hardenedEscapeCSV(lead.sales_potential || 'Moderate'),
+                      hardenedEscapeCSV(lead.digital_readiness || 'Moderate'),
+                      hardenedEscapeCSV(lead.growth_potential || 'Moderate'),
+                      hardenedEscapeCSV(lead.market_position_intelligence_insight || ''),
+                      hardenedEscapeCSV(lead.buyer_intent_strength || 'Moderate'),
+                      hardenedEscapeCSV(lead.transactional_service_intent_score || 0),
+                      hardenedEscapeCSV(lead.enterprise_sales_orientation_score || 0),
+                      hardenedEscapeCSV(lead.lead_generation_focus_score || 0),
+                      hardenedEscapeCSV(lead.conversion_oriented_positioning_score || 0),
+                      hardenedEscapeCSV(lead.commercial_readiness_maturity || 'Moderate'),
+                      hardenedEscapeCSV(lead.primary_website_type || 'informational'),
+                      hardenedEscapeCSV(lead.commercial_insights || ''),
+                      hardenedEscapeCSV(lead.sales_positioning_maturity_score || 0),
+                      hardenedEscapeCSV(lead.commercial_readiness_level_score || 0),
+                      hardenedEscapeCSV(lead.conversion_targeting_insight || ''),
+                      hardenedEscapeCSV(lead.market_position_ai_strategic_recommendation || ''),
+                      hardenedEscapeCSV(lead.keyword_visibility_gap_opportunities || ''),
+                      hardenedEscapeCSV(lead.keyword_visibility_gap_level || 'Low'),
+                      hardenedEscapeCSV(lead.keyword_visibility_gap_competitor_advantage || ''),
+                      hardenedEscapeCSV(lead.keyword_visibility_gap_search_impact || 'Low'),
+                      hardenedEscapeCSV(lead.keyword_visibility_gap_insight || ''),
+                      hardenedEscapeCSV(lead.trust_decay_level || 'Low'),
+                      hardenedEscapeCSV(lead.maintenance_confidence || 100),
+                      hardenedEscapeCSV(lead.outdated_signal_indicators || ''),
+                      hardenedEscapeCSV(lead.credibility_impact_insight || ''),
+                      hardenedEscapeCSV(lead.ai_trust_recommendation || ''),
+                      hardenedEscapeCSV(lead.rebranding_pitch),
+                      hardenedEscapeCSV(trustWarning),
+                      hardenedEscapeCSV(seoIssues),
+                      hardenedEscapeCSV((lead.aeo_probe_response || 'No AI recognition data.').substring(0, 500)),
+                      hardenedEscapeCSV(lead.battle_data?.overall_winner || 'N/A'),
+                      hardenedEscapeCSV(lead.battle_data?.ai_verdict || 'N/A'),
+                      hardenedEscapeCSV(emailBody)
                     ].join(',');
 
 
