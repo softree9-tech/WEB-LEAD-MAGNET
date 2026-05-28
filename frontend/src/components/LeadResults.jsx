@@ -620,6 +620,28 @@ function MobileWalkthrough({ lead }) {
   );
 }
 
+function CopyButton({ content }) {
+  const [copied, setCopied] = React.useState(false);
+  const handleCopy = () => {
+    navigator.clipboard.writeText(content);
+    setCopied(true);
+    setTimeout(() => setCopied(false), 2000);
+  };
+  return (
+    <button className="action-btn" onClick={handleCopy} aria-live="polite">
+      {copied ? (
+        <span style={{ color: 'var(--success-color)', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+          <Check size={14} /> Copied!
+        </span>
+      ) : (
+        <>
+          <Copy size={14} /> Copy to Clipboard
+        </>
+      )}
+    </button>
+  );
+}
+
 export default function LeadResults({ leads }) {
   if (!leads || leads.length === 0) {
     return (
@@ -2147,13 +2169,7 @@ Best,
                   <h2 style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
                     <Mail color="var(--accent-color)" size={20} /> Personalized AI Outreach Email
                   </h2>
-                  <button className="action-btn" onClick={(e) => {
-                    navigator.clipboard.writeText(emailBody);
-                    e.currentTarget.innerHTML = '<span style="color:#10b981;display:flex;align-items:center;gap:0.5rem;"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="20 6 9 17 4 12"></polyline></svg> Copied!</span>';
-                    setTimeout(() => e.target.innerHTML = '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg> Copy to Clipboard', 2000);
-                  }}>
-                    <Copy size={14} /> Copy to Clipboard
-                  </button>
+                  <CopyButton content={emailBody} />
                 </div>
                 <div style={{ position: 'relative' }}>
                   <textarea
