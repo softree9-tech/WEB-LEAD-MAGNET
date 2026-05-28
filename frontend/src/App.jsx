@@ -14,7 +14,11 @@ function App() {
   };
 
   const handleBatchResults = (newResults) => {
-    setResults(prev => [...newResults, ...prev]);
+    // Filter out any malformed results that might cause rendering crashes
+    const validResults = (newResults || []).filter(r => r && typeof r === 'object' && r.website);
+    if (validResults.length > 0) {
+      setResults(prev => [...validResults, ...prev]);
+    }
   };
 
   return (

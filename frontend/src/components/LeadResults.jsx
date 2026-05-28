@@ -25,7 +25,7 @@ import { ExternalLink, RefreshCw, Download, Monitor, Mail, Lock, FileCode, Check
  *   Severe viewport collision   → -20 to -25
  */
 function calculateMobileResponsivenessScore(lead) {
-  const sections = lead.mobile_sections || [];
+  const sections = (lead.mobile_sections || []).filter(s => s != null);
   const uxRating = (lead.mobile_ux_rating || 'Average').toLowerCase();
   const conversionRisk = (lead.mobile_conversion_risk || 'Moderate').toLowerCase();
   const hasViewport = !!lead.seo_mobile;
@@ -64,7 +64,8 @@ function calculateMobileResponsivenessScore(lead) {
   };
 
   sections.forEach(sec => {
-    const risk = (sec.risk || 'Low').toLowerCase();
+    if (!sec) return;
+    const risk = (sec?.risk || 'Low').toLowerCase();
     if (risk === 'critical') criticalSections++;
     else if (risk === 'high') highRiskSections++;
     else if (risk === 'moderate') moderateRiskSections++;
@@ -207,7 +208,7 @@ function calculateMobileResponsivenessScore(lead) {
   if (issuesDetected.excessiveSpacing) consistencyScore -= 4;
   
   // Mixed risk levels indicates inconsistency
-  const riskLevels = new Set(sections.map(sec => (sec.risk || 'Low').toLowerCase()));
+  const riskLevels = new Set(sections.filter(s => s != null).map(sec => (sec?.risk || 'Low').toLowerCase()));
   if (riskLevels.size >= 3) consistencyScore -= 5;
   else if (riskLevels.size === 2 && (riskLevels.has('critical') || riskLevels.has('high'))) consistencyScore -= 3;
   consistencyScore = Math.max(0, Math.min(20, consistencyScore));
@@ -340,8 +341,11 @@ function calculateMobileResponsivenessScore(lead) {
 }
 
 function MobileWalkthrough({ lead }) {
-  const sections = lead.mobile_sections && lead.mobile_sections.length > 0
-    ? lead.mobile_sections
+  const rawSections = lead.mobile_sections && lead.mobile_sections.length > 0
+    ? lead.mobile_sections.filter(s => s != null)
+    : [];
+  const sections = rawSections.length > 0
+    ? rawSections
     : [
         {
           name: "Mobile Overview",
@@ -371,8 +375,8 @@ function MobileWalkthrough({ lead }) {
     setCurrentIndex(index);
   };
 
-  const currentSection = sections[currentIndex];
-  const riskValue = currentSection.risk || 'Moderate';
+  const currentSection = sections[currentIndex] || sections[0] || { name: 'Overview', insight: '', risk: 'Moderate', b64_image: '' };
+  const riskValue = currentSection?.risk || 'Moderate';
   const riskClass = riskValue.toLowerCase() === 'critical' || riskValue.toLowerCase() === 'high' 
     ? 'critical' 
     : riskValue.toLowerCase() === 'moderate' 
@@ -680,7 +684,7 @@ export default function LeadResults({ leads }) {
                 const batchAeoScore = parseInt(lead.aeo_score || 0);
                 const batchEmailBody = `Hi team,
 
-I was doing some research in your industry and took a look under the hood of ${lead.website.replace(/^https?:\/\//i, '')}. I ran a deep forensic analysis and found 4 critical bottlenecks bleeding your organic traffic and conversions:
+I was doing some research in your industry and took a look under the hood of ${(lead.website || '').replace(/^https?:\/\//i, '')}. I ran a deep forensic analysis and found 4 critical bottlenecks bleeding your organic traffic and conversions:
 
 1. REBRANDING & UX (${uxScore}/100)
 ${lead.rebranding_pitch || "Your overall visual hierarchy and user engagement flows need optimization to convert high-intent traffic."}
@@ -745,7 +749,7 @@ Best,
                   escapeCSV(lead.strategic_risk_level || 'Moderate'),
                   escapeCSV(lead.momentum_growth_direction || 'Neutral'),
                   escapeCSV(lead.momentum_ai_insight || ''),
-                  escapeCSV((lead.ai_strategic_plan || []).map(s => `${s.priority}: ${s.action} (Impact: ${s.impact})`).join(' | ')),
+                  escapeCSV((lead.ai_strategic_plan || []).map(s => `${s?.priority || ''}: ${s?.action || ''} (Impact: ${s?.impact || ''})`).join(' | ')),
                   escapeCSV(`$${lead.revenue_leak_amount || 0}`),
                   escapeCSV(lead.revenue_leak_severity || 'Low'),
                   escapeCSV(`$${lead.annual_opportunity_loss || 0}`),
@@ -963,7 +967,7 @@ Best,
             <div className="elite-main" id={`lead-${index}`}>
               <div className="elite-header">
                 <div>
-                  <h1 className="report-title">WEBSITE PERFORMANCE REPORT: <span className="highlight-domain">{lead.website.replace(/^https?:\/\//i, '')}</span></h1>
+                  <h1 className="report-title">WEBSITE PERFORMANCE REPORT: <span className="highlight-domain">{(lead.website || '').replace(/^https?:\/\//i, '')}</span></h1>
                   <p className="report-date">Data as of: {new Date().toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}</p>
                 </div>
                 <div className="header-actions">
@@ -1042,7 +1046,7 @@ Best,
                       escapeCSV(lead.strategic_risk_level || 'Moderate'),
                       escapeCSV(lead.momentum_growth_direction || 'Neutral'),
                       escapeCSV(lead.momentum_ai_insight || ''),
-                      escapeCSV((lead.ai_strategic_plan || []).map(s => `${s.priority}: ${s.action} (Impact: ${s.impact})`).join(' | ')),
+                      escapeCSV((lead.ai_strategic_plan || []).map(s => `${s?.priority || ''}: ${s?.action || ''} (Impact: ${s?.impact || ''})`).join(' | ')),
                       escapeCSV(`$${lead.revenue_leak_amount || 0}`),
                       escapeCSV(lead.revenue_leak_severity || 'Low'),
                       escapeCSV(`$${lead.annual_opportunity_loss || 0}`),
@@ -1104,7 +1108,7 @@ Best,
                     const url = window.URL.createObjectURL(blob);
                     const a = document.createElement('a');
                     a.href = url;
-                    a.download = `instantly_${lead.website.replace(/^https?:\/\//i, '').replace(/[/.]/g, '_')}.csv`;
+                    a.download = `instantly_${(lead.website || '').replace(/^https?:\/\//i, '').replace(/[/.]/g, '_')}.csv`;
                     document.body.appendChild(a);
                     a.click();
                     document.body.removeChild(a);

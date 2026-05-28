@@ -64,10 +64,13 @@ export default function CSVUpload({ onResult }) {
           if (line.trim()) {
             try {
               const result = JSON.parse(line);
-              if (result.error) {
+              if (result.error && !result.website) {
+                // Only skip results that are pure error objects without website data
                 console.error("Result error:", result.error);
               } else {
-                onResult([result]); // App.jsx handleBatchResults expects an array
+                // Pass through all results including error_detail results
+                // (they now have complete fallback structures from the backend)
+                onResult([result]);
                 setProcessedCount(prev => prev + 1);
               }
             } catch (e) {

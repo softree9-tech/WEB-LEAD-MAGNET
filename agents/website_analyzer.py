@@ -1001,17 +1001,25 @@ def website_analyzer_agent(state: AgentState) -> AgentState:
 - Messaging Clarity (Clear, Confusing, Jargon-heavy)
 - Trust Signals (Strong, Weak, Missing - scan the text specifically for Client Reviews, Testimonials, Case Studies, partner mentions, or awards!)"""
 
-        system_msg = SystemMessage(content=f"""You are an elite Digital Marketing agency owner auditing a prospect's website to sell them a WEBSITE REDEVELOPMENT + SEO OPTIMIZATION project.
+        system_msg = SystemMessage(content=f"""You are a premium digital strategy consultant providing an executive-grade website audit for a prospective client. Your tone is professional, constructive, and consulting-oriented — like a trusted advisor highlighting both strengths and growth opportunities. Avoid being overly negative or repetitive. Focus on business growth, conversion authority, and strategic positioning.
+
+SCORING CALIBRATION (CRITICAL — follow these guidelines precisely):
+- A modern, professional B2B website with clean design, clear messaging, working CTAs, and decent mobile experience should score 8-9 on first impression and sub-metric scores. Do NOT over-penalize.
+- Only score below 6 if the site has genuinely severe issues (broken layout, no CTA, outdated design, completely missing trust signals).
+- Missing schema markup, weak AI visibility (AEO), or absent newsletter/chat are IMPROVEMENT OPPORTUNITIES, not critical failures. They should reduce scores by 1 point maximum, not drop them to 3-5.
+- A site that "works well but could be better" is an 8. A site that is "polished and competitive" is a 9. Reserve 10 for truly exceptional sites with best-in-class everything.
+- Scores of 1-5 should be extremely rare and reserved for genuinely broken, abandoned, or amateur websites.
+- Be fair and calibrated. Think of how a real consulting firm would grade a client — acknowledging their strengths while identifying strategic opportunities for improvement.
 
 Tasks:
 {visual_instruction}
 
 Then, based on the VERIFIED Google Lighthouse data provided below, generate comprehensive Search Visibility metrics:
-1. rebranding_pitch: Write 2-3 aggressive sentences. Reference SPECIFIC Lighthouse scores (Performance, Accessibility, Mobile) to expose how their website is technically failing. Tie each flaw to lost revenue. Example: 'Your site scores 38/100 on Google Performance and 45/100 on Mobile — meaning over half your visitors abandon before your page even loads. A modern, optimized redesign would immediately recover this lost traffic.'
-2. seo_score (0-100), seo_status, seo_improvement: If a Google Lighthouse SEO score is provided, use it as the base (adjust slightly based on speed/meta/H1 findings). If Lighthouse score is 0 (API unavailable), calculate from the technical metrics. If speed is >4s, score MUST be low.
-3. aeo_score (0-100), aeo_status, aeo_improvement: Base the AEO score STRICTLY on the LIVE AEO PROBE RESULTS provided. If AI Recognition is False, the score MUST be below 25. If True with low confidence, score 25-50. If True with high confidence, score 50-80+. Use the raw AI response to craft specific, actionable improvement advice.
+1. rebranding_pitch: Write 2-3 compelling, professional sentences. Reference SPECIFIC Lighthouse scores (Performance, Accessibility, Mobile) to highlight specific technical improvement opportunities tied to revenue impact. Frame this as "here's what's leaving money on the table" rather than "your website is failing." Example: 'With a Performance score of 62/100 and Mobile at 55/100, your site is losing visitors who expect sub-2-second load times. A targeted performance optimization could recover significant organic traffic and conversions.'
+2. seo_score (0-100), seo_status, seo_improvement: If a Google Lighthouse SEO score is provided, use it as the base (adjust slightly based on speed/meta/H1 findings). If Lighthouse score is 0 (API unavailable), calculate from the technical metrics. If speed is >4s, score MUST be low. The seo_status should be professional and strategic — highlight what's working AND what needs attention.
+3. aeo_score (0-100), aeo_status, aeo_improvement: Base the AEO score STRICTLY on the LIVE AEO PROBE RESULTS provided. If AI Recognition is False, the score MUST be below 25. If True with low confidence, score 25-50. If True with high confidence, score 50-80+. Use the raw AI response to craft specific, actionable improvement advice. NOTE: Low AEO scores are common and expected for most businesses — frame this as a growth opportunity, not a catastrophic failure.
 
-Finally, compute the Internal Lead Score (0-10) where a HIGHER score means a WORSE website (making them a HOTTER lead for our agency to pitch). Factor in ALL Lighthouse scores — low Performance, Accessibility, or Mobile scores should push the lead score higher.
+Finally, compute the Internal Lead Score (0-10) where a HIGHER score means a WORSE website (making them a HOTTER lead for our agency to pitch). Factor in ALL Lighthouse scores — low Performance, Accessibility, or Mobile scores should push the lead score higher. A well-built professional site should score 3-5 (decent site, moderate opportunity). Only sites with serious issues should score 7-10.
 
 Additionally, generate a 'First Impression Score' (0-10) from the perspective of a first-time visitor.
 Analyze:
@@ -1023,56 +1031,63 @@ Analyze:
 - Readability (Contrast/Font size)
 - Mobile Feel (Fluid vs Broken)
 
-Assign a verdict: Excellent (9-10), Good (7-8), Average (5-6), Poor (0-4).
-Provide a short, concise, and emotionally impactful AI explanation (e.g., "Website feels outdated and lacks strong trust signals.").
+FIRST IMPRESSION SCORING CALIBRATION (PRESENCE SCORE):
+- 9-10 (Excellent): Best-in-class design, highly polished, immediately trustworthy, clear value prop, strong social proof, polished mobile experience.
+- 8-9 (Good): Modern, professional B2B websites with clean design, clear messaging, working CTAs, and decent mobile experience. Most standard, healthy professional sites should score 8-9 here by default unless there are major, obvious issues.
+- 6-7 (Average): Functional but unremarkable. Noticeable gaps in design polish, trust signals, or messaging clarity.
+- 4-5 (Poor): Clearly outdated, cluttered, or confusing. Multiple visible issues.
+- 1-3 (Critical): Broken, abandoned, or fundamentally unusable.
+
+Assign a verdict: Excellent (9-10), Good (8-9), Average (6-7), Poor (0-5).
+Provide a short, concise, and balanced AI explanation that acknowledges strengths before noting improvement areas (e.g., "Professional design with clean layout, but trust signals could be strengthened with client testimonials and case studies.").
 
 Additionally, generate an EXECUTIVE PRESENCE INTELLIGENCE assessment. Provide:
-- `executive_summary`: A concise AI summary (e.g. “The website creates a credible first impression, but conversion infrastructure and AI-search optimization remain below industry-leading standards.”) based on SEO, UX, trust signals, AI visibility, conversion readiness, competitor intelligence, mobile experience, and schema analysis.
-- `business_risk_insight`: The biggest business risk insight.
-- `strategic_opportunity_insight`: The top opportunity area insight.
-- `executive_ai_recommendation`: A strategic AI recommendation.
-- `brand_credibility_insight`: An insight into the brand's credibility based on trust signals.
+- `executive_summary`: A balanced, executive-level AI summary that acknowledges the website's strengths first, then identifies strategic improvement areas. Cover SEO, UX, trust signals, AI visibility, conversion readiness, mobile experience, and schema. Example: "The website presents a credible, professional brand image with solid foundational SEO. Key opportunities exist in AI search optimization, conversion path refinement, and structured data implementation to elevate competitive positioning." Avoid generic SEO audit language — write like a strategic consultant.
+- `business_risk_insight`: The biggest business risk — frame constructively as "the area with the most potential impact if left unaddressed."
+- `strategic_opportunity_insight`: The top opportunity area insight — frame as a growth lever, not a failure.
+- `executive_ai_recommendation`: A strategic AI recommendation focused on ROI and business outcomes.
+- `brand_credibility_insight`: An insight into the brand's credibility — acknowledge existing trust signals before noting gaps.
 
-Also provide a `conversion_readiness_level` (High, Medium, Low) based on the conversion elements present.
+Also provide a `conversion_readiness_level` (High, Medium, Low) based on the conversion elements present. Most sites with contact forms and CTAs should be at least "Medium."
 
-Finally, provide an `industry_insight`: compare this website to top industry performers. 1-sentence aggressive insight into why they are winning or losing compared to the top 10% of competitors.
+Finally, provide an `industry_insight`: compare this website to top industry performers. Write a balanced 1-sentence insight that positions where they stand and what would elevate them. Example: "The site performs competitively in visual design and messaging but lags behind top-tier competitors in conversion infrastructure and AI search visibility."
 
 Finally, analyze the `SCHEMA MARKUP` situation. Based on the detected schemas provided:
-- Calculate a `schema_coverage_score` (0-100) based on the presence of FAQ, LocalBusiness, Review, Organization, Product, Breadcrumb, and Article schemas.
-- Provide a `schema_gap_insight`: Explain how missing schemas (like FAQ or Review) are hurting their AI visibility (ChatGPT recommendations) and Google Rich Results.
+- Calculate a `schema_coverage_score` (0-100) based on the presence of FAQ, LocalBusiness, Review, Organization, Product, Breadcrumb, and Article schemas. Note: Most websites have 0-2 schemas, so a score of 30-50 is normal. Only penalize heavily if the business clearly needs specific schemas (e.g., a local business with no LocalBusiness schema).
+- Provide a `schema_gap_insight`: Explain how adding missing schemas could improve AI visibility and Google Rich Results. Frame as opportunity, not failure.
 - Set a `schema_visibility_impact` (High, Medium, Low).
 - Provide a `schema_recommendation` for implementation priority.
 
 Finally, analyze the `KEYWORD VISIBILITY GAP`:
-- Identify 3-5 `keyword_visibility_gap_opportunities`: high-value missing keyword opportunities the website is missing compared to industry expectations.
-- Set a `keyword_visibility_gap_level` (High, Medium, Low) based on the missed potential.
-- Provide a `keyword_visibility_gap_competitor_advantage`: 1-sentence summary of what competitors are ranking for that this site is not.
+- Identify 3-5 `keyword_visibility_gap_opportunities`: high-value keyword opportunities the website could target to increase visibility.
+- Set a `keyword_visibility_gap_level` (High, Medium, Low) based on the growth potential.
+- Provide a `keyword_visibility_gap_competitor_advantage`: 1-sentence summary of where competitors may be capturing traffic this site is missing.
 - Set a `keyword_visibility_gap_search_impact` (High, Medium, Low) on AI/Search visibility.
-- Provide a `keyword_visibility_gap_insight`: Short, aggressive AI insight on search intent coverage and visibility gaps.
+- Provide a `keyword_visibility_gap_insight`: Strategic AI insight on search intent coverage and visibility growth opportunities.
 
 Finally, analyze the `MOBILE EXPERIENCE REALITY CHECK`:
 - Based on the provided mobile screenshot (360x640), evaluate how the site actually looks on a low-end device.
-- Assign a `mobile_ux_rating` (Excellent, Good, Average, Poor, Critical).
+- Assign a `mobile_ux_rating` (Excellent, Good, Average, Poor, Critical). Most responsive sites should be at least "Average" or "Good."
 - Assess the `mobile_conversion_risk` (Low, Moderate, High, Critical) based on CTA visibility and readability on mobile.
-- Provide a `mobile_ai_insight`: A short, punchy AI recommendation to fix mobile conversion leaks (e.g., "Primary CTA is difficult to notice on smaller mobile devices, reducing conversion potential.").
+- Provide a `mobile_ai_insight`: A short, actionable AI recommendation to improve mobile conversion (e.g., "Primary CTA could benefit from increased contrast and prominent placement on smaller screens to boost mobile conversions.").
 - Generate a list of `mobile_sections` that correspond EXACTLY in order to the sections listed under 'MOBILE WEBSITE SECTIONS TO AUDIT SEQUENTIALLY'.
-- For each section, provide a descriptive `name` (e.g. 'Hero Section', 'Services Section'), a critique `insight` (1-2 sentences, professional, specific to what content or risk is in that section), and a `risk` level (Low, Moderate, High, Critical).
+- For each section, provide a descriptive `name` (e.g. 'Hero Section', 'Services Section'), a critique `insight` (1-2 sentences, professional, balanced — note what works and what could be improved), and a `risk` level (Low, Moderate, High, Critical). Most sections on a functional mobile site should be "Low" or "Moderate."
 
 Finally, analyze the `COMPETITOR MOMENTUM TRACKER`:
 - Compare this website's current state (SEO, UX, AI visibility, trust signals, schema, lead capture, content freshness, conversion readiness) against rapid industry changes.
-- Generate a `momentum_score` (0-100) based on how quickly they appear to be adopting modern search and conversion standards.
+- Generate a `momentum_score` (0-100) based on how quickly they appear to be adopting modern search and conversion standards. A maintained, modern site should score 50-70+.
 - Determine `competitive_growth_status` (Leading, Steady, Falling Behind).
 - Assess `strategic_risk_level` (High, Moderate, Low).
-- Write a `momentum_comparison`: 1-2 aggressive sentences comparing their momentum to competitors who are "rapidly improving AI visibility and conversion infrastructure."
+- Write a `momentum_comparison`: 1-2 professional sentences comparing their position to industry trends. Frame as strategic context, not criticism.
 - Set `momentum_growth_direction` (Up, Down, Neutral).
-- Provide a `momentum_ai_insight`: A high-level AI strategic insight on how they are being outpaced or if they are keeping up with industry technology adoption.
+- Provide a `momentum_ai_insight`: A high-level AI strategic insight on their competitive trajectory and key acceleration opportunities.
 
 - Example action: "Add FAQ schema and move primary CTA above the fold to improve AI discoverability and lead conversion."
 
 Finally, analyze the REVENUE IMPACT FORECAST:
-- Generate a `revenue_impact_insight`: A high-level, executive AI insight about the long-term business impact of current technical and conversion leaks. Focus on how continued delays in optimization may significantly reduce long-term conversion performance and AI visibility competitiveness.
-- Determine `annual_opportunity_loss`: Based on the technical metrics and current leaks, estimate the total lost business opportunity over the next 12 months.
-- Set `urgency_severity`: (Immediate, 30-60 Days, 90+ Days) based on the severity of current revenue leaks.
+- Generate a `revenue_impact_insight`: A high-level, executive AI insight about the long-term business impact of addressing current technical and conversion opportunities. Focus on the positive ROI of optimization rather than doom scenarios.
+- Determine `annual_opportunity_loss`: Based on the technical metrics and current gaps, estimate the total missed business opportunity over the next 12 months.
+- Set `urgency_severity`: (Immediate, 30-60 Days, 90+ Days) based on the priority of current opportunities.
 
 Finally, analyze the CONVERSION OPPORTUNITY INTELLIGENCE:
 - Combine missing lead capture analysis with AI-driven conversion optimization recommendations.
@@ -1083,17 +1098,17 @@ Finally, analyze the CONVERSION OPPORTUNITY INTELLIGENCE:
   - `mobile_conversion_recommendation`: Concise AI recommendation specifically for mobile-specific conversion improvements.
   - `lead_gen_improvement_opportunity`: Concise AI insight on lead generation improvement opportunities like forms, chat, or trust signals.
   - `conversion_intelligence_insight`: A strategic, premium, executive-level conversion intelligence insight combining all analysis data (CTA, forms, mobile, trust, AI visibility).
-969:   - `cta_strength_level`: (High, Moderate, Low) Overall CTA wording strength.
-970:   - `cta_urgency_score`: (0-10) How much urgency does the CTA create?
-971:   - `cta_visibility_rating`: (High, Moderate, Low) How visible is the primary CTA?
-972:   - `cta_placement_quality`: (Strategic, Suboptimal, Poor) Quality of CTA placement.
-973:   - `cta_action_clarity_score`: (0-10) How clear is the action required?
-974:   - `cta_persuasiveness_score`: (0-10) How persuasive is the CTA language?
-975:   - `cta_effectiveness_insight`: Concise AI conversion effectiveness insight. Example: "The CTA is visible but lacks urgency and persuasive language, reducing conversion motivation."
-976:   - `cta_ai_optimization_recommendation`: Concise AI optimization recommendation for CTA.
+  - `cta_strength_level`: (High, Moderate, Low) Overall CTA wording strength.
+  - `cta_urgency_score`: (0-10) How much urgency does the CTA create? A clear "Contact Us" or "Get Started" is at least a 5-6.
+  - `cta_visibility_rating`: (High, Moderate, Low) How visible is the primary CTA?
+  - `cta_placement_quality`: (Strategic, Suboptimal, Poor) Quality of CTA placement.
+  - `cta_action_clarity_score`: (0-10) How clear is the action required?
+  - `cta_persuasiveness_score`: (0-10) How persuasive is the CTA language?
+  - `cta_effectiveness_insight`: Concise AI conversion effectiveness insight. Example: "The CTA is visible and clearly positioned, though adding urgency-driven language could further boost engagement."
+  - `cta_ai_optimization_recommendation`: Concise AI optimization recommendation for CTA.
 Finally, analyze the CONTENT & MESSAGING CLARITY:
 - Evaluate the website's messaging across:
-  - `headline_clarity_score`: (0-10) How clear and impactful is the primary headline?
+  - `headline_clarity_score`: (0-10) How clear and impactful is the primary headline? A clear, professional headline is at least 6-7.
   - `value_prop_strength_score`: (0-10) How strong and unique is the value proposition?
   - `cta_communication_quality_score`: (0-10) How well does the CTA communicate the next step?
   - `messaging_confidence_score`: (0-10) Does the messaging sound authoritative and confident?
@@ -1101,10 +1116,10 @@ Finally, analyze the CONTENT & MESSAGING CLARITY:
   - `brand_communication_effectiveness_score`: (0-10) Overall effectiveness of brand communication.
 - Provide:
   - `messaging_clarity_level`: (High, Moderate, Low) Overall level of messaging clarity.
-  - `communication_effectiveness_insight`: Concise executive-level AI insight on brand communication effectiveness.
+  - `communication_effectiveness_insight`: Concise executive-level AI insight on brand communication effectiveness — acknowledge strengths before improvement areas.
   - `value_proposition_analysis`: Concise AI analysis of the value proposition strength and clarity.
   - `messaging_strategic_recommendation`: Strategic AI recommendation for messaging and content clarity.
-  - Example: “The website appears visually professional, but the messaging lacks a strong value proposition and does not clearly communicate why customers should choose this business.”
+  - Example: "The website communicates a professional brand presence with clear service offerings. Strengthening the hero-section value proposition and adding specific differentiators would elevate conversion potential."
 
 Finally, analyze the MARKET POSITION INTELLIGENCE:
 - Combine industry competitiveness analysis with AI-powered lead quality, business potential, and commercial readiness scoring.
@@ -1115,7 +1130,7 @@ Finally, analyze the MARKET POSITION INTELLIGENCE:
   - `sales_potential`: (High, Moderate, Low).
   - `digital_readiness`: (High, Moderate, Low) based on tech stack, analytics, and optimization.
   - `growth_potential`: (High, Moderate, Low).
-  - `market_position_intelligence_insight`: A concise, executive AI strategic insight (e.g., “The business demonstrates above-average market competitiveness and strong digital maturity, making it a high-potential sales opportunity.”)
+  - `market_position_intelligence_insight`: A concise, executive AI strategic insight (e.g., "The business demonstrates above-average market competitiveness and strong digital maturity, making it a high-potential sales opportunity.")
   - `buyer_intent_strength`: (Low, Moderate, High, Advanced) based on transactional and conversion-focused signals.
   - `transactional_service_intent_score`: (0-100) How well does the site drive direct sales/service inquiries?
   - `enterprise_sales_orientation_score`: (0-100) Does the site target high-value B2B/Enterprise clients?
@@ -1140,12 +1155,12 @@ Finally, analyze the TRUST DECAY & CREDIBILITY:
   - Weak maintenance signals.
   - Inactive trust indicators (missing reviews or empty testimonial sections).
 - Generate:
-  - `trust_decay_level`: (Critical, High, Moderate, Low).
-  - `maintenance_confidence`: (0-100) based on content freshness and technical health.
-  - `outdated_signal_indicators`: Comma-separated list of detected outdated signals.
-  - `credibility_impact_insight`: Concise AI insight on how trust decay impacts long-term brand credibility.
-  - `ai_trust_recommendation`: Strategic AI recommendation to restore brand trust and authority.
-  - Example: "The website design is modern overall, but stale content and inactive trust signals may weaken perceived professionalism."
+  - `trust_decay_level`: (Critical, High, Moderate, Low). A modern, maintained site with current copyright should be "Low" unless specific decay signals are detected.
+  - `maintenance_confidence`: (0-100) based on content freshness and technical health. A modern, functional site should score 60-80+.
+  - `outdated_signal_indicators`: Comma-separated list of detected outdated signals. If none detected, use "None detected."
+  - `credibility_impact_insight`: Concise AI insight on brand credibility — acknowledge strengths before noting any concerns.
+  - `ai_trust_recommendation`: Strategic AI recommendation to strengthen brand trust and authority.
+  - Example: "The website maintains a modern design with current branding, though adding client testimonials and case studies would further reinforce credibility with high-intent visitors."
 """)
 
         mobile_sections_prompt = ""
@@ -1531,7 +1546,11 @@ Finally, analyze the TRUST DECAY & CREDIBILITY:
         "credibility_impact_insight": result_dict.get("credibility_impact_insight", ""),
         "ai_trust_recommendation": result_dict.get("ai_trust_recommendation", ""),
         "b64_image_mobile": b64_image_mobile,
-        "mobile_sections": result_dict.get("mobile_sections", [])
+        "mobile_sections": result_dict.get("mobile_sections", []),
+        "risk": {
+            "score": 80 if result_dict.get("strategic_risk_level") == "High" else (50 if result_dict.get("strategic_risk_level") == "Moderate" else (20 if result_dict.get("strategic_risk_level") == "Low" else 0)),
+            "level": result_dict.get("strategic_risk_level", "Unknown")
+        }
     }
 
 
