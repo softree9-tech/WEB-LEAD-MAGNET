@@ -23,10 +23,16 @@ def test_unsafe_urls():
         "http://0.0.0.0",
         "file:///etc/passwd",
         "ftp://example.com",
-        "http://[::1]"
+        "http://[::1]",
+        "http://[::ffff:7f00:1]", # IPv4-mapped IPv6 loopback
+        "http://[fe80::1]"       # Link-local
     ]
     for url in unsafe_urls:
         assert is_safe_url(url) is False, f"URL should be unsafe: {url}"
+
+def test_dns_resolution_failure():
+    # A hostname that doesn't exist should be handled gracefully
+    assert is_safe_url("http://nonexistent.hostname.that.should.fail") is False
 
 if __name__ == "__main__":
     try:
@@ -34,6 +40,8 @@ if __name__ == "__main__":
         print("✅ Safe URLs test passed")
         test_unsafe_urls()
         print("✅ Unsafe URLs test passed")
+        test_dns_resolution_failure()
+        print("✅ DNS resolution failure test passed")
         print("🛡️ SSRF Security tests passed!")
     except AssertionError as e:
         print(f"❌ Test failed: {e}")

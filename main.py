@@ -391,7 +391,8 @@ async def process_csv(file: UploadFile = File(...)):
         for i, row in df.iterrows():
             website = str(row.get("website", ""))
             if not is_safe_url(website):
-                print(f"--- Processing previously unsafe URL: {website} ---")
+                print(f"--- Skipping unsafe URL: {website} ---")
+                continue
 
             print(f"--- Queuing row {i+1}/{len(df)}: {website} ---")
             initial_state = {
