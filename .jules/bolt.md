@@ -1,0 +1,3 @@
+## 2025-05-14 - Security-Conscious Caching for SSRF Protection
+**Learning:** Caching security checks like `is_safe_url` with a simple LRU cache can introduce vulnerabilities (e.g., DNS rebinding) if volatility isn't considered. Furthermore, using `socket.gethostbyname` only validates one IP, potentially missing others in a dual-stack setup.
+**Action:** Always use `socket.getaddrinfo` to validate ALL resolved IP addresses (IPv4 and IPv6) for SSRF protection. When caching, ensure the security logic remains robust against multi-IP hostnames by validating the entire set before caching the 'safe' result.
