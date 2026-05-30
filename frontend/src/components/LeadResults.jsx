@@ -703,7 +703,15 @@ I've put together a comprehensive technical audit outlining exactly how we can r
 Best,
 [Your Name]`;
 
-                const escapeCSV = (str) => `"${String(str || '').replace(/"/g, '""')}"`;
+                const hardenedEscapeCSV = (str) => {
+                  const val = String(str || '');
+                  const escaped = `"${val.replace(/"/g, '""')}"`;
+                  if (val.startsWith('=') || val.startsWith('+') || val.startsWith('-') || val.startsWith('@')) {
+                    return `'${escaped}`;
+                  }
+                  return escaped;
+                };
+                const escapeCSV = hardenedEscapeCSV;
 
                 return [
                   escapeCSV(lead.website),
@@ -1000,7 +1008,15 @@ Best,
                     ].filter(Boolean).slice(0, 5).join(' | ') || 'No major SEO issues detected';
 
                     // Preserve newlines inside quoted fields — RFC 4180 compliant
-                    const escapeCSV = (str) => `"${String(str || '').replace(/"/g, '""')}"`;
+                    const hardenedEscapeCSV = (str) => {
+                      const val = String(str || '');
+                      const escaped = `"${val.replace(/"/g, '""')}"`;
+                      if (val.startsWith('=') || val.startsWith('+') || val.startsWith('-') || val.startsWith('@')) {
+                        return `'${escaped}`;
+                      }
+                      return escaped;
+                    };
+                    const escapeCSV = hardenedEscapeCSV;
 
                     const csvRow = [
                       escapeCSV(lead.website),
