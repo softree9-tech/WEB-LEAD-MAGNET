@@ -77,6 +77,7 @@ export default function SingleLeadForm({ onResult }) {
             value={url}
             onChange={(e) => setUrl(e.target.value)}
             className="input-field"
+            aria-label={isBattleMode ? "Primary Website URL" : "Website URL to Analyze"}
             placeholder={isBattleMode ? "Primary Website (https://acme.com)" : "https://acme.com"}
             style={{ padding: '0.5rem 1rem', fontSize: '0.9rem', background: 'rgba(15, 23, 42, 0.9)', flexGrow: 1, margin: 0 }}
           />
@@ -88,6 +89,7 @@ export default function SingleLeadForm({ onResult }) {
               value={competitorUrl}
               onChange={(e) => setCompetitorUrl(e.target.value)}
               className="input-field animate-slide-up"
+              aria-label="Competitor Website URL"
               placeholder="Competitor Website (https://competitor.com)"
               style={{ padding: '0.5rem 1rem', fontSize: '0.9rem', background: 'rgba(15, 23, 42, 0.9)', flexGrow: 1, margin: 0, borderColor: 'rgba(239, 68, 68, 0.3)' }}
             />
@@ -107,7 +109,7 @@ export default function SingleLeadForm({ onResult }) {
         </button>
       </form>
 
-      {error && <div style={{ color: '#ef4444', fontSize: '0.8rem', marginTop: '4px' }}>{error}</div>}
+      {error && <div role="alert" style={{ color: '#ef4444', fontSize: '0.8rem', marginTop: '4px' }}>{error}</div>}
     </div>
   );
 }
