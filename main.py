@@ -91,17 +91,44 @@ def process_single_lead(lead: LeadInput):
         "raw_role": lead.role,
         "raw_website": lead.website
     }
+
+    # Build contact fields from form input (mirrors batch CSV apollo_fields structure)
+    name_parts = (lead.name or "").strip().split(" ", 1)
+    apollo_fields = {
+        "First Name": name_parts[0] if name_parts[0] and name_parts[0] != "Unknown" else "",
+        "Last Name": name_parts[1] if len(name_parts) > 1 and name_parts[1] != "Unknown" else "",
+        "Title": lead.role if lead.role and lead.role != "Unknown" else "",
+        "Company Name": lead.company if lead.company and lead.company != "Unknown" else "",
+        "Email": lead.email if lead.email and lead.email != "unknown@example.com" else "",
+        "Website": lead.website,
+    }
     
     try:
         final_state = graph_app.invoke(initial_state)
-        return final_state.get("output_row", {})
+        result = final_state.get("output_row", {})
+        # Ensure critical fields always exist with safe defaults (matches _process_one_lead)
+        result.setdefault("website", lead.website)
+        result.setdefault("final_score", 0)
+        result.setdefault("mobile_sections", [])
+        result.setdefault("mobile_conversion_risk", "Moderate")
+        result.setdefault("strategic_risk_level", "Moderate")
+        result.setdefault("mobile_ux_rating", "Average")
+        result.setdefault("design", "Unknown")
+        result.setdefault("cta", "Unknown")
+        result.setdefault("message", "Unknown")
+        result.setdefault("trust", "Unknown")
+        result.setdefault("speed", "Unknown")
+        # Attach original contact fields for export enrichment (consistent with batch)
+        result["_apollo_fields"] = apollo_fields
+        return result
     except Exception as e:
         print(f"❌ Error in process_single_lead: {e}")
         raise HTTPException(status_code=500, detail="Internal server error during lead processing")
 
-async def _process_one_lead(initial_state: dict, label: str) -> dict:
+async def _process_one_lead(initial_state: dict, label: str, apollo_fields: dict = None) -> dict:
     """Process a single lead inside the semaphore-limited thread pool.
-    Returns a complete result dict even on failure to prevent frontend crashes."""
+    Returns a complete result dict even on failure to prevent frontend crashes.
+    If apollo_fields is provided, it is injected into the result for CSV export enrichment."""
     async with _semaphore:
         try:
             print(f"⚡ Starting parallel processing: {label}")
@@ -120,17 +147,21 @@ async def _process_one_lead(initial_state: dict, label: str) -> dict:
             result.setdefault("message", "Unknown")
             result.setdefault("trust", "Unknown")
             result.setdefault("speed", "Unknown")
+            # Attach original Apollo/CSV contact fields for export enrichment
+            if apollo_fields:
+                result["_apollo_fields"] = apollo_fields
             return result
         except Exception as e:
             print(f"❌ Error processing {label}: {e}")
             # Return a COMPLETE fallback structure so the frontend never crashes
-            return _build_error_fallback(initial_state.get("raw_website", label), str(e))
+            return _build_error_fallback(initial_state.get("raw_website", label), str(e), apollo_fields=apollo_fields)
 
 
-def _build_error_fallback(website: str, error_detail: str = "") -> dict:
+def _build_error_fallback(website: str, error_detail: str = "", apollo_fields: dict = None) -> dict:
     """Build a complete fallback result dict when a lead fails processing.
-    Ensures every field the frontend expects is present with safe defaults."""
-    return {
+    Ensures every field the frontend expects is present with safe defaults.
+    If apollo_fields is provided, it is included for CSV export enrichment."""
+    fallback = {
         "website": website,
         "error_detail": error_detail,
         "final_score": 0,
@@ -281,6 +312,10 @@ def _build_error_fallback(website: str, error_detail: str = "") -> dict:
             "level": "Unknown"
         }
     }
+    # Attach original Apollo/CSV contact fields for export enrichment
+    if apollo_fields:
+        fallback["_apollo_fields"] = apollo_fields
+    return fallback
 
 
 @app.post("/api/process/batch")
@@ -371,6 +406,53 @@ async def process_battle(payload: BattleInput):
         print(f"❌ Battle Analysis Error: {e}")
         raise HTTPException(status_code=500, detail="Internal server error during battle analysis")
 
+# ─── Dynamic Column Mapping for Apollo / Generic CSVs ─────────────────────────
+# Maps logical field names to a list of possible CSV column names (lowercase).
+# The first match in the uploaded CSV wins.
+COLUMN_ALIASES = {
+    "website":    ["website", "url", "company url", "domain", "site", "web"],
+    "first_name": ["first name", "first_name", "firstname", "given name", "first"],
+    "last_name":  ["last name", "last_name", "lastname", "surname", "family name", "last"],
+    "email":      ["email", "email address", "contact email", "work email", "e-mail"],
+    "title":      ["title", "job title", "position", "role", "designation"],
+    "company":    ["company", "company name", "organization", "account name", "org"],
+}
+
+
+def _resolve_columns(df: pd.DataFrame) -> dict:
+    """Resolve logical field names to actual DataFrame column names.
+    Performs case-insensitive matching against COLUMN_ALIASES.
+    Returns a dict mapping logical names -> actual column names (or None if not found).
+    Raises HTTPException if 'website' cannot be resolved."""
+    # Build a lowercase -> original column name lookup
+    lower_to_original = {col.strip().lower(): col for col in df.columns}
+
+    resolved = {}
+    for logical, aliases in COLUMN_ALIASES.items():
+        resolved[logical] = None
+        for alias in aliases:
+            if alias in lower_to_original:
+                resolved[logical] = lower_to_original[alias]
+                break
+
+    if resolved["website"] is None:
+        print(f"--- Error: No website column found. Available columns: {list(df.columns)} ---")
+        raise HTTPException(
+            status_code=400,
+            detail=f"CSV must contain a website column. Recognized names: {', '.join(COLUMN_ALIASES['website'])}. Found: {', '.join(df.columns)}"
+        )
+
+    print(f"--- Column mapping resolved: {resolved} ---")
+    return resolved
+
+
+def _safe_str(value) -> str:
+    """Safely convert a cell value to string, handling NaN/None."""
+    if value is None or (isinstance(value, float) and pd.isna(value)):
+        return ""
+    return str(value).strip()
+
+
 @app.post("/api/process/csv")
 async def process_csv(file: UploadFile = File(...)):
     if not file.filename.endswith('.csv'):
@@ -379,29 +461,46 @@ async def process_csv(file: UploadFile = File(...)):
     try:
         print(f"--- Received CSV file: {file.filename} ---")
         df = pd.read_csv(file.file)
-        print(f"--- CSV loaded successfully. Rows: {len(df)} ---")
+        print(f"--- CSV loaded successfully. Rows: {len(df)}, Columns: {list(df.columns)} ---")
         print(f"--- ⚡ Parallel processing enabled (max {MAX_CONCURRENT_LEADS} at a time) ---")
         
-        # Only website is strictly required
-        if "website" not in df.columns:
-            print("--- Error: 'website' column missing in CSV ---")
-            raise HTTPException(status_code=400, detail="CSV must contain at least a 'website' column")
+        # Flexible column resolution (case-insensitive, supports Apollo + generic CSVs)
+        resolved = _resolve_columns(df)
+        website_col = resolved["website"]
             
         tasks = []
         for i, row in df.iterrows():
-            website = str(row.get("website", ""))
+            website = _safe_str(row.get(website_col, ""))
+            if not website:
+                print(f"--- Skipping row {i+1}: empty website ---")
+                continue
+
             if not is_safe_url(website):
-                print(f"--- Processing previously unsafe URL: {website} ---")
+                print(f"--- Skipping row {i+1}: unsafe URL {website} ---")
+                continue
+
+            # Collect original contact fields for export enrichment
+            apollo_fields = {
+                "First Name":   _safe_str(row.get(resolved["first_name"], "")) if resolved["first_name"] else "",
+                "Last Name":    _safe_str(row.get(resolved["last_name"], "")) if resolved["last_name"] else "",
+                "Title":        _safe_str(row.get(resolved["title"], "")) if resolved["title"] else "",
+                "Company Name": _safe_str(row.get(resolved["company"], "")) if resolved["company"] else "",
+                "Email":        _safe_str(row.get(resolved["email"], "")) if resolved["email"] else "",
+                "Website":      website,
+            }
 
             print(f"--- Queuing row {i+1}/{len(df)}: {website} ---")
             initial_state = {
-                "raw_name": str(row.get("name", "")) if "name" in df.columns else "",
-                "raw_email": str(row.get("email", "")) if "email" in df.columns else "",
-                "raw_company": str(row.get("company", "")) if "company" in df.columns else "",
-                "raw_role": str(row.get("role", "")) if "role" in df.columns else "",
+                "raw_name": apollo_fields["First Name"] + (" " + apollo_fields["Last Name"] if apollo_fields["Last Name"] else ""),
+                "raw_email": apollo_fields["Email"],
+                "raw_company": apollo_fields["Company Name"],
+                "raw_role": apollo_fields["Title"],
                 "raw_website": website
             }
-            tasks.append(_process_one_lead(initial_state, website))
+            tasks.append(_process_one_lead(initial_state, website, apollo_fields=apollo_fields))
+
+        if not tasks:
+            raise HTTPException(status_code=400, detail="No valid website URLs found in the CSV")
 
         async def stream_results():
             for coro in asyncio.as_completed(tasks):

@@ -646,10 +646,12 @@ export default function LeadResults({ leads }) {
               boxShadow: '0 4px 20px rgba(6, 182, 212, 0.3)'
             }}
             onClick={() => {
-              const csvHeader = 'website,competitor_website,final_score,design,cta,message,trust,speed,schema_score,schema_impact,first_impression_score,first_impression_verdict,executive_summary,business_risk_insight,strategic_opportunity_insight,executive_ai_recommendation,brand_credibility_insight,msg_clarity_level,msg_effectiveness_insight,val_prop_analysis,msg_strategic_rec,headline_clarity,val_prop_strength,cta_quality,msg_confidence,audience_clarity,brand_effectiveness,cta_strength,cta_urgency,cta_visibility,cta_placement,cta_clarity,cta_persuasiveness,cta_eff_insight,cta_opt_rec_ai,mobile_rating,mobile_risk,mobile_insight,momentum_score,momentum_status,momentum_risk,momentum_direction,momentum_insight,strategic_action_plan,revenue_leak,leak_severity,annual_loss,urgency_severity,revenue_impact_insight,visitors_lost,leads_lost,missing_leads_count,conversion_loss_percent,readiness_level,cta_opt_rec,conv_imp_sug,funnel_opt_ins,mobile_conv_rec,lead_gen_opp,conv_intel_ins,industry_percentile,industry_tier,industry_competitiveness,lead_quality,maturity_level,sales_potential,digital_readiness,growth_potential,market_insight,buyer_intent,trans_intent,ent_orientation,lead_gen_focus,conv_positioning,comm_maturity,website_type,comm_insights,sales_maturity,comm_readiness_lvl,conv_target_insight,market_strat_rec,keyword_opps,keyword_level,competitor_adv,search_impact,keyword_insight,trust_decay,maintenance_confidence,outdated_signals,credibility_insight,trust_recommendation,rebranding_pitch,seo_issues,aeo_quote,battle_winner,battle_verdict,emailfullbody\n';
+              const csvHeader = 'first_name,last_name,title,company_name,email,website,competitor_website,final_score,design,cta,message,trust,speed,schema_score,schema_impact,first_impression_score,first_impression_verdict,executive_summary,business_risk_insight,strategic_opportunity_insight,executive_ai_recommendation,brand_credibility_insight,msg_clarity_level,msg_effectiveness_insight,val_prop_analysis,msg_strategic_rec,headline_clarity,val_prop_strength,cta_quality,msg_confidence,audience_clarity,brand_effectiveness,cta_strength,cta_urgency,cta_visibility,cta_placement,cta_clarity,cta_persuasiveness,cta_eff_insight,cta_opt_rec_ai,mobile_rating,mobile_risk,mobile_insight,momentum_score,momentum_status,momentum_risk,momentum_direction,momentum_insight,strategic_action_plan,revenue_leak,leak_severity,annual_loss,urgency_severity,revenue_impact_insight,visitors_lost,leads_lost,missing_leads_count,conversion_loss_percent,readiness_level,cta_opt_rec,conv_imp_sug,funnel_opt_ins,mobile_conv_rec,lead_gen_opp,conv_intel_ins,industry_percentile,industry_tier,industry_competitiveness,lead_quality,maturity_level,sales_potential,digital_readiness,growth_potential,market_insight,buyer_intent,trans_intent,ent_orientation,lead_gen_focus,conv_positioning,comm_maturity,website_type,comm_insights,sales_maturity,comm_readiness_lvl,conv_target_insight,market_strat_rec,keyword_opps,keyword_level,competitor_adv,search_impact,keyword_insight,trust_decay,maintenance_confidence,outdated_signals,credibility_insight,trust_recommendation,rebranding_pitch,seo_issues,aeo_quote,battle_winner,battle_verdict,emailfullbody\n';
 
 
               const csvRows = leads.map(lead => {
+                // Extract original Apollo/CSV contact fields (graceful fallback for non-CSV results)
+                const af = lead._apollo_fields || {};
                 const consistencyVal = lead.design === 'Modern' ? 90 : 60;
                 const flowVal = lead.message === 'Clear' ? 80 : 50;
                 const mobileVal = lead.seo_mobile ? 80 : 30;
@@ -706,6 +708,11 @@ Best,
                 const escapeCSV = (str) => `"${String(str || '').replace(/"/g, '""')}"`;
 
                 return [
+                  escapeCSV(af['First Name'] || ''),
+                  escapeCSV(af['Last Name'] || ''),
+                  escapeCSV(af['Title'] || ''),
+                  escapeCSV(af['Company Name'] || ''),
+                  escapeCSV(af['Email'] || ''),
                   escapeCSV(lead.website),
                   escapeCSV(lead.competitor_data?.website || 'N/A'),
                   uxScore,
@@ -973,7 +980,7 @@ Best,
                 <div className="header-actions">
                   <button className="action-btn" onClick={() => window.location.reload()}><RefreshCw size={14} /> Recalculate</button>
                   <button className="action-btn primary" onClick={() => {
-                    const csvHeader = 'website,competitor_website,final_score,design,cta,message,trust,speed,schema_score,schema_impact,first_impression_score,first_impression_verdict,executive_summary,business_risk_insight,strategic_opportunity_insight,executive_ai_recommendation,brand_credibility_insight,msg_clarity_level,msg_effectiveness_insight,val_prop_analysis,msg_strategic_rec,headline_clarity,val_prop_strength,cta_quality,msg_confidence,audience_clarity,brand_effectiveness,cta_strength,cta_urgency,cta_visibility,cta_placement,cta_clarity,cta_persuasiveness,cta_eff_insight,cta_opt_rec_ai,mobile_rating,mobile_risk,mobile_insight,momentum_score,momentum_status,momentum_risk,momentum_direction,momentum_insight,strategic_action_plan,revenue_leak,leak_severity,annual_loss,urgency_severity,revenue_impact_insight,visitors_lost,leads_lost,missing_leads_count,conversion_loss_percent,readiness_level,cta_opt_rec,conv_imp_sug,funnel_opt_ins,mobile_conv_rec,lead_gen_opp,conv_intel_ins,industry_percentile,industry_tier,industry_competitiveness,lead_quality,maturity_level,sales_potential,digital_readiness,growth_potential,market_insight,buyer_intent,trans_intent,ent_orientation,lead_gen_focus,conv_positioning,comm_maturity,website_type,comm_insights,sales_maturity,comm_readiness_lvl,conv_target_insight,market_strat_rec,keyword_opps,keyword_level,competitor_adv,search_impact,keyword_insight,trust_decay,maintenance_confidence,outdated_signals,credibility_insight,trust_recommendation,rebranding_pitch,seo_issues,aeo_quote,battle_winner,battle_verdict,emailfullbody\n';
+                    const csvHeader = 'first_name,last_name,title,company_name,email,website,competitor_website,final_score,design,cta,message,trust,speed,schema_score,schema_impact,first_impression_score,first_impression_verdict,executive_summary,business_risk_insight,strategic_opportunity_insight,executive_ai_recommendation,brand_credibility_insight,msg_clarity_level,msg_effectiveness_insight,val_prop_analysis,msg_strategic_rec,headline_clarity,val_prop_strength,cta_quality,msg_confidence,audience_clarity,brand_effectiveness,cta_strength,cta_urgency,cta_visibility,cta_placement,cta_clarity,cta_persuasiveness,cta_eff_insight,cta_opt_rec_ai,mobile_rating,mobile_risk,mobile_insight,momentum_score,momentum_status,momentum_risk,momentum_direction,momentum_insight,strategic_action_plan,revenue_leak,leak_severity,annual_loss,urgency_severity,revenue_impact_insight,visitors_lost,leads_lost,missing_leads_count,conversion_loss_percent,readiness_level,cta_opt_rec,conv_imp_sug,funnel_opt_ins,mobile_conv_rec,lead_gen_opp,conv_intel_ins,industry_percentile,industry_tier,industry_competitiveness,lead_quality,maturity_level,sales_potential,digital_readiness,growth_potential,market_insight,buyer_intent,trans_intent,ent_orientation,lead_gen_focus,conv_positioning,comm_maturity,website_type,comm_insights,sales_maturity,comm_readiness_lvl,conv_target_insight,market_strat_rec,keyword_opps,keyword_level,competitor_adv,search_impact,keyword_insight,trust_decay,maintenance_confidence,outdated_signals,credibility_insight,trust_recommendation,rebranding_pitch,seo_issues,aeo_quote,battle_winner,battle_verdict,emailfullbody\n';
 
                     const trustWarning = [
                       (!lead.seo_ssl ? 'SSL certificate invalid or missing' : (lead.ssl_days_remaining < 30 ? `SSL expires in ${lead.ssl_days_remaining} days` : '')),
@@ -1002,7 +1009,14 @@ Best,
                     // Preserve newlines inside quoted fields — RFC 4180 compliant
                     const escapeCSV = (str) => `"${String(str || '').replace(/"/g, '""')}"`;
 
+                    const af = lead._apollo_fields || {};
+
                     const csvRow = [
+                      escapeCSV(af['First Name'] || ''),
+                      escapeCSV(af['Last Name'] || ''),
+                      escapeCSV(af['Title'] || ''),
+                      escapeCSV(af['Company Name'] || ''),
+                      escapeCSV(af['Email'] || ''),
                       escapeCSV(lead.website),
                       escapeCSV(lead.competitor_data?.website || 'N/A'),
                       uxScore,
