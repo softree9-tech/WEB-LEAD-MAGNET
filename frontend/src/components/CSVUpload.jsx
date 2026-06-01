@@ -101,6 +101,7 @@ export default function CSVUpload({ onResult }) {
           type="file"
           accept=".csv"
           ref={fileInputRef}
+          aria-label="Upload CSV file for batch analysis"
           onChange={(e) => setFile(e.target.files[0])}
           style={{ fontSize: '0.8rem', flexGrow: 1, color: 'var(--text-secondary)' }}
         />
@@ -126,7 +127,7 @@ export default function CSVUpload({ onResult }) {
           : ' Upload'}
       </button>
 
-      {error && <div style={{ position: 'absolute', bottom: '-15px', left: '1.25rem', color: '#ef4444', fontSize: '0.75rem', maxWidth: '300px', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{error}</div>}
+      {error && <div role="alert" style={{ position: 'absolute', bottom: '-15px', left: '1.25rem', color: '#ef4444', fontSize: '0.75rem', maxWidth: '300px', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{error}</div>}
     </div>
   );
 }
