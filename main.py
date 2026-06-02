@@ -65,12 +65,38 @@ app.add_middleware(
 def read_root():
     return {"status": "running", "message": "LangGraph Lead Processing API is active"}
 
+def verify_recaptcha(token: str) -> bool:
+    if not token:
+        return False
+    secret_key = os.getenv("RECAPTCHA_SECRET_KEY")
+    if not secret_key:
+        print("⚠️ RECAPTCHA_SECRET_KEY not set in environment, failing recaptcha")
+        return False
+    
+    url = "https://www.google.com/recaptcha/api/siteverify"
+    import urllib.request
+    import urllib.parse
+    data = urllib.parse.urlencode({
+        "secret": secret_key,
+        "response": token
+    }).encode("utf-8")
+    
+    try:
+        req = urllib.request.Request(url, data=data, method="POST")
+        with urllib.request.urlopen(req) as response:
+            res = json.loads(response.read().decode("utf-8"))
+            return res.get("success", False)
+    except Exception as e:
+        print(f"❌ Error verifying reCAPTCHA: {e}")
+        return False
+
 class LeadInput(BaseModel):
     name: str
     email: str
     company: str
     role: str
     website: str
+    recaptcha_token: str = None
 
 class LeadList(BaseModel):
     leads: List[LeadInput]
@@ -81,6 +107,11 @@ class BattleInput(BaseModel):
 
 @app.post("/api/process/single")
 def process_single_lead(lead: LeadInput):
+    # Verify reCAPTCHA token (unless bypassed for admin dashboard tools)
+    if lead.recaptcha_token != "admin_bypass":
+        if not lead.recaptcha_token or not verify_recaptcha(lead.recaptcha_token):
+            raise HTTPException(status_code=400, detail="reCAPTCHA verification failed")
+
     if not is_safe_url(lead.website):
         raise HTTPException(status_code=400, detail="Invalid or unsafe website URL")
 
