@@ -1,26 +1,12 @@
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
+import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
 import SingleLeadForm from './components/SingleLeadForm';
 import CSVUpload from './components/CSVUpload';
 import LeadResults from './components/LeadResults';
 import PublicAnalyze from './pages/PublicAnalyze';
 import './App.css';
 
-function App() {
-  const [currentPath, setCurrentPath] = useState(window.location.pathname);
-
-  useEffect(() => {
-    const handlePopState = () => {
-      setCurrentPath(window.location.pathname);
-    };
-    window.addEventListener('popstate', handlePopState);
-    return () => window.removeEventListener('popstate', handlePopState);
-  }, []);
-
-  const navigate = (to) => {
-    window.history.pushState({}, '', to);
-    setCurrentPath(to);
-  };
-
+function Dashboard() {
   const [results, setResults] = useState([]);
 
   const handleSingleResult = (newResult) => {
@@ -36,11 +22,6 @@ function App() {
       setResults(prev => [...validResults, ...prev]);
     }
   };
-
-  // /analyze = public lead capture portal, everything else = internal dashboard
-  if (currentPath === '/analyze' || currentPath === '/analyze/') {
-    return <PublicAnalyze />;
-  }
 
   return (
     <div className="app-container">
@@ -58,6 +39,18 @@ function App() {
         <LeadResults leads={results} />
       </div>
     </div>
+  );
+}
+
+function App() {
+  return (
+    <Router>
+      <Routes>
+        <Route path="/" element={<PublicAnalyze />} />
+        <Route path="/analyzer" element={<Dashboard />} />
+        <Route path="/analyzer/" element={<Dashboard />} />
+      </Routes>
+    </Router>
   );
 }
 
