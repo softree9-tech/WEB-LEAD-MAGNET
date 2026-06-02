@@ -833,6 +833,66 @@ Best,
       )}
 
       {leads.map((lead, index) => {
+        // ── Validation Failure Card ─────────────────────────────────────────
+        // If the website failed pre-analysis validation, show a clean error card
+        // instead of rendering the full (empty/hallucinated) analysis dashboard.
+        if (lead.validation_failed || (lead.error_detail && lead.design === 'Unknown' && lead.cta === 'Unknown' && lead.message === 'Unknown' && lead.trust === 'Unknown')) {
+          return (
+            <div key={index} className="glass-panel animate-fade-in" style={{
+              padding: '2rem 2.5rem',
+              display: 'flex',
+              flexDirection: 'column',
+              gap: '1.25rem',
+              borderLeft: '3px solid rgba(251, 191, 36, 0.5)',
+              background: 'rgba(251, 191, 36, 0.03)',
+            }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
+                <div style={{
+                  width: '48px',
+                  height: '48px',
+                  borderRadius: '50%',
+                  background: 'rgba(251, 191, 36, 0.08)',
+                  border: '1px solid rgba(251, 191, 36, 0.2)',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  flexShrink: 0
+                }}>
+                  <AlertTriangle size={22} color="#fbbf24" />
+                </div>
+                <div style={{ flex: 1 }}>
+                  <h3 style={{ margin: 0, fontSize: '1.1rem', fontWeight: 700, color: '#fbbf24' }}>
+                    Website Validation Failed
+                  </h3>
+                  <p style={{ margin: '4px 0 0', fontSize: '0.85rem', color: 'var(--text-secondary)' }}>
+                    {lead.website || 'Unknown URL'}
+                  </p>
+                </div>
+              </div>
+
+              <div style={{
+                background: 'rgba(255, 255, 255, 0.02)',
+                border: '1px solid rgba(255, 255, 255, 0.06)',
+                borderRadius: '10px',
+                padding: '1rem 1.25rem',
+                display: 'flex',
+                alignItems: 'flex-start',
+                gap: '10px'
+              }}>
+                <X size={16} color="#ef4444" style={{ flexShrink: 0, marginTop: '2px' }} />
+                <p style={{ margin: 0, fontSize: '0.875rem', color: '#94a3b8', lineHeight: 1.6 }}>
+                  {lead.error_detail || 'Website is currently unreachable. AI analysis was not generated to ensure report accuracy.'}
+                </p>
+              </div>
+
+              <div style={{ fontSize: '0.75rem', color: '#475569', display: 'flex', alignItems: 'center', gap: '6px' }}>
+                <Check size={12} color="#475569" />
+                No AI report was generated — preventing inaccurate or hallucinated results.
+              </div>
+            </div>
+          );
+        }
+
         // Core metrics mappings
         const consistencyVal = lead.design === 'Modern' ? 90 : 60;
         const flowVal = lead.message === 'Clear' ? 80 : 50;

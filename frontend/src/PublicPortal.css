@@ -1,0 +1,345 @@
+/* Public Portal Scoped CSS - Premium Enterprise AI Aesthetic */
+@import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&display=swap');
+
+.public-portal-theme {
+  --bg-dark-1: #050505;
+  --bg-dark-2: #0B0B0B;
+  --accent-orange: #FF7A00;
+  --accent-orange-glow: rgba(255, 122, 0, 0.15);
+  --text-white: #ffffff;
+  --text-gray: #94a3b8;
+  --border-light: rgba(255, 255, 255, 0.05);
+  --border-glow: rgba(255, 122, 0, 0.25);
+  --glass-bg: rgba(11, 11, 11, 0.7);
+  --glass-border: rgba(255, 255, 255, 0.08);
+
+  font-family: 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+  background-color: var(--bg-dark-1);
+  background-image: 
+    radial-gradient(circle at 50% -20%, rgba(255, 122, 0, 0.15), transparent 55%),
+    radial-gradient(circle at 10% 30%, rgba(255, 122, 0, 0.04), transparent 35%),
+    radial-gradient(circle at 90% 70%, rgba(255, 122, 0, 0.03), transparent 45%);
+  color: var(--text-white);
+  min-height: 100vh;
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  box-sizing: border-box;
+}
+
+/* Ensure body colors and settings don't conflict */
+.public-portal-theme * {
+  box-sizing: border-box;
+}
+
+/* Typography elements overrides */
+.public-portal-theme h1,
+.public-portal-theme h2,
+.public-portal-theme h3,
+.public-portal-theme h4 {
+  font-family: 'Plus Jakarta Sans', sans-serif;
+  letter-spacing: -0.03em;
+  color: var(--text-white);
+}
+
+/* Glassmorphism Card for Public Theme */
+.public-portal-theme .glass-card {
+  background: var(--glass-bg);
+  backdrop-filter: blur(24px);
+  -webkit-backdrop-filter: blur(24px);
+  border: 1px solid var(--glass-border);
+  border-radius: 16px;
+  box-shadow: 
+    0 30px 60px -15px rgba(0, 0, 0, 0.8),
+    0 0 50px 0 rgba(255, 122, 0, 0.01),
+    inset 0 1px 1px 0 rgba(255, 255, 255, 0.05);
+  transition: border-color 0.3s cubic-bezier(0.16, 1, 0.3, 1), box-shadow 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.public-portal-theme .glass-card:hover {
+  border-color: var(--border-glow);
+  box-shadow: 
+    0 30px 60px -15px rgba(0, 0, 0, 0.9),
+    0 0 60px 0 rgba(255, 122, 0, 0.04),
+    inset 0 1px 1px 0 rgba(255, 255, 255, 0.08);
+}
+
+/* Premium Inputs */
+.public-portal-theme .premium-input-wrapper {
+  position: relative;
+  text-align: left;
+}
+
+.public-portal-theme .premium-input-label {
+  display: block;
+  font-size: 0.75rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: var(--text-gray);
+  margin-bottom: 0.6rem;
+}
+
+.public-portal-theme .premium-input-field {
+  width: 100%;
+  padding: 14px 16px 14px 44px;
+  background: rgba(5, 5, 5, 0.6);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 10px;
+  color: var(--text-white);
+  font-size: 0.95rem;
+  font-weight: 500;
+  outline: none;
+  transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+  backdrop-filter: blur(5px);
+}
+
+.public-portal-theme .premium-input-field:focus {
+  border-color: var(--accent-orange);
+  box-shadow: 0 0 0 4px rgba(255, 122, 0, 0.15), 0 0 20px 0 rgba(255, 122, 0, 0.05);
+  background: rgba(5, 5, 5, 0.85);
+}
+
+.public-portal-theme .premium-input-field::placeholder {
+  color: rgba(255, 255, 255, 0.25);
+}
+
+/* Premium Buttons */
+.public-portal-theme .premium-btn-orange {
+  background: linear-gradient(135deg, #FF9E43 0%, #FF7A00 100%);
+  color: #000000 !important;
+  font-family: 'Plus Jakarta Sans', sans-serif;
+  font-weight: 700;
+  font-size: 1rem;
+  letter-spacing: -0.01em;
+  border-radius: 10px;
+  padding: 14px 28px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  box-shadow: 0 10px 25px -5px rgba(255, 122, 0, 0.35), 0 0 20px 0 rgba(255, 122, 0, 0.1);
+  transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  cursor: pointer;
+}
+
+.public-portal-theme .premium-btn-orange:hover:not(:disabled) {
+  transform: translateY(-2px);
+  box-shadow: 0 15px 30px -5px rgba(255, 122, 0, 0.5), 0 0 30px 0 rgba(255, 122, 0, 0.15);
+  filter: brightness(1.05);
+}
+
+.public-portal-theme .premium-btn-orange:active:not(:disabled) {
+  transform: translateY(0);
+}
+
+.public-portal-theme .premium-btn-orange:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+  box-shadow: none;
+}
+
+/* Sub-headings and Badges */
+.public-portal-theme .badge-orange {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 14px;
+  border-radius: 9999px;
+  background: rgba(255, 122, 0, 0.08);
+  border: 1px solid rgba(255, 122, 0, 0.25);
+  color: var(--accent-orange);
+  font-size: 0.75rem;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  box-shadow: 0 0 20px 0 rgba(255, 122, 0, 0.05);
+}
+
+/* Animated Scanning Glow for Loader */
+.public-portal-theme .spinning-loader {
+  border: 3px solid rgba(255, 122, 0, 0.1);
+  border-top-color: var(--accent-orange);
+  animation: spin 1.2s linear infinite;
+}
+
+.public-portal-theme .scanning-beam {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 4px;
+  background: linear-gradient(90deg, transparent, var(--accent-orange), transparent);
+  animation: scan 2.8s ease-in-out infinite;
+  opacity: 0.6;
+}
+
+/* ─────────────────────────────────────────────────────────────────────────────
+   REPORT COMPONENT OVERRIDES (SCOPED TO THE PUBLIC PORTAL)
+   ───────────────────────────────────────────────────────────────────────────── */
+
+.public-portal-theme .elite-dashboard {
+  background: var(--bg-dark-2);
+  border-color: rgba(255, 255, 255, 0.07);
+  box-shadow: 0 30px 60px rgba(0, 0, 0, 0.7);
+  font-family: 'Plus Jakarta Sans', sans-serif;
+}
+
+.public-portal-theme .elite-sidebar {
+  background: rgba(5, 5, 5, 0.95);
+  border-right-color: rgba(255, 255, 255, 0.07);
+}
+
+.public-portal-theme .brand-icon {
+  background: linear-gradient(135deg, #FF9E43, #FF7A00);
+  color: #000000;
+  font-weight: 800;
+}
+
+.public-portal-theme .nav-icon.active,
+.public-portal-theme .nav-icon:hover {
+  color: var(--accent-orange);
+}
+
+.public-portal-theme .highlight-domain {
+  color: var(--accent-orange);
+}
+
+.public-portal-theme .quad-card,
+.public-portal-theme .mobile-reality-card,
+.public-portal-theme .aeo-card-wide,
+.public-portal-theme .first-impression-card,
+.public-portal-theme .missing-leads-card,
+.public-portal-theme .revenue-leak-card {
+  background: rgba(11, 11, 11, 0.75) !important;
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  border: 1px solid rgba(255, 255, 255, 0.06) !important;
+  box-shadow: 0 15px 35px rgba(0, 0, 0, 0.4) !important;
+}
+
+.public-portal-theme .quad-card:hover,
+.public-portal-theme .mobile-reality-card:hover,
+.public-portal-theme .aeo-card-wide:hover,
+.public-portal-theme .first-impression-card:hover,
+.public-portal-theme .missing-leads-card:hover,
+.public-portal-theme .revenue-leak-card:hover {
+  border-color: rgba(255, 122, 0, 0.25) !important;
+  box-shadow: 0 15px 40px rgba(255, 122, 0, 0.03) !important;
+}
+
+/* First Impression Card */
+.public-portal-theme .first-impression-card::after {
+  background: radial-gradient(circle at top right, rgba(255, 122, 0, 0.08), transparent 70%);
+}
+
+.public-portal-theme .impression-explanation {
+  border-left-color: var(--accent-orange);
+}
+
+/* Missing Leads Card */
+.public-portal-theme .missing-leads-card::after {
+  background: radial-gradient(circle at top left, rgba(255, 122, 0, 0.08), transparent 70%);
+}
+
+.public-portal-theme .missing-number {
+  color: var(--accent-orange);
+  text-shadow: 0 0 20px rgba(255, 122, 0, 0.3);
+}
+
+/* Trust Card */
+.public-portal-theme .trust-ai-insight {
+  border-left-color: var(--accent-orange);
+}
+
+.public-portal-theme .trust-insight-label {
+  color: var(--accent-orange);
+}
+
+/* Glow Rings (SEO, UX etc.) */
+.public-portal-theme .glow-ring {
+  box-shadow: 0 0 25px rgba(255, 122, 0, 0.22), inset 0 0 12px rgba(0, 0, 0, 0.6);
+}
+
+.public-portal-theme .ring::before {
+  background: #0f0f0f;
+}
+
+/* Bar Fills */
+.public-portal-theme .bar-fill {
+  background: linear-gradient(90deg, #FF9E43, #FF7A00);
+}
+
+.public-portal-theme .ai-visibility-bar .bar-track .bar-fill {
+  background: linear-gradient(90deg, #FF9E43, #FF7A00);
+}
+
+.public-portal-theme .ai-grid-bars .bar-track .bar-fill {
+  background: linear-gradient(90deg, #FF9E43, #FF7A00);
+}
+
+/* Tooltips */
+.public-portal-theme .responsiveness-tooltip {
+  background: rgba(11, 11, 11, 0.98);
+  border-color: rgba(255, 122, 0, 0.3);
+  box-shadow: 0 15px 35px rgba(0, 0, 0, 0.8), 0 0 20px rgba(255, 122, 0, 0.15);
+}
+
+.public-portal-theme .tooltip-title {
+  color: var(--accent-orange);
+}
+
+.public-portal-theme .tooltip-score-bar-fill {
+  background: linear-gradient(90deg, #FF9E43, #FF7A00);
+}
+
+.public-portal-theme .mobile-stat-card.responsiveness-score-card {
+  border-color: rgba(255, 122, 0, 0.15);
+}
+
+.public-portal-theme .mobile-stat-card.responsiveness-score-card:hover {
+  box-shadow: 0 10px 25px rgba(255, 122, 0, 0.2), inset 0 0 12px rgba(255, 122, 0, 0.05);
+  border-color: rgba(255, 122, 0, 0.45);
+}
+
+.public-portal-theme .mobile-stat-card.ux-rating-card:hover {
+  box-shadow: 0 10px 25px rgba(255, 122, 0, 0.15), inset 0 0 12px rgba(255, 122, 0, 0.05);
+  border-color: rgba(255, 122, 0, 0.35);
+}
+
+/* Action buttons */
+.public-portal-theme .action-btn {
+  background: rgba(255, 255, 255, 0.05);
+  border-color: rgba(255, 255, 255, 0.08);
+  color: #e2e8f0;
+}
+
+.public-portal-theme .action-btn:hover {
+  background: rgba(255, 122, 0, 0.1);
+  border-color: rgba(255, 122, 0, 0.35);
+  color: #ffffff;
+}
+
+.public-portal-theme .action-btn.primary {
+  background: linear-gradient(135deg, #FF9E43 0%, #FF7A00 100%);
+  color: #000000 !important;
+  border: none;
+  font-weight: 700;
+}
+
+.public-portal-theme .action-btn.primary:hover {
+  filter: brightness(1.08);
+  box-shadow: 0 0 20px rgba(255, 122, 0, 0.25);
+}
+
+@keyframes spin {
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
+}
+
+@keyframes scan {
+  0% { transform: translateX(-100%); }
+  50% { transform: translateX(100%); }
+  100% { transform: translateX(-100%); }
+}

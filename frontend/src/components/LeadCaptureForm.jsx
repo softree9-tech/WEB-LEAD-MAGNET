@@ -1,19 +1,15 @@
 import React, { useState, useEffect } from 'react';
-import { User, Briefcase, Building2, Mail, Globe, Sparkles, Loader2 } from 'lucide-react';
+import { User, Mail, Globe, Sparkles, Loader2 } from 'lucide-react';
 
 export default function LeadCaptureForm({ onSubmit, loading, error }) {
   const [formData, setFormData] = useState({
     fullName: '',
-    title: '',
-    companyName: '',
     email: '',
     website: ''
   });
 
   const [touched, setTouched] = useState({
     fullName: false,
-    title: false,
-    companyName: false,
     email: false,
     website: false
   });
@@ -27,10 +23,8 @@ export default function LeadCaptureForm({ onSubmit, loading, error }) {
     const siteKey = import.meta.env.VITE_RECAPTCHA_SITE_KEY || '6LeIxAcTAAAAAJcZVRqyHh71UMIEGNQ_MXjiZKhI';
 
     const renderWidget = () => {
-      // Guard: only render once — prevents StrictMode double-mount crash
       if (widgetIdRef.current !== null) return;
       if (!recaptchaRef.current) return;
-      // Additional guard: if the container already has an iframe (already rendered by a prior mount cycle)
       if (recaptchaRef.current.childNodes.length > 0) {
         recaptchaRef.current.innerHTML = '';
       }
@@ -43,12 +37,10 @@ export default function LeadCaptureForm({ onSubmit, loading, error }) {
           'error-callback': () => setRecaptchaToken(null)
         });
       } catch (err) {
-        // If render fails (e.g. already rendered), silently ignore
         console.warn("reCAPTCHA render skipped:", err.message);
       }
     };
 
-    // Poll until grecaptcha.render is available, then render once
     const interval = setInterval(() => {
       if (window.grecaptcha && window.grecaptcha.render) {
         clearInterval(interval);
@@ -58,7 +50,6 @@ export default function LeadCaptureForm({ onSubmit, loading, error }) {
 
     return () => {
       clearInterval(interval);
-      // On unmount, reset the widget so re-mount can render fresh
       if (widgetIdRef.current !== null) {
         try { window.grecaptcha.reset(widgetIdRef.current); } catch (_) {}
         widgetIdRef.current = null;
@@ -70,12 +61,11 @@ export default function LeadCaptureForm({ onSubmit, loading, error }) {
     };
   }, []);
 
-  // Automatically derive website from email domain or company name if not manually edited
+  // Automatically derive website from email domain if not manually edited
   useEffect(() => {
     if (isWebsiteManuallyEdited) return;
 
     const email = formData.email.trim();
-    const company = formData.companyName.trim();
 
     if (email && email.includes('@')) {
       const domain = email.split('@')[1];
@@ -87,16 +77,8 @@ export default function LeadCaptureForm({ onSubmit, loading, error }) {
       }
     }
 
-    if (company) {
-      const cleanCompany = company.toLowerCase().replace(/[^a-z0-9]/g, '');
-      if (cleanCompany) {
-        setFormData(prev => ({ ...prev, website: `https://${cleanCompany}.com` }));
-        return;
-      }
-    }
-
     setFormData(prev => ({ ...prev, website: '' }));
-  }, [formData.email, formData.companyName, isWebsiteManuallyEdited]);
+  }, [formData.email, isWebsiteManuallyEdited]);
 
   const handleChange = (e) => {
     const { name, value } = e.target;
@@ -116,7 +98,7 @@ export default function LeadCaptureForm({ onSubmit, loading, error }) {
     e.preventDefault();
     
     // Simple validation
-    if (!formData.fullName || !formData.title || !formData.companyName || !formData.email || !formData.website) {
+    if (!formData.fullName || !formData.email || !formData.website) {
       return;
     }
 
@@ -129,43 +111,41 @@ export default function LeadCaptureForm({ onSubmit, loading, error }) {
   };
 
   return (
-    <div className="glass-panel animate-fade-in" style={{
-      padding: '2.5rem',
+    <div className="glass-card animate-fade-in" style={{
+      padding: '3rem 2.5rem',
       maxWidth: '550px',
       width: '100%',
       margin: '0 auto',
-      boxShadow: '0 8px 32px 0 rgba(0, 0, 0, 0.37)',
-      border: '1px solid rgba(255, 255, 255, 0.08)',
-      background: 'rgba(15, 23, 42, 0.65)'
     }}>
-      <div style={{ textAlign: 'center', marginBottom: '2rem' }}>
+      <div style={{ textAlign: 'center', marginBottom: '2.5rem' }}>
         <div style={{ 
           display: 'inline-flex', 
           alignItems: 'center', 
           justifyContent: 'center', 
-          width: '50px', 
-          height: '50px', 
+          width: '56px', 
+          height: '56px', 
           borderRadius: '50%', 
-          background: 'rgba(59, 130, 246, 0.1)', 
-          border: '1px solid rgba(59, 130, 246, 0.2)',
-          marginBottom: '1rem',
-          color: 'var(--accent-color)'
+          background: 'rgba(255, 122, 0, 0.08)', 
+          border: '1px solid rgba(255, 122, 0, 0.25)',
+          marginBottom: '1.25rem',
+          color: '#FF7A00',
+          boxShadow: '0 0 20px rgba(255, 122, 0, 0.1)'
         }}>
-          <Sparkles size={24} />
+          <Sparkles size={26} />
         </div>
-        <h2 style={{ fontSize: '1.75rem', fontWeight: 700, marginBottom: '0.5rem', background: 'linear-gradient(135deg, #fff, #94a3b8)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent' }}>
-          Analyze Your Lead Magnet
+        <h2 style={{ fontSize: '1.75rem', fontWeight: 800, marginBottom: '0.75rem', background: 'linear-gradient(135deg, #fff, #94a3b8)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent' }}>
+          Generate Your AI Performance Audit
         </h2>
-        <p style={{ color: 'var(--text-secondary)', fontSize: '0.925rem', lineHeight: 1.5 }}>
-          Enter your details below to get an instant AI-powered marketing audit of your website's lead conversion metrics.
+        <p style={{ color: 'var(--text-gray)', fontSize: '0.925rem', lineHeight: 1.6 }}>
+          Designed for growth-focused businesses, this AI-powered audit delivers strategic insights into your website’s conversion performance, digital credibility, and customer acquisition readiness.
         </p>
       </div>
 
-      <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: '1.25rem' }}>
-        <div>
-          <label className="input-label" htmlFor="fullName">Full Name</label>
+      <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem' }}>
+        <div className="premium-input-wrapper">
+          <label className="premium-input-label" htmlFor="fullName">Full Name</label>
           <div style={{ position: 'relative' }}>
-            <span style={{ position: 'absolute', left: '12px', top: '50%', transform: 'translateY(-50%)', color: 'var(--text-secondary)', display: 'flex', alignItems: 'center' }}>
+            <span style={{ position: 'absolute', left: '14px', top: '50%', transform: 'translateY(-50%)', color: 'var(--text-gray)', display: 'flex', alignItems: 'center' }}>
               <User size={18} />
             </span>
             <input
@@ -176,61 +156,16 @@ export default function LeadCaptureForm({ onSubmit, loading, error }) {
               value={formData.fullName}
               onChange={handleChange}
               onBlur={() => handleBlur('fullName')}
-              className="input-field"
-              placeholder="John Doe"
-              style={{ paddingLeft: '42px' }}
+              className="premium-input-field"
+              placeholder="e.g. Sarah Jenkins"
             />
           </div>
         </div>
 
-        <div>
-          <label className="input-label" htmlFor="title">Job Title</label>
+        <div className="premium-input-wrapper">
+          <label className="premium-input-label" htmlFor="email">Business Email</label>
           <div style={{ position: 'relative' }}>
-            <span style={{ position: 'absolute', left: '12px', top: '50%', transform: 'translateY(-50%)', color: 'var(--text-secondary)', display: 'flex', alignItems: 'center' }}>
-              <Briefcase size={18} />
-            </span>
-            <input
-              required
-              id="title"
-              name="title"
-              type="text"
-              value={formData.title}
-              onChange={handleChange}
-              onBlur={() => handleBlur('title')}
-              className="input-field"
-              placeholder="Marketing Director"
-              style={{ paddingLeft: '42px' }}
-            />
-          </div>
-        </div>
-
-        <div style={{ display: 'grid', gridTemplateColumns: '1fr', gap: '1.25rem' }}>
-          <div>
-            <label className="input-label" htmlFor="companyName">Company Name</label>
-            <div style={{ position: 'relative' }}>
-              <span style={{ position: 'absolute', left: '12px', top: '50%', transform: 'translateY(-50%)', color: 'var(--text-secondary)', display: 'flex', alignItems: 'center' }}>
-                <Building2 size={18} />
-              </span>
-              <input
-                required
-                id="companyName"
-                name="companyName"
-                type="text"
-                value={formData.companyName}
-                onChange={handleChange}
-                onBlur={() => handleBlur('companyName')}
-                className="input-field"
-                placeholder="Acme Corp"
-                style={{ paddingLeft: '42px' }}
-              />
-            </div>
-          </div>
-        </div>
-
-        <div>
-          <label className="input-label" htmlFor="email">Business Email</label>
-          <div style={{ position: 'relative' }}>
-            <span style={{ position: 'absolute', left: '12px', top: '50%', transform: 'translateY(-50%)', color: 'var(--text-secondary)', display: 'flex', alignItems: 'center' }}>
+            <span style={{ position: 'absolute', left: '14px', top: '50%', transform: 'translateY(-50%)', color: 'var(--text-gray)', display: 'flex', alignItems: 'center' }}>
               <Mail size={18} />
             </span>
             <input
@@ -241,24 +176,23 @@ export default function LeadCaptureForm({ onSubmit, loading, error }) {
               value={formData.email}
               onChange={handleChange}
               onBlur={() => handleBlur('email')}
-              className="input-field"
-              placeholder="john@acme.com"
-              style={{ paddingLeft: '42px' }}
+              className="premium-input-field"
+              placeholder="e.g. sarah@company.com"
             />
           </div>
         </div>
 
-        <div>
+        <div className="premium-input-wrapper">
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-            <label className="input-label" htmlFor="website">Website URL to Analyze</label>
-            {!isWebsiteManuallyEdited && (formData.email || formData.companyName) && (
-              <span style={{ fontSize: '0.75rem', color: 'var(--accent-color)', fontWeight: 500 }}>
+            <label className="premium-input-label" htmlFor="website">Website URL to Analyze</label>
+            {!isWebsiteManuallyEdited && formData.email && (
+              <span style={{ fontSize: '0.75rem', color: 'var(--accent-orange)', fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.05em' }}>
                 Auto-derived
               </span>
             )}
           </div>
           <div style={{ position: 'relative' }}>
-            <span style={{ position: 'absolute', left: '12px', top: '50%', transform: 'translateY(-50%)', color: 'var(--text-secondary)', display: 'flex', alignItems: 'center' }}>
+            <span style={{ position: 'absolute', left: '14px', top: '50%', transform: 'translateY(-50%)', color: 'var(--text-gray)', display: 'flex', alignItems: 'center' }}>
               <Globe size={18} />
             </span>
             <input
@@ -269,26 +203,25 @@ export default function LeadCaptureForm({ onSubmit, loading, error }) {
               value={formData.website}
               onChange={handleWebsiteChange}
               onBlur={() => handleBlur('website')}
-              className="input-field"
-              placeholder="https://acme.com"
-              style={{ paddingLeft: '42px' }}
+              className="premium-input-field"
+              placeholder="https://yourcompany.com"
             />
           </div>
         </div>
 
-        <div style={{ display: 'flex', justifyContent: 'center', margin: '0.75rem 0' }}>
+        <div style={{ display: 'flex', justifyContent: 'center', margin: '0.5rem 0' }}>
           <div ref={recaptchaRef}></div>
         </div>
 
         {error && (
           <div style={{ 
-            color: 'var(--error-color)', 
+            color: '#ef4444', 
             fontSize: '0.85rem', 
             background: 'rgba(239, 68, 68, 0.1)', 
-            border: '1px solid rgba(239, 68, 68, 0.2)', 
-            padding: '10px 14px', 
-            borderRadius: '8px',
-            marginTop: '0.5rem'
+            border: '1px solid rgba(239, 68, 68, 0.25)', 
+            padding: '12px 16px', 
+            borderRadius: '10px',
+            lineHeight: 1.5
           }}>
             {error}
           </div>
@@ -296,26 +229,22 @@ export default function LeadCaptureForm({ onSubmit, loading, error }) {
 
         <button 
           type="submit" 
-          className="primary-btn" 
+          className="premium-btn-orange" 
           disabled={loading || !recaptchaToken} 
           style={{ 
-            opacity: (loading || !recaptchaToken) ? 0.6 : 1, 
-            padding: '12px',
-            fontSize: '1rem',
             width: '100%',
-            marginTop: '0.5rem',
-            cursor: (loading || !recaptchaToken) ? 'not-allowed' : 'pointer'
+            marginTop: '0.5rem'
           }}
         >
           {loading ? (
             <>
               <Loader2 className="spinning" size={18} />
-              Analyzing Website...
+              Generating Audit...
             </>
           ) : (
             <>
               <Sparkles size={18} />
-              Analyze Website
+              Generate Your Audit
             </>
           )}
         </button>

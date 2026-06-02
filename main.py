@@ -26,7 +26,7 @@ from graph import graph_app
 from fastapi.middleware.cors import CORSMiddleware
 from langchain_openai import ChatOpenAI
 from core.models import BattleCardResult
-from core.security import is_safe_url
+from core.security import is_safe_url, validate_website
 
 # ─── Parallel Processing Config ─────────────────────────────────────────────
 # Max leads to process simultaneously. Keep low to avoid RAM/rate-limit issues.
@@ -46,7 +46,7 @@ app = FastAPI(
 # Set FRONTEND_URL env var on Render to your Vercel domain
 _frontend_url = os.getenv("FRONTEND_URL", "")
 _allowed_origins = [
-    "http://localhost:5173",   # Vite dev server
+    "http://localhost:5175",   # Vite dev server
     "http://localhost:4173",   # Vite preview
     "https://web-lead-magnet-seven.vercel.app",   # Vercel production
 ]
@@ -93,10 +93,10 @@ def verify_recaptcha(token: str) -> bool:
 class LeadInput(BaseModel):
     name: str
     email: str
-    company: str
-    role: str
     website: str
     recaptcha_token: str = None
+    company: str = None
+    role: str = None
 
 class LeadList(BaseModel):
     leads: List[LeadInput]
@@ -104,6 +104,16 @@ class LeadList(BaseModel):
 class BattleInput(BaseModel):
     primary_website: str
     competitor_website: str
+
+@app.post("/api/validate")
+def validate_website_endpoint(lead: LeadInput):
+    """Pre-flight validation: checks DNS, HTTP accessibility, parked domains.
+    Returns {valid, error, url} so the frontend can gate analysis."""
+    validation = validate_website(lead.website)
+    if not validation["valid"]:
+        raise HTTPException(status_code=422, detail=validation["error"])
+    return {"valid": True, "url": validation["url"]}
+
 
 @app.post("/api/process/single")
 def process_single_lead(lead: LeadInput):
@@ -115,11 +125,17 @@ def process_single_lead(lead: LeadInput):
     if not is_safe_url(lead.website):
         raise HTTPException(status_code=400, detail="Invalid or unsafe website URL")
 
+    # ─── Strict Website Validation ──────────────────────────────────────────
+    validation = validate_website(lead.website)
+    if not validation["valid"]:
+        print(f"🚫 Website validation failed for {lead.website}: {validation['error']}")
+        raise HTTPException(status_code=422, detail=validation["error"])
+
     initial_state = {
         "raw_name": lead.name,
         "raw_email": lead.email,
-        "raw_company": lead.company,
-        "raw_role": lead.role,
+        "raw_company": lead.company or "Unknown",
+        "raw_role": lead.role or "Unknown",
         "raw_website": lead.website
     }
 
@@ -356,11 +372,17 @@ async def process_batch_leads(payload: LeadList):
         if not is_safe_url(lead.website):
             continue  # Skip unsafe URLs in batch
 
+        # ─── Strict Website Validation ──────────────────────────────────
+        validation = validate_website(lead.website)
+        if not validation["valid"]:
+            print(f"🚫 Batch: skipping {lead.website} — {validation['error']}")
+            continue
+
         initial_state = {
             "raw_name": lead.name,
             "raw_email": lead.email,
-            "raw_company": lead.company,
-            "raw_role": lead.role,
+            "raw_company": lead.company or "Unknown",
+            "raw_role": lead.role or "Unknown",
             "raw_website": lead.website
         }
         tasks.append(_process_one_lead(initial_state, lead.email or lead.website))
@@ -375,6 +397,14 @@ async def process_battle(payload: BattleInput):
     """
     if not is_safe_url(payload.primary_website) or not is_safe_url(payload.competitor_website):
         raise HTTPException(status_code=400, detail="One or both website URLs are invalid or unsafe")
+
+    # ─── Strict Website Validation for both URLs ───────────────────────────
+    primary_val = validate_website(payload.primary_website)
+    if not primary_val["valid"]:
+        raise HTTPException(status_code=422, detail=f"Primary website: {primary_val['error']}")
+    competitor_val = validate_website(payload.competitor_website)
+    if not competitor_val["valid"]:
+        raise HTTPException(status_code=422, detail=f"Competitor website: {competitor_val['error']}")
 
     primary_state = {
         "raw_name": "Primary",
@@ -500,6 +530,7 @@ async def process_csv(file: UploadFile = File(...)):
         website_col = resolved["website"]
             
         tasks = []
+        skipped_validations = []
         for i, row in df.iterrows():
             website = _safe_str(row.get(website_col, ""))
             if not website:
@@ -508,6 +539,24 @@ async def process_csv(file: UploadFile = File(...)):
 
             if not is_safe_url(website):
                 print(f"--- Skipping row {i+1}: unsafe URL {website} ---")
+                continue
+
+            # ─── Strict Website Validation ──────────────────────────────
+            validation = validate_website(website)
+            if not validation["valid"]:
+                print(f"🚫 CSV row {i+1}: {website} — {validation['error']}")
+                # Collect contact fields even for failed validations
+                fail_apollo = {
+                    "First Name":   _safe_str(row.get(resolved["first_name"], "")) if resolved["first_name"] else "",
+                    "Last Name":    _safe_str(row.get(resolved["last_name"], "")) if resolved["last_name"] else "",
+                    "Title":        _safe_str(row.get(resolved["title"], "")) if resolved["title"] else "",
+                    "Company Name": _safe_str(row.get(resolved["company"], "")) if resolved["company"] else "",
+                    "Email":        _safe_str(row.get(resolved["email"], "")) if resolved["email"] else "",
+                    "Website":      website,
+                }
+                fallback = _build_error_fallback(website, validation["error"], apollo_fields=fail_apollo)
+                fallback["validation_failed"] = True
+                skipped_validations.append(fallback)
                 continue
 
             # Collect original contact fields for export enrichment
@@ -530,10 +579,14 @@ async def process_csv(file: UploadFile = File(...)):
             }
             tasks.append(_process_one_lead(initial_state, website, apollo_fields=apollo_fields))
 
-        if not tasks:
+        if not tasks and not skipped_validations:
             raise HTTPException(status_code=400, detail="No valid website URLs found in the CSV")
 
         async def stream_results():
+            # First, yield all validation-failed rows immediately
+            for fallback in skipped_validations:
+                yield json.dumps(fallback) + "\n"
+
             for coro in asyncio.as_completed(tasks):
                 try:
                     result = await coro

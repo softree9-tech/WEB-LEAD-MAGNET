@@ -9,10 +9,28 @@ const baseUrl = import.meta.env.VITE_API_URL
   || 'http://localhost:8000';
 
 const API_BASE_URL = `${baseUrl}/api/process`;
+const API_ROOT = `${baseUrl}/api`;
+
+export const validateWebsite = async (website) => {
+  try {
+    const response = await axios.post(`${API_ROOT}/validate`, {
+      name: 'Validation',
+      email: 'validate@check.com',
+      website: website,
+      recaptcha_token: 'admin_bypass'
+    }, { timeout: 25000 });
+    return { valid: true, url: response.data.url };
+  } catch (error) {
+    const detail = error.response?.data?.detail || 'Website validation failed.';
+    return { valid: false, error: detail };
+  }
+};
 
 export const processSingleLead = async (leadData) => {
   try {
-    const response = await axios.post(`${API_BASE_URL}/single`, leadData);
+    const response = await axios.post(`${API_BASE_URL}/single`, leadData, {
+      timeout: 180000 // 3 minute timeout for full analysis
+    });
     return response.data;
   } catch (error) {
     console.error('Error processing single lead:', error);
@@ -22,7 +40,9 @@ export const processSingleLead = async (leadData) => {
 
 export const processBattle = async (battleData) => {
   try {
-    const response = await axios.post(`${API_BASE_URL}/battle`, battleData);
+    const response = await axios.post(`${API_BASE_URL}/battle`, battleData, {
+      timeout: 300000 // 5 minute timeout for battle (2 full analyses + LLM comparison)
+    });
     return response.data;
   } catch (error) {
     console.error('Error processing battle analysis:', error);

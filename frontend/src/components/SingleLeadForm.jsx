@@ -1,19 +1,46 @@
 import React, { useState } from 'react';
-import { Globe, Sparkles, Loader2, Sword } from 'lucide-react';
-import { processSingleLead, processBattle } from "../api/api"
+import { Globe, Sparkles, Loader2, Sword, AlertTriangle, ShieldX } from 'lucide-react';
+import { processSingleLead, processBattle, validateWebsite } from "../api/api"
 
 export default function SingleLeadForm({ onResult }) {
   const [url, setUrl] = useState('');
   const [competitorUrl, setCompetitorUrl] = useState('');
   const [isBattleMode, setIsBattleMode] = useState(false);
   const [loading, setLoading] = useState(false);
+  const [validating, setValidating] = useState(false);
   const [error, setError] = useState(null);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    setLoading(true);
     setError(null);
 
+    // ── Step 1: Validate website(s) before running analysis ──────────────
+    setValidating(true);
+    try {
+      const primaryCheck = await validateWebsite(url);
+      if (!primaryCheck.valid) {
+        setError(primaryCheck.error);
+        setValidating(false);
+        return;
+      }
+
+      if (isBattleMode && competitorUrl) {
+        const competitorCheck = await validateWebsite(competitorUrl);
+        if (!competitorCheck.valid) {
+          setError(`Competitor: ${competitorCheck.error}`);
+          setValidating(false);
+          return;
+        }
+      }
+    } catch (err) {
+      setError('Validation check failed. Please try again.');
+      setValidating(false);
+      return;
+    }
+    setValidating(false);
+
+    // ── Step 2: Run AI analysis ─────────────────────────────────────────
+    setLoading(true);
     try {
       let data;
       if (isBattleMode && competitorUrl) {
@@ -25,8 +52,6 @@ export default function SingleLeadForm({ onResult }) {
         data = await processSingleLead({
           name: 'Unknown',
           email: 'unknown@example.com',
-          company: 'Unknown',
-          role: 'Unknown',
           website: url,
           recaptcha_token: 'admin_bypass'
         });
@@ -41,6 +66,8 @@ export default function SingleLeadForm({ onResult }) {
       setLoading(false);
     }
   };
+
+  const isProcessing = validating || loading;
 
   return (
     <div className="glass-panel animate-fade-in" style={{ padding: '0.75rem 1.25rem', display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
@@ -95,20 +122,36 @@ export default function SingleLeadForm({ onResult }) {
           )}
         </div>
 
-        <button type="submit" className="primary-btn" disabled={loading} style={{ 
-          opacity: loading ? 0.7 : 1, 
+        <button type="submit" className="primary-btn" disabled={isProcessing} style={{ 
+          opacity: isProcessing ? 0.7 : 1, 
           padding: '0.5rem 1rem', 
           whiteSpace: 'nowrap', 
           minWidth: isBattleMode ? '100%' : '130px',
           background: isBattleMode ? 'linear-gradient(135deg, #ef4444 0%, #b91c1c 100%)' : 'var(--accent-gradient)',
           boxShadow: isBattleMode ? '0 4px 15px rgba(239, 68, 68, 0.3)' : 'var(--accent-shadow)'
         }}>
-          {loading ? <Loader2 className="spinning" size={16} /> : (isBattleMode ? <Sword size={16} /> : <Sparkles size={16} />)}
-          {loading ? ' Analyzing...' : (isBattleMode ? ' Start Competitor Battle' : ' Analyze')}
+          {validating ? <Loader2 className="spinning" size={16} /> : loading ? <Loader2 className="spinning" size={16} /> : (isBattleMode ? <Sword size={16} /> : <Sparkles size={16} />)}
+          {validating ? ' Validating...' : loading ? ' Analyzing...' : (isBattleMode ? ' Start Competitor Battle' : ' Analyze')}
         </button>
       </form>
 
-      {error && <div style={{ color: '#ef4444', fontSize: '0.8rem', marginTop: '4px' }}>{error}</div>}
+      {error && (
+        <div style={{ 
+          display: 'flex', 
+          alignItems: 'flex-start', 
+          gap: '8px', 
+          color: '#fbbf24', 
+          fontSize: '0.825rem', 
+          background: 'rgba(251, 191, 36, 0.08)', 
+          border: '1px solid rgba(251, 191, 36, 0.2)', 
+          padding: '10px 14px', 
+          borderRadius: '8px',
+          lineHeight: 1.4
+        }}>
+          <ShieldX size={16} style={{ flexShrink: 0, marginTop: '1px' }} />
+          <span>{error}</span>
+        </div>
+      )}
     </div>
   );
 }
