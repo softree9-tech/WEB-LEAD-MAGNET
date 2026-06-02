@@ -1,32 +1,38 @@
 import sys
 import os
+
 sys.path.append(os.getcwd())
 from core.security import is_safe_url
+
 
 def test_safe_urls():
     safe_urls = [
         "https://google.com",
         "http://example.com",
         "softreetechnology.com",
-        "https://github.com/trending"
+        "https://github.com/trending",
+        "http://ipv6.google.com",
     ]
     for url in safe_urls:
         assert is_safe_url(url) is True, f"URL should be safe: {url}"
+
 
 def test_unsafe_urls():
     unsafe_urls = [
         "http://localhost",
         "http://127.0.0.1",
-        "http://169.254.169.254", # AWS metadata
+        "http://169.254.169.254",  # AWS metadata
         "http://192.168.1.1",
         "http://10.0.0.1",
         "http://0.0.0.0",
         "file:///etc/passwd",
         "ftp://example.com",
-        "http://[::1]"
+        "http://[::1]",
+        "http://[0:0:0:0:0:ffff:127.0.0.1]",
     ]
     for url in unsafe_urls:
         assert is_safe_url(url) is False, f"URL should be unsafe: {url}"
+
 
 if __name__ == "__main__":
     try:
