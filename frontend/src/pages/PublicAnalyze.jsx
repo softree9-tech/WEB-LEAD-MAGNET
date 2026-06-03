@@ -1,8 +1,32 @@
 import React, { useState, useEffect } from 'react';
+import { Link } from 'react-router-dom';
 import LeadCaptureForm from '../components/LeadCaptureForm';
 import LeadResults from '../components/LeadResults';
 import { processSingleLead, validateWebsite } from '../api/api';
-import { Sparkles, ArrowLeft, ShieldCheck, Cpu, Zap, BarChart2 } from 'lucide-react';
+import { 
+  Sparkles, 
+  ArrowLeft, 
+  ShieldCheck, 
+  Cpu, 
+  Zap, 
+  BarChart2, 
+  TrendingUp, 
+  Lock, 
+  Clock, 
+  FileText, 
+  AlertTriangle, 
+  LayoutGrid, 
+  Code, 
+  Download, 
+  Award, 
+  Users, 
+  Globe, 
+  Smartphone, 
+  MousePointerClick, 
+  Layout, 
+  Check, 
+  Search 
+} from 'lucide-react';
 import '../PublicPortal.css';
 
 export default function PublicAnalyze() {
@@ -84,8 +108,19 @@ export default function PublicAnalyze() {
     if (!started) {
       return (
         <div className="public-portal-theme">
-          <div className="app-container" style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', minHeight: '80vh', textAlign: 'center', padding: '2rem' }}>
-            <div className="glass-card animate-fade-in" style={{
+          <div className="portal-navbar">
+            <Link to="/" className="portal-logo-container">
+              <span className="portal-logo-title">Softree</span>
+              <span className="portal-logo-subtitle">Technology</span>
+            </Link>
+            <Link to="/analyzer" className="portal-nav-badge">
+              <ShieldCheck size={14} style={{ color: 'var(--accent-orange)' }} />
+              Lead Engine Portal
+            </Link>
+          </div>
+
+          <div className="portal-main-content" style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', minHeight: '80vh', textAlign: 'center', padding: '2rem' }}>
+            <div className="form-card-glass animate-fade-in" style={{
               padding: '3.5rem 2.5rem',
               maxWidth: '550px',
               width: '100%',
@@ -136,13 +171,13 @@ export default function PublicAnalyze() {
 
               <button 
                 onClick={() => setStarted(true)} 
-                className="premium-btn-orange" 
+                className="btn-premium-cta" 
                 style={{ 
                   width: '100%',
                   fontSize: '1.1rem'
                 }}
               >
-                <Sparkles size={18} />
+                <Sparkles size={18} className="btn-premium-cta-icon" />
                 Get Started
               </button>
             </div>
@@ -153,10 +188,31 @@ export default function PublicAnalyze() {
 
     return (
       <div className="public-portal-theme" style={{ display: 'block', minHeight: '100vh', backgroundAttachment: 'fixed' }}>
-        <div className="app-container" style={{ padding: '2rem 1rem', maxWidth: '1400px' }}>
+        <div className="portal-navbar">
+          <Link to="/" className="portal-logo-container">
+            <span className="portal-logo-title">Softree</span>
+            <span className="portal-logo-subtitle">Technology</span>
+          </Link>
+          <button 
+            onClick={handleReset} 
+            className="portal-nav-badge"
+            style={{
+              display: 'flex',
+              alignItems: 'center',
+              gap: '6px',
+              cursor: 'pointer',
+              background: 'transparent'
+            }}
+          >
+            <ArrowLeft size={14} />
+            Analyze Another URL
+          </button>
+        </div>
+
+        <div className="portal-container" style={{ padding: '4rem 2rem', maxWidth: '1400px' }}>
           <header className="animate-fade-in" style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '2.5rem', flexWrap: 'wrap', gap: '1rem' }}>
             <div>
-              <div className="badge-orange" style={{ marginBottom: '6px' }}>
+              <div className="orange-badge" style={{ marginBottom: '12px' }}>
                 <ShieldCheck size={14} />
                 Analysis Completed
               </div>
@@ -170,22 +226,6 @@ export default function PublicAnalyze() {
                 Audit for {result.website.replace(/^https?:\/\/(www\.)?/, '')}
               </h1>
             </div>
-            <button 
-              onClick={handleReset} 
-              className="action-btn"
-              style={{
-                display: 'flex',
-                alignItems: 'center',
-                gap: '6px',
-                padding: '10px 18px',
-                fontSize: '0.875rem',
-                borderRadius: '8px',
-                cursor: 'pointer'
-              }}
-            >
-              <ArrowLeft size={16} />
-              Analyze Another URL
-            </button>
           </header>
 
           <div className="animate-fade-in" style={{ animationDelay: '0.1s' }}>
@@ -199,8 +239,19 @@ export default function PublicAnalyze() {
   if (loading) {
     return (
       <div className="public-portal-theme">
-        <div className="app-container" style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', minHeight: '80vh', textAlign: 'center', padding: '2rem' }}>
-          <div className="glass-card animate-fade-in" style={{
+        <div className="portal-navbar">
+          <Link to="/" className="portal-logo-container">
+            <span className="portal-logo-title">Softree</span>
+            <span className="portal-logo-subtitle">Technology</span>
+          </Link>
+          <Link to="/analyzer" className="portal-nav-badge">
+            <ShieldCheck size={14} style={{ color: 'var(--accent-orange)' }} />
+            Lead Engine Portal
+          </Link>
+        </div>
+
+        <div className="portal-main-content" style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', minHeight: '80vh', textAlign: 'center', padding: '2rem' }}>
+          <div className="form-card-glass animate-fade-in" style={{
             padding: '3.5rem 2.5rem',
             maxWidth: '500px',
             width: '100%',
@@ -212,7 +263,16 @@ export default function PublicAnalyze() {
             overflow: 'hidden'
           }}>
             {/* Cinematic scanning beam */}
-            <div className="scanning-beam" />
+            <div className="scanning-beam" style={{
+              position: 'absolute',
+              top: 0,
+              left: 0,
+              width: '100%',
+              height: '4px',
+              background: 'linear-gradient(90deg, transparent, var(--accent-orange), transparent)',
+              animation: 'scan 2.8s ease-in-out infinite',
+              opacity: 0.6
+            }} />
 
             {/* Animated Scanning Circle */}
             <div style={{ position: 'relative', width: '100px', height: '100px' }}>
@@ -287,8 +347,19 @@ export default function PublicAnalyze() {
   if (validating) {
     return (
       <div className="public-portal-theme">
-        <div className="app-container" style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', minHeight: '80vh', textAlign: 'center', padding: '2rem' }}>
-          <div className="glass-card animate-fade-in" style={{
+        <div className="portal-navbar">
+          <Link to="/" className="portal-logo-container">
+            <span className="portal-logo-title">Softree</span>
+            <span className="portal-logo-subtitle">Technology</span>
+          </Link>
+          <Link to="/analyzer" className="portal-nav-badge">
+            <ShieldCheck size={14} style={{ color: 'var(--accent-orange)' }} />
+            Lead Engine Portal
+          </Link>
+        </div>
+
+        <div className="portal-main-content" style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', minHeight: '80vh', textAlign: 'center', padding: '2rem' }}>
+          <div className="form-card-glass animate-fade-in" style={{
             padding: '3.5rem 2.5rem',
             maxWidth: '480px',
             width: '100%',
@@ -338,23 +409,470 @@ export default function PublicAnalyze() {
 
   return (
     <div className="public-portal-theme">
-      <div className="app-container" style={{ display: 'flex', flexDirection: 'column', minHeight: '90vh', justifyContent: 'center', padding: '3rem 1.5rem' }}>
-        <header className="header animate-fade-in" style={{ marginBottom: '3.5rem' }}>
-          <div className="badge-orange" style={{ marginBottom: '1.25rem' }}>
-            <Sparkles size={13} />
-            AI Growth Intelligence
+      {/* NAVBAR */}
+      <nav className="portal-navbar">
+        <Link to="/" className="portal-logo-container">
+          <span className="portal-logo-title">Softree</span>
+          <span className="portal-logo-subtitle">Technology</span>
+        </Link>
+        <Link to="/analyzer" className="portal-nav-badge">
+          <ShieldCheck size={14} style={{ marginRight: '6px' }} />
+          Lead Engine Portal
+        </Link>
+      </nav>
+
+      <div className="portal-main-content">
+        
+        {/* SECTION 1: HERO SECTION */}
+        <section className="portal-section">
+          <div className="portal-container hero-split-grid">
+            
+            {/* Left side = headline + benefits */}
+            <div className="hero-left-col animate-fade-in">
+              <div className="orange-badge">
+                <Sparkles size={13} style={{ marginRight: '4px' }} />
+                AI Growth Intelligence
+              </div>
+              <h1 className="hero-title">
+                AI-Powered Website Intelligence for <span className="highlight-orange">Scalable Growth</span>
+              </h1>
+              <p className="hero-subtitle">
+                Built for modern growth teams and business leaders, our AI-powered audit platform delivers strategic website intelligence designed to improve conversions, strengthen digital trust, and accelerate inbound revenue performance.
+              </p>
+
+              {/* Benefit Icons below */}
+              <div className="hero-benefits-grid">
+                
+                {/* Benefit 1 */}
+                <div className="hero-benefit-item">
+                  <div className="benefit-icon-wrapper">
+                    <TrendingUp size={20} />
+                  </div>
+                  <h4 className="benefit-title">Growth Focused</h4>
+                  <p className="benefit-desc">Actionable insights that drive real results</p>
+                </div>
+
+                {/* Benefit 2 */}
+                <div className="hero-benefit-item">
+                  <div className="benefit-icon-wrapper">
+                    <Zap size={20} />
+                  </div>
+                  <h4 className="benefit-title">Instant Results</h4>
+                  <p className="benefit-desc">Get your audit report in under 60 seconds</p>
+                </div>
+
+                {/* Benefit 3 */}
+                <div className="hero-benefit-item">
+                  <div className="benefit-icon-wrapper">
+                    <ShieldCheck size={20} />
+                  </div>
+                  <h4 className="benefit-title">100% Secure</h4>
+                  <p className="benefit-desc">Your data is safe and confidential</p>
+                </div>
+
+              </div>
+            </div>
+
+            {/* Right side = Form Card */}
+            <div className="animate-fade-in" style={{ animationDelay: '0.1s' }}>
+              <LeadCaptureForm onSubmit={handleSubmit} loading={loading || validating} error={error} />
+            </div>
+
           </div>
-          <h1 style={{ fontSize: '3rem', fontWeight: 800, marginBottom: '1.25rem', background: 'linear-gradient(135deg, #ffffff 65%, #ff7a00 100%)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent', lineHeight: 1.2 }}>
-            AI-Powered Website Intelligence for Scalable Growth
-          </h1>
-          <p style={{ color: 'var(--text-gray)', fontSize: '1.1rem', maxWidth: '750px', margin: '0 auto', lineHeight: 1.7, fontWeight: 400 }}>
-            Built for modern growth teams and business leaders, our AI-powered audit platform delivers strategic website intelligence designed to improve conversions, strengthen digital trust, and accelerate inbound revenue performance.
-          </p>
-        </header>
-        <div style={{ width: '100%', display: 'flex', justifyContent: 'center' }}>
-          <LeadCaptureForm onSubmit={handleSubmit} loading={loading || validating} error={error} />
-        </div>
+        </section>
+
+        {/* SECTION 2: SAMPLE AUDIT REPORT */}
+        <section className="portal-section sample-report-section">
+          <div className="portal-container">
+            
+            <div className="section-header">
+              <h2 className="section-title">See a Sample Audit Report</h2>
+              <p className="section-subtitle">Here’s a preview of the insights you’ll receive after analyzing your page.</p>
+            </div>
+
+            {/* Dashboard Mockup Frame */}
+            <div className="mock-dashboard-frame">
+              
+              {/* Sidebar */}
+              <aside className="mock-sidebar">
+                <div>
+                  <div className="mock-sidebar-brand">
+                    <div className="mock-brand-title">Softree</div>
+                    <div className="mock-brand-sub">Technology</div>
+                  </div>
+
+                  <div className="mock-audit-meta">
+                    <div className="mock-meta-label">Audit Report</div>
+                    <div className="mock-meta-value" title="https://example.com/landing">https://example.com/landing</div>
+                  </div>
+
+                  <nav className="mock-sidebar-nav">
+                    <div className="mock-nav-item active">
+                      <LayoutGrid size={15} />
+                      <span>Overview</span>
+                    </div>
+                    <div className="mock-nav-item">
+                      <AlertTriangle size={15} />
+                      <span>Top Issues</span>
+                    </div>
+                    <div className="mock-nav-item">
+                      <TrendingUp size={15} />
+                      <span>Opportunities</span>
+                    </div>
+                    <div className="mock-nav-item">
+                      <FileText size={15} />
+                      <span>Detailed Analysis</span>
+                    </div>
+                    <div className="mock-nav-item">
+                      <Sparkles size={15} />
+                      <span>Recommendations</span>
+                    </div>
+                    <div className="mock-nav-item">
+                      <Code size={15} />
+                      <span>Technical Insights</span>
+                    </div>
+                  </nav>
+                </div>
+              </aside>
+
+              {/* Main Panel Content */}
+              <main className="mock-main-content">
+                
+                {/* Top Row Grid */}
+                <div className="mock-cards-grid-3">
+                  
+                  {/* Card 1: Conversion Score */}
+                  <div className="mock-report-card">
+                    <div className="mock-report-card-title-row">
+                      <span className="mock-report-card-title">Conversion Score</span>
+                    </div>
+                    <div className="mock-score-content">
+                      <div className="mock-score-number-group">
+                        <div style={{ display: 'flex', alignItems: 'baseline' }}>
+                          <span className="mock-score-big">72</span>
+                          <span className="mock-score-total">/100</span>
+                        </div>
+                        <span className="mock-score-status">Good</span>
+                      </div>
+                      <div className="mock-score-ring">
+                        <svg className="mock-score-circle-svg">
+                          <circle cx="35" cy="35" r="28" fill="none" stroke="rgba(255, 122, 0, 0.08)" strokeWidth="5" />
+                          <circle cx="35" cy="35" r="28" fill="none" stroke="#FF7A00" strokeWidth="5" strokeDasharray="175.9" strokeDashoffset="49.25" strokeLinecap="round" />
+                        </svg>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Card 2: Top Issues Found */}
+                  <div className="mock-report-card">
+                    <div className="mock-report-card-title-row">
+                      <span className="mock-report-card-title">Top Issues Found</span>
+                      <span className="mock-critical-badge">3 Critical</span>
+                    </div>
+                    <div className="mock-issues-list">
+                      <div className="mock-issue-item">
+                        <AlertTriangle size={12} />
+                        <span>Missing customer testimonials</span>
+                      </div>
+                      <div className="mock-issue-item">
+                        <AlertTriangle size={12} />
+                        <span>Weak CTA placement</span>
+                      </div>
+                      <div className="mock-issue-item">
+                        <AlertTriangle size={12} />
+                        <span>Form has too many fields</span>
+                      </div>
+                    </div>
+                    <div className="mock-card-action-link">
+                      <span>View all issues</span>
+                      <span>→</span>
+                    </div>
+                  </div>
+
+                  {/* Card 3: Estimated Impact */}
+                  <div className="mock-report-card">
+                    <div className="mock-report-card-title-row">
+                      <span className="mock-report-card-title">Estimated Impact</span>
+                    </div>
+                    <div>
+                      <div className="mock-impact-value">+28%</div>
+                      <div className="mock-impact-sub">Potential conversion improvement</div>
+                    </div>
+                    <div className="mock-impact-graph-container">
+                      <svg width="100%" height="100%" viewBox="0 0 240 50" preserveAspectRatio="none">
+                        <defs>
+                          <linearGradient id="chart-glow" x1="0" y1="0" x2="0" y2="1">
+                            <stop offset="0%" stopColor="#FF7A00" stopOpacity="0.25" />
+                            <stop offset="100%" stopColor="#FF7A00" stopOpacity="0.0" />
+                          </linearGradient>
+                        </defs>
+                        <path d="M10 40 L40 43 L70 32 L100 36 L130 18 L160 26 L190 22 L220 8 L220 50 L10 50 Z" fill="url(#chart-glow)" />
+                        <path d="M10 40 L40 43 L70 32 L100 36 L130 18 L160 26 L190 22 L220 8" fill="none" stroke="#FF7A00" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" />
+                        <circle cx="10" cy="40" r="3" fill="#FF7A00" stroke="#050505" strokeWidth="1" />
+                        <circle cx="40" cy="43" r="3" fill="#FF7A00" stroke="#050505" strokeWidth="1" />
+                        <circle cx="70" cy="32" r="3" fill="#FF7A00" stroke="#050505" strokeWidth="1" />
+                        <circle cx="100" cy="36" r="3" fill="#FF7A00" stroke="#050505" strokeWidth="1" />
+                        <circle cx="130" cy="18" r="3" fill="#FF7A00" stroke="#050505" strokeWidth="1" />
+                        <circle cx="160" cy="26" r="3" fill="#FF7A00" stroke="#050505" strokeWidth="1" />
+                        <circle cx="190" cy="22" r="3" fill="#FF7A00" stroke="#050505" strokeWidth="1" />
+                        <circle cx="220" cy="8" r="3" fill="#FF7A00" stroke="#050505" strokeWidth="1" />
+                      </svg>
+                    </div>
+                  </div>
+
+                </div>
+
+                {/* Bottom Row Grid */}
+                <div className="mock-cards-grid-3">
+                  
+                  {/* Card 4: Key Opportunity Areas */}
+                  <div className="mock-report-card">
+                    <div className="mock-report-card-title-row">
+                      <span className="mock-report-card-title">Key Opportunity Areas</span>
+                    </div>
+                    <div className="mock-check-list">
+                      <div className="mock-check-item">
+                        <Check size={13} />
+                        <span>Add social proof above the fold</span>
+                      </div>
+                      <div className="mock-check-item">
+                        <Check size={13} />
+                        <span>Improve CTA visibility and contrast</span>
+                      </div>
+                      <div className="mock-check-item">
+                        <Check size={13} />
+                        <span>Shorten and simplify the form</span>
+                      </div>
+                      <div className="mock-check-item">
+                        <Check size={13} />
+                        <span>Clarify value proposition in headline</span>
+                      </div>
+                    </div>
+                    <div className="mock-card-action-link">
+                      <span>View all opportunities</span>
+                      <span>→</span>
+                    </div>
+                  </div>
+
+                  {/* Card 5: AI Recommendations */}
+                  <div className="mock-report-card">
+                    <div className="mock-report-card-title-row">
+                      <span className="mock-report-card-title">AI Recommendations</span>
+                    </div>
+                    <div className="mock-check-list">
+                      <div className="mock-recommend-item">
+                        <Sparkles size={13} />
+                        <span>Add customer testimonials to build trust</span>
+                      </div>
+                      <div className="mock-recommend-item">
+                        <Sparkles size={13} />
+                        <span>Move primary CTA above the fold</span>
+                      </div>
+                      <div className="mock-recommend-item">
+                        <Sparkles size={13} />
+                        <span>Reduce form fields from 7 to 3</span>
+                      </div>
+                      <div className="mock-recommend-item">
+                        <Sparkles size={13} />
+                        <span>Add a sticky CTA for better conversions</span>
+                      </div>
+                    </div>
+                    <div className="mock-card-action-link">
+                      <span>View all recommendations</span>
+                      <span>→</span>
+                    </div>
+                  </div>
+
+                  {/* Card 6: Get Full Report Promo */}
+                  <div className="mock-report-card promo-card">
+                    <div className="mock-promo-icon-wrapper">
+                      <FileText size={28} />
+                    </div>
+                    <div className="mock-promo-title">Get the Full Report</div>
+                    <p className="mock-promo-text">
+                      Our detailed PDF report includes in-depth analysis, screenshots, and step-by-step recommendations.
+                    </p>
+                    <div className="mock-promo-btn">
+                      <Download size={14} />
+                      <span>Download Sample PDF</span>
+                    </div>
+                    <span className="mock-promo-footer">No email required</span>
+                  </div>
+
+                </div>
+
+              </main>
+
+            </div>
+
+            <div className="mock-disclaimer">
+              This is a sample report for demonstration only. Your actual report will be generated based on the page you submit.
+            </div>
+
+          </div>
+        </section>
+
+        {/* SECTION 3: WHAT WE ANALYZE */}
+        <section className="portal-section">
+          <div className="portal-container">
+            
+            <div className="section-header" style={{ marginLeft: 'auto', marginRight: 'auto' }}>
+              <h2 className="section-title">What We Analyze</h2>
+              <p className="section-subtitle">Our multi-agent system audits your digital footprint across six strategic conversion layers.</p>
+            </div>
+
+            <div className="analyze-cards-grid">
+              
+              {/* Card 1 */}
+              <div className="analyze-premium-card">
+                <div className="analyze-card-header">
+                  <div className="analyze-icon-wrapper">
+                    <TrendingUp size={22} />
+                  </div>
+                  <h4 className="analyze-card-title">Conversion Intelligence</h4>
+                </div>
+                <p className="analyze-card-desc">Identify friction points hurting conversions and opportunities to increase sign-ups and sales.</p>
+              </div>
+
+              {/* Card 2 */}
+              <div className="analyze-premium-card">
+                <div className="analyze-card-header">
+                  <div className="analyze-icon-wrapper">
+                    <MousePointerClick size={22} />
+                  </div>
+                  <h4 className="analyze-card-title">CTA Effectiveness</h4>
+                </div>
+                <p className="analyze-card-desc">Evaluate the placement, visibility, copy, and visual contrast of your primary and secondary calls-to-action.</p>
+              </div>
+
+              {/* Card 3 */}
+              <div className="analyze-premium-card">
+                <div className="analyze-card-header">
+                  <div className="analyze-icon-wrapper">
+                    <Award size={22} />
+                  </div>
+                  <h4 className="analyze-card-title">Trust & Credibility</h4>
+                </div>
+                <p className="analyze-card-desc">Analyze trust signals, security badges, social proof elements, and overall domain authority flags.</p>
+              </div>
+
+              {/* Card 4 */}
+              <div className="analyze-premium-card">
+                <div className="analyze-card-header">
+                  <div className="analyze-icon-wrapper">
+                    <Layout size={22} />
+                  </div>
+                  <h4 className="analyze-card-title">User Experience</h4>
+                </div>
+                <p className="analyze-card-desc">Assess overall page layout usability, content hierarchy, readability, and interface clarity.</p>
+              </div>
+
+              {/* Card 5 */}
+              <div className="analyze-premium-card">
+                <div className="analyze-card-header">
+                  <div className="analyze-icon-wrapper">
+                    <Smartphone size={22} />
+                  </div>
+                  <h4 className="analyze-card-title">Mobile Performance</h4>
+                </div>
+                <p className="analyze-card-desc">Check responsiveness, button sizes, mobile font sizes, and layout adaptation on smaller screens.</p>
+              </div>
+
+              {/* Card 6 */}
+              <div className="analyze-premium-card">
+                <div className="analyze-card-header">
+                  <div className="analyze-icon-wrapper">
+                    <Search size={22} />
+                  </div>
+                  <h4 className="analyze-card-title">SEO & Technical</h4>
+                </div>
+                <p className="analyze-card-desc">Review critical meta tags, title lengths, semantic headings hierarchy, image alt text, and page response speeds.</p>
+              </div>
+
+            </div>
+
+          </div>
+        </section>
+
+        {/* SECTION 4: TRUST / ENTERPRISE SECTION */}
+        <section className="portal-section trust-badges-section">
+          <div className="portal-container">
+            
+            <div className="section-header" style={{ marginLeft: 'auto', marginRight: 'auto', marginBottom: '3.5rem' }}>
+              <h2 className="section-title">Why Growth Teams Trust Softree Technology</h2>
+            </div>
+
+            <div className="trust-badges-flex">
+              
+              {/* Badge 1 */}
+              <div className="trust-badge-card">
+                <div className="trust-icon-wrapper">
+                  <ShieldCheck size={28} />
+                </div>
+                <div className="trust-badge-title">ISO/IEC 27001:2022</div>
+                <div className="trust-badge-desc">Certified Security Management</div>
+              </div>
+
+              {/* Badge 2 */}
+              <div className="trust-badge-card">
+                <div className="trust-icon-wrapper">
+                  <Award size={28} />
+                </div>
+                <div className="trust-badge-title">ISO 9001:2015</div>
+                <div className="trust-badge-desc">Certified Quality Management</div>
+              </div>
+
+              {/* Badge 3: Microsoft Logo */}
+              <div className="trust-badge-card">
+                <div className="trust-icon-wrapper" style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '2px', width: '24px', height: '24px', margin: '2px 0' }}>
+                  <div style={{ background: '#f25022', width: '11px', height: '11px' }}></div>
+                  <div style={{ background: '#7fba00', width: '11px', height: '11px' }}></div>
+                  <div style={{ background: '#00a4ef', width: '11px', height: '11px' }}></div>
+                  <div style={{ background: '#ffb900', width: '11px', height: '11px' }}></div>
+                </div>
+                <div className="trust-badge-title">Microsoft</div>
+                <div className="trust-badge-desc">Technology Expertise</div>
+              </div>
+
+              {/* Badge 4 */}
+              <div className="trust-badge-card">
+                <div className="trust-icon-wrapper">
+                  <Users size={28} />
+                </div>
+                <div className="trust-badge-title">Global Delivery Team</div>
+                <div className="trust-badge-desc">Across Multiple Time Zones</div>
+              </div>
+
+              {/* Badge 5 */}
+              <div className="trust-badge-card">
+                <div className="trust-icon-wrapper">
+                  <Globe size={28} />
+                </div>
+                <div className="trust-badge-title">Serving Clients</div>
+                <div className="trust-badge-desc">US, UK & Australia</div>
+              </div>
+
+            </div>
+
+          </div>
+        </section>
+
       </div>
+
+      {/* FOOTER */}
+      <footer className="portal-footer">
+        <div>
+          © 2025 Softree Technology. All rights reserved.
+        </div>
+        <div className="portal-footer-links">
+          <a href="#" className="portal-footer-link" onClick={e => e.preventDefault()}>Privacy Policy</a>
+          <span style={{ color: 'rgba(255,255,255,0.1)' }}>|</span>
+          <a href="#" className="portal-footer-link" onClick={e => e.preventDefault()}>Terms of Service</a>
+          <span style={{ color: 'rgba(255,255,255,0.1)' }}>|</span>
+          <a href="#" className="portal-footer-link" onClick={e => e.preventDefault()}>Contact Us</a>
+        </div>
+      </footer>
+
     </div>
   );
 }
