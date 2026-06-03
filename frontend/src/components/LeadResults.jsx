@@ -24,6 +24,14 @@ import { ExternalLink, RefreshCw, Download, Monitor, Mail, Lock, FileCode, Check
  *   Broken responsive layout    → -15 to -20
  *   Severe viewport collision   → -20 to -25
  */
+const sanitizeText = (text) => {
+  if (text === null || text === undefined) return '';
+  return String(text)
+    .replace(/[\r\n]+/g, ' ')
+    .replace(/\s+/g, ' ')
+    .trim();
+};
+
 const exportToExcel = async (leads, filename, isPublic) => {
   try {
     const ExcelJS = await import('exceljs');
@@ -150,13 +158,6 @@ const exportToExcel = async (leads, filename, isPublic) => {
       const engagementVal = lead.cta === 'Strong' ? 90 : 40;
       const uxScore = Math.round((consistencyVal + flowVal + mobileVal + engagementVal) / 4);
 
-      const trustWarning = [
-        (!lead.seo_ssl ? 'SSL certificate invalid or missing' : (lead.ssl_days_remaining < 30 ? `SSL expires in ${lead.ssl_days_remaining} days` : '')),
-        !lead.has_lead_capture ? 'No contact form detected' : '',
-        !lead.has_newsletter ? 'No newsletter signup found' : '',
-        !(lead.has_analytics?.google_analytics) ? 'Google Analytics not installed' : '',
-      ].filter(Boolean).join(' | ') || 'No critical issues found';
-
       const seoIssues = [
         !lead.seo_title && 'Missing title tag',
         !lead.seo_meta_desc && 'Missing meta description',
@@ -198,115 +199,115 @@ Best,
 [Your Name]`;
 
       worksheet.addRow({
-        first_name: af['First Name'] || '',
-        last_name: af['Last Name'] || '',
-        title: af['Title'] || '',
-        company_name: af['Company Name'] || '',
-        email: af['Email'] || '',
-        website: lead.website || '',
-        competitor_website: lead.competitor_data?.website || 'N/A',
+        first_name: sanitizeText(af['First Name']),
+        last_name: sanitizeText(af['Last Name']),
+        title: sanitizeText(af['Title']),
+        company_name: sanitizeText(af['Company Name']),
+        email: sanitizeText(af['Email']),
+        website: sanitizeText(lead.website),
+        competitor_website: sanitizeText(lead.competitor_data?.website || 'N/A'),
         final_score: uxScore,
-        design: lead.design || '',
-        cta: lead.cta || '',
-        message: lead.message || '',
-        trust: lead.trust || '',
-        speed: lead.speed || '',
+        design: sanitizeText(lead.design),
+        cta: sanitizeText(lead.cta),
+        message: sanitizeText(lead.message),
+        trust: sanitizeText(lead.trust),
+        speed: sanitizeText(lead.speed),
         schema_score: lead.schema_coverage_score || 0,
-        schema_impact: lead.schema_visibility_impact || 'Low',
+        schema_impact: sanitizeText(lead.schema_visibility_impact || 'Low'),
         first_impression_score: lead.first_impression_score || 0,
-        first_impression_verdict: lead.first_impression_verdict || 'Unknown',
-        executive_summary: lead.executive_summary || '',
-        business_risk_insight: lead.business_risk_insight || '',
-        strategic_opportunity_insight: lead.strategic_opportunity_insight || '',
-        executive_ai_recommendation: lead.executive_ai_recommendation || '',
-        brand_credibility_insight: lead.brand_credibility_insight || '',
-        msg_clarity_level: lead.messaging_clarity_level || 'Moderate',
-        msg_effectiveness_insight: lead.communication_effectiveness_insight || '',
-        val_prop_analysis: lead.value_proposition_analysis || '',
-        msg_strategic_rec: lead.messaging_strategic_recommendation || '',
+        first_impression_verdict: sanitizeText(lead.first_impression_verdict || 'Unknown'),
+        executive_summary: sanitizeText(lead.executive_summary),
+        business_risk_insight: sanitizeText(lead.business_risk_insight),
+        strategic_opportunity_insight: sanitizeText(lead.strategic_opportunity_insight),
+        executive_ai_recommendation: sanitizeText(lead.executive_ai_recommendation),
+        brand_credibility_insight: sanitizeText(lead.brand_credibility_insight),
+        msg_clarity_level: sanitizeText(lead.messaging_clarity_level || 'Moderate'),
+        msg_effectiveness_insight: sanitizeText(lead.communication_effectiveness_insight),
+        val_prop_analysis: sanitizeText(lead.value_proposition_analysis),
+        msg_strategic_rec: sanitizeText(lead.messaging_strategic_recommendation),
         headline_clarity: lead.headline_clarity_score || 0,
         val_prop_strength: lead.value_prop_strength_score || 0,
         cta_quality: lead.cta_communication_quality_score || 0,
         msg_confidence: lead.messaging_confidence_score || 0,
         audience_clarity: lead.audience_targeting_clarity_score || 0,
         brand_effectiveness: lead.brand_communication_effectiveness_score || 0,
-        cta_strength: lead.cta_strength_level || 'Moderate',
+        cta_strength: sanitizeText(lead.cta_strength_level || 'Moderate'),
         cta_urgency: lead.cta_urgency_score || 0,
-        cta_visibility: lead.cta_visibility_rating || 'Moderate',
-        cta_placement: lead.cta_placement_quality || 'Suboptimal',
+        cta_visibility: sanitizeText(lead.cta_visibility_rating || 'Moderate'),
+        cta_placement: sanitizeText(lead.cta_placement_quality || 'Suboptimal'),
         cta_clarity: lead.cta_action_clarity_score || 0,
         cta_persuasiveness: lead.cta_persuasiveness_score || 0,
-        cta_eff_insight: lead.cta_effectiveness_insight || '',
-        cta_opt_rec_ai: lead.cta_ai_optimization_recommendation || '',
-        mobile_rating: lead.mobile_ux_rating || 'Average',
-        mobile_risk: lead.mobile_conversion_risk || 'Moderate',
-        mobile_insight: lead.mobile_ai_insight || '',
+        cta_eff_insight: sanitizeText(lead.cta_effectiveness_insight),
+        cta_opt_rec_ai: sanitizeText(lead.cta_ai_optimization_recommendation),
+        mobile_rating: sanitizeText(lead.mobile_ux_rating || 'Average'),
+        mobile_risk: sanitizeText(lead.mobile_conversion_risk || 'Moderate'),
+        mobile_insight: sanitizeText(lead.mobile_ai_insight),
         momentum_score: lead.momentum_score || 0,
-        momentum_status: lead.competitive_growth_status || 'Steady',
-        momentum_risk: lead.strategic_risk_level || 'Moderate',
-        momentum_direction: lead.momentum_growth_direction || 'Neutral',
-        momentum_insight: lead.momentum_ai_insight || '',
-        strategic_action_plan: (lead.ai_strategic_plan || []).map(s => `${s?.priority || ''}: ${s?.action || ''} (Impact: ${s?.impact || ''})`).join(' | '),
-        revenue_leak: `$${lead.revenue_leak_amount || 0}`,
-        leak_severity: lead.revenue_leak_severity || 'Low',
-        annual_loss: `$${lead.annual_opportunity_loss || 0}`,
-        urgency_severity: lead.urgency_severity || '90+ Days',
-        revenue_impact_insight: lead.revenue_impact_insight || '',
+        momentum_status: sanitizeText(lead.competitive_growth_status || 'Steady'),
+        momentum_risk: sanitizeText(lead.strategic_risk_level || 'Moderate'),
+        momentum_direction: sanitizeText(lead.momentum_growth_direction || 'Neutral'),
+        momentum_insight: sanitizeText(lead.momentum_ai_insight),
+        strategic_action_plan: sanitizeText((lead.ai_strategic_plan || []).map(s => `${s?.priority || ''}: ${s?.action || ''} (Impact: ${s?.impact || ''})`).join(' | ')),
+        revenue_leak: sanitizeText(`$${lead.revenue_leak_amount || 0}`),
+        leak_severity: sanitizeText(lead.revenue_leak_severity || 'Low'),
+        annual_loss: sanitizeText(`$${lead.annual_opportunity_loss || 0}`),
+        urgency_severity: sanitizeText(lead.urgency_severity || '90+ Days'),
+        revenue_impact_insight: sanitizeText(lead.revenue_impact_insight),
         visitors_lost: lead.visitors_lost || 0,
         leads_lost: lead.leads_lost || 0,
         missing_leads_count: lead.missing_opportunities_count || 0,
-        conversion_loss_percent: `${lead.estimated_conversion_loss_percent || 0}%`,
-        readiness_level: lead.conversion_readiness_level || 'Low',
-        cta_opt_rec: lead.cta_optimization_recommendation || '',
-        conv_imp_sug: lead.conversion_improvement_suggestion || '',
-        funnel_opt_ins: lead.funnel_optimization_insight || '',
-        mobile_conv_rec: lead.mobile_conversion_recommendation || '',
-        lead_gen_opp: lead.lead_gen_improvement_opportunity || '',
-        conv_intel_ins: lead.conversion_intelligence_insight || '',
+        conversion_loss_percent: sanitizeText(`${lead.estimated_conversion_loss_percent || 0}%`),
+        readiness_level: sanitizeText(lead.conversion_readiness_level || 'Low'),
+        cta_opt_rec: sanitizeText(lead.cta_optimization_recommendation),
+        conv_imp_sug: sanitizeText(lead.conversion_improvement_suggestion),
+        funnel_opt_ins: sanitizeText(lead.funnel_optimization_insight),
+        mobile_conv_rec: sanitizeText(lead.mobile_conversion_recommendation),
+        lead_gen_opp: sanitizeText(lead.lead_gen_improvement_opportunity),
+        conv_intel_ins: sanitizeText(lead.conversion_intelligence_insight),
         industry_percentile: lead.industry_percentile || 0,
-        industry_tier: lead.industry_tier || 'Unknown',
-        industry_competitiveness: lead.industry_competitiveness || 'Unknown',
+        industry_tier: sanitizeText(lead.industry_tier || 'Unknown'),
+        industry_competitiveness: sanitizeText(lead.industry_competitiveness || 'Unknown'),
         lead_quality: lead.lead_quality_score || 0,
-        maturity_level: lead.business_maturity_level || 'Unknown',
-        sales_potential: lead.sales_potential || 'Moderate',
-        digital_readiness: lead.digital_readiness || 'Moderate',
-        growth_potential: lead.growth_potential || 'Moderate',
-        market_insight: lead.market_position_intelligence_insight || '',
-        buyer_intent: lead.buyer_intent_strength || 'Moderate',
+        maturity_level: sanitizeText(lead.business_maturity_level || 'Unknown'),
+        sales_potential: sanitizeText(lead.sales_potential || 'Moderate'),
+        digital_readiness: sanitizeText(lead.digital_readiness || 'Moderate'),
+        growth_potential: sanitizeText(lead.growth_potential || 'Moderate'),
+        market_insight: sanitizeText(lead.market_position_intelligence_insight),
+        buyer_intent: sanitizeText(lead.buyer_intent_strength || 'Moderate'),
         trans_intent: lead.transactional_service_intent_score || 0,
         ent_orientation: lead.enterprise_sales_orientation_score || 0,
         lead_gen_focus: lead.lead_generation_focus_score || 0,
         conv_positioning: lead.conversion_oriented_positioning_score || 0,
-        comm_maturity: lead.commercial_readiness_maturity || 'Moderate',
-        website_type: lead.primary_website_type || 'informational',
-        comm_insights: lead.commercial_insights || '',
+        comm_maturity: sanitizeText(lead.commercial_readiness_maturity || 'Moderate'),
+        website_type: sanitizeText(lead.primary_website_type || 'informational'),
+        comm_insights: sanitizeText(lead.commercial_insights),
         sales_maturity: lead.sales_positioning_maturity_score || 0,
         comm_readiness_lvl: lead.commercial_readiness_level_score || 0,
-        conv_target_insight: lead.conversion_targeting_insight || '',
-        market_strat_rec: lead.market_position_ai_strategic_recommendation || '',
-        keyword_opps: lead.keyword_visibility_gap_opportunities || '',
-        keyword_level: lead.keyword_visibility_gap_level || 'Low',
-        competitor_adv: lead.keyword_visibility_gap_competitor_advantage || '',
-        search_impact: lead.keyword_visibility_gap_search_impact || 'Low',
-        keyword_insight: lead.keyword_visibility_gap_insight || '',
-        trust_decay: lead.trust_decay_level || 'Low',
+        conv_target_insight: sanitizeText(lead.conversion_targeting_insight),
+        market_strat_rec: sanitizeText(lead.market_position_ai_strategic_recommendation),
+        keyword_opps: sanitizeText(lead.keyword_visibility_gap_opportunities),
+        keyword_level: sanitizeText(lead.keyword_visibility_gap_level || 'Low'),
+        competitor_adv: sanitizeText(lead.keyword_visibility_gap_competitor_advantage),
+        search_impact: sanitizeText(lead.keyword_visibility_gap_search_impact || 'Low'),
+        keyword_insight: sanitizeText(lead.keyword_visibility_gap_insight),
+        trust_decay: sanitizeText(lead.trust_decay_level || 'Low'),
         maintenance_confidence: lead.maintenance_confidence || 100,
-        outdated_signals: lead.outdated_signal_indicators || '',
-        credibility_insight: lead.credibility_impact_insight || '',
-        trust_recommendation: lead.ai_trust_recommendation || '',
-        rebranding_pitch: lead.rebranding_pitch || '',
-        seo_issues: seoIssues,
-        aeo_quote: (lead.aeo_probe_response || 'No AI recognition data.').substring(0, isPublic ? 500 : 1000),
-        battle_winner: lead.battle_data?.overall_winner || 'N/A',
-        battle_verdict: lead.battle_data?.ai_verdict || 'N/A',
-        emailfullbody: batchEmailBody
+        outdated_signals: sanitizeText(lead.outdated_signal_indicators),
+        credibility_insight: sanitizeText(lead.credibility_impact_insight),
+        trust_recommendation: sanitizeText(lead.ai_trust_recommendation),
+        rebranding_pitch: sanitizeText(lead.rebranding_pitch),
+        seo_issues: sanitizeText(seoIssues),
+        aeo_quote: sanitizeText((lead.aeo_probe_response || 'No AI recognition data.').substring(0, isPublic ? 500 : 1000)),
+        battle_winner: sanitizeText(lead.battle_data?.overall_winner || 'N/A'),
+        battle_verdict: sanitizeText(lead.battle_data?.ai_verdict || 'N/A'),
+        emailfullbody: sanitizeText(batchEmailBody)
       });
     });
 
     // Clean, professional styling
     worksheet.eachRow({ includeEmpty: true }, (row, rowNumber) => {
       if (rowNumber === 1) {
-        row.height = 28;
+        row.height = 24;
         row.eachCell({ includeEmpty: true }, (cell) => {
           cell.font = { name: 'Segoe UI', size: 10, bold: true, color: { argb: 'FFFFFFFF' } };
           cell.fill = {
@@ -314,7 +315,7 @@ Best,
             pattern: 'solid',
             fgColor: { argb: 'FF1E293B' }
           };
-          cell.alignment = { vertical: 'top', horizontal: 'left', wrapText: true };
+          cell.alignment = { vertical: 'top', horizontal: 'left', wrapText: false };
           cell.border = {
             top: { style: 'thin', color: { argb: 'FF334155' } },
             bottom: { style: 'medium', color: { argb: 'FF334155' } },
@@ -323,10 +324,10 @@ Best,
           };
         });
       } else {
-        row.height = undefined;
+        row.height = 20;
         row.eachCell({ includeEmpty: true }, (cell) => {
           cell.font = { name: 'Segoe UI', size: 10 };
-          cell.alignment = { vertical: 'top', horizontal: 'left', wrapText: true };
+          cell.alignment = { vertical: 'top', horizontal: 'left', wrapText: false };
           cell.border = {
             top: { style: 'thin', color: { argb: 'FFE2E8F0' } },
             bottom: { style: 'thin', color: { argb: 'FFE2E8F0' } },
@@ -348,7 +349,7 @@ Best,
           maxLength = maxLineLength;
         }
       });
-      column.width = Math.max(12, Math.min(45, maxLength + 3));
+      column.width = Math.max(12, Math.min(50, maxLength + 3));
     });
 
     const buffer = await workbook.xlsx.writeBuffer();
@@ -1212,159 +1213,9 @@ Best,
                   <button className="action-btn" onClick={() => window.location.reload()}><RefreshCw size={14} /> Recalculate</button>
                   {true && (
                     <button className="action-btn primary" onClick={() => {
-                      if (isPublic) {
-                        const filename = `audit_report_${(lead.website || '').replace(/^https?:\/\//i, '').replace(/[/.]/g, '_')}.xlsx`;
-                        exportToExcel([lead], filename, true);
-                      } else {
-                        // Original CSV logic
-                        const csvHeader = 'first_name,last_name,title,company_name,email,website,competitor_website,final_score,design,cta,message,trust,speed,schema_score,schema_impact,first_impression_score,first_impression_verdict,executive_summary,business_risk_insight,strategic_opportunity_insight,executive_ai_recommendation,brand_credibility_insight,msg_clarity_level,msg_effectiveness_insight,val_prop_analysis,msg_strategic_rec,headline_clarity,val_prop_strength,cta_quality,msg_confidence,audience_clarity,brand_effectiveness,cta_strength,cta_urgency,cta_visibility,cta_placement,cta_clarity,cta_persuasiveness,cta_eff_insight,cta_opt_rec_ai,mobile_rating,mobile_risk,mobile_insight,momentum_score,momentum_status,momentum_risk,momentum_direction,momentum_insight,strategic_action_plan,revenue_leak,leak_severity,annual_loss,urgency_severity,revenue_impact_insight,visitors_lost,leads_lost,missing_leads_count,conversion_loss_percent,readiness_level,cta_opt_rec,conv_imp_sug,funnel_opt_ins,mobile_conv_rec,lead_gen_opp,conv_intel_ins,industry_percentile,industry_tier,industry_competitiveness,lead_quality,maturity_level,sales_potential,digital_readiness,growth_potential,market_insight,buyer_intent,trans_intent,ent_orientation,lead_gen_focus,conv_positioning,comm_maturity,website_type,comm_insights,sales_maturity,comm_readiness_lvl,conv_target_insight,market_strat_rec,keyword_opps,keyword_level,competitor_adv,search_impact,keyword_insight,trust_decay,maintenance_confidence,outdated_signals,credibility_insight,trust_recommendation,rebranding_pitch,seo_issues,aeo_quote,battle_winner,battle_verdict,emailfullbody\n';
-
-                        const trustWarning = [
-                          (!lead.seo_ssl ? 'SSL certificate invalid or missing' : (lead.ssl_days_remaining < 30 ? `SSL expires in ${lead.ssl_days_remaining} days` : '')),
-                          !lead.has_lead_capture ? 'No contact form detected' : '',
-                          !lead.has_newsletter ? 'No newsletter signup found' : '',
-                          !(lead.has_analytics?.google_analytics) ? 'Google Analytics not installed' : '',
-                        ].filter(Boolean).join(' | ') || 'No critical issues found';
-
-                        const seoIssues = [
-                          !lead.seo_title && 'Missing title tag',
-                          !lead.seo_meta_desc && 'Missing meta description',
-                          !lead.seo_h1 && 'Missing H1 tag',
-                          !lead.seo_canonical && 'Missing canonical tag',
-                          !lead.seo_og && 'Missing Open Graph tags',
-                          !lead.seo_mobile && 'Poor mobile optimization',
-                          lead.has_duplicate_meta && 'Duplicate meta tags',
-                          !lead.has_cta && 'Weak CTA placement',
-                          !lead.has_newsletter && 'Missing newsletter signup',
-                          parseFloat(lead.load_time) > 3.0 && `Slow page load (${lead.load_time}s)`,
-                          (lead.broken_links?.length > 0) && `${lead.broken_links.length} broken links`,
-                          (lead.image_percent_missing_alt > 0) && 'Missing alt text',
-                          ...((lead.lighthouse_issues?.performance || []).slice(0, 1).map(i => `Perf: ${i}`)),
-                          ...((lead.lighthouse_issues?.seo || []).slice(0, 1).map(i => `SEO: ${i}`)),
-                        ].filter(Boolean).slice(0, 5).join(' | ') || 'No major SEO issues detected';
-
-                        // Preserve newlines inside quoted fields — RFC 4180 compliant
-                        const escapeCSV = (str) => `"${String(str || '').replace(/"/g, '""')}"`;
-
-                        const af = lead._apollo_fields || {};
-
-                        const csvRow = [
-                          escapeCSV(af['First Name'] || ''),
-                          escapeCSV(af['Last Name'] || ''),
-                          escapeCSV(af['Title'] || ''),
-                          escapeCSV(af['Company Name'] || ''),
-                          escapeCSV(af['Email'] || ''),
-                          escapeCSV(lead.website),
-                          escapeCSV(lead.competitor_data?.website || 'N/A'),
-                          uxScore,
-                          escapeCSV(lead.design),
-                          escapeCSV(lead.cta),
-                          escapeCSV(lead.message),
-                          escapeCSV(lead.trust),
-                          escapeCSV(lead.speed),
-                          escapeCSV(lead.schema_coverage_score || 0),
-                          escapeCSV(lead.schema_visibility_impact || 'Low'),
-                          escapeCSV(lead.first_impression_score || 0),
-                          escapeCSV(lead.first_impression_verdict || 'Unknown'),
-                          escapeCSV(lead.executive_summary || ''),
-                          escapeCSV(lead.business_risk_insight || ''),
-                          escapeCSV(lead.strategic_opportunity_insight || ''),
-                          escapeCSV(lead.executive_ai_recommendation || ''),
-                          escapeCSV(lead.brand_credibility_insight || ''),
-                          escapeCSV(lead.messaging_clarity_level || 'Moderate'),
-                          escapeCSV(lead.communication_effectiveness_insight || ''),
-                          escapeCSV(lead.value_proposition_analysis || ''),
-                          escapeCSV(lead.messaging_strategic_recommendation || ''),
-                          escapeCSV(lead.headline_clarity_score || 0),
-                          escapeCSV(lead.value_prop_strength_score || 0),
-                          escapeCSV(lead.cta_communication_quality_score || 0),
-                          escapeCSV(lead.messaging_confidence_score || 0),
-                          escapeCSV(lead.audience_targeting_clarity_score || 0),
-                          escapeCSV(lead.brand_communication_effectiveness_score || 0),
-                          escapeCSV(lead.cta_strength_level || 'Moderate'),
-                          escapeCSV(lead.cta_urgency_score || 0),
-                          escapeCSV(lead.cta_visibility_rating || 'Moderate'),
-                          escapeCSV(lead.cta_placement_quality || 'Suboptimal'),
-                          escapeCSV(lead.cta_action_clarity_score || 0),
-                          escapeCSV(lead.cta_persuasiveness_score || 0),
-                          escapeCSV(lead.cta_effectiveness_insight || ''),
-                          escapeCSV(lead.cta_ai_optimization_recommendation || ''),
-                          escapeCSV(lead.mobile_ux_rating || 'Average'),
-                          escapeCSV(lead.mobile_conversion_risk || 'Moderate'),
-                          escapeCSV(lead.mobile_ai_insight || ''),
-                          escapeCSV(lead.momentum_score || 0),
-                          escapeCSV(lead.competitive_growth_status || 'Steady'),
-                          escapeCSV(lead.strategic_risk_level || 'Moderate'),
-                          escapeCSV(lead.momentum_growth_direction || 'Neutral'),
-                          escapeCSV(lead.momentum_ai_insight || ''),
-                          escapeCSV((lead.ai_strategic_plan || []).map(s => `${s?.priority || ''}: ${s?.action || ''} (Impact: ${s?.impact || ''})`).join(' | ')),
-                          escapeCSV(`$${lead.revenue_leak_amount || 0}`),
-                          escapeCSV(lead.revenue_leak_severity || 'Low'),
-                          escapeCSV(`$${lead.annual_opportunity_loss || 0}`),
-                          escapeCSV(lead.urgency_severity || '90+ Days'),
-                          escapeCSV(lead.revenue_impact_insight || ''),
-                          escapeCSV(lead.visitors_lost || 0),
-                          escapeCSV(lead.leads_lost || 0),
-                          escapeCSV(lead.missing_opportunities_count || 0),
-                          escapeCSV(`${lead.estimated_conversion_loss_percent || 0}%`),
-                          escapeCSV(lead.conversion_readiness_level || 'Low'),
-                          escapeCSV(lead.cta_optimization_recommendation || ''),
-                          escapeCSV(lead.conversion_improvement_suggestion || ''),
-                          escapeCSV(lead.funnel_optimization_insight || ''),
-                          escapeCSV(lead.mobile_conversion_recommendation || ''),
-                          escapeCSV(lead.lead_gen_improvement_opportunity || ''),
-                          escapeCSV(lead.conversion_intelligence_insight || ''),
-                          escapeCSV(lead.industry_percentile || 0),
-                          escapeCSV(lead.industry_tier || 'Unknown'),
-                          escapeCSV(lead.industry_competitiveness || 'Unknown'),
-                          escapeCSV(lead.lead_quality_score || 0),
-                          escapeCSV(lead.business_maturity_level || 'Unknown'),
-                          escapeCSV(lead.sales_potential || 'Moderate'),
-                          escapeCSV(lead.digital_readiness || 'Moderate'),
-                          escapeCSV(lead.growth_potential || 'Moderate'),
-                          escapeCSV(lead.market_position_intelligence_insight || ''),
-                          escapeCSV(lead.buyer_intent_strength || 'Moderate'),
-                          escapeCSV(lead.transactional_service_intent_score || 0),
-                          escapeCSV(lead.enterprise_sales_orientation_score || 0),
-                          escapeCSV(lead.lead_generation_focus_score || 0),
-                          escapeCSV(lead.conversion_oriented_positioning_score || 0),
-                          escapeCSV(lead.commercial_readiness_maturity || 'Moderate'),
-                          escapeCSV(lead.primary_website_type || 'informational'),
-                          escapeCSV(lead.commercial_insights || ''),
-                          escapeCSV(lead.sales_positioning_maturity_score || 0),
-                          escapeCSV(lead.commercial_readiness_level_score || 0),
-                          escapeCSV(lead.conversion_targeting_insight || ''),
-                          escapeCSV(lead.market_position_ai_strategic_recommendation || ''),
-                          escapeCSV(lead.keyword_visibility_gap_opportunities || ''),
-                          escapeCSV(lead.keyword_visibility_gap_level || 'Low'),
-                          escapeCSV(lead.keyword_visibility_gap_competitor_advantage || ''),
-                          escapeCSV(lead.keyword_visibility_gap_search_impact || 'Low'),
-                          escapeCSV(lead.keyword_visibility_gap_insight || ''),
-                          escapeCSV(lead.trust_decay_level || 'Low'),
-                          escapeCSV(lead.maintenance_confidence || 100),
-                          escapeCSV(lead.outdated_signal_indicators || ''),
-                          escapeCSV(lead.credibility_impact_insight || ''),
-                          escapeCSV(lead.ai_trust_recommendation || ''),
-                          escapeCSV(lead.rebranding_pitch),
-                          escapeCSV(trustWarning),
-                          escapeCSV(seoIssues),
-                          escapeCSV((lead.aeo_probe_response || 'No AI recognition data.').substring(0, 500)),
-                          escapeCSV(lead.battle_data?.overall_winner || 'N/A'),
-                          escapeCSV(lead.battle_data?.ai_verdict || 'N/A'),
-                          escapeCSV(emailBody)
-                        ].join(',');
-
-                        const blob = new Blob(['\uFEFF' + csvHeader + csvRow], { type: 'text/csv;charset=utf-8;' });
-                        const url = window.URL.createObjectURL(blob);
-                        const a = document.createElement('a');
-                        a.href = url;
-                        a.download = `instantly_${(lead.website || '').replace(/^https?:\/\//i, '').replace(/[/.]/g, '_')}.csv`;
-                        document.body.appendChild(a);
-                        a.click();
-                        document.body.removeChild(a);
-                        window.URL.revokeObjectURL(url);
-                      }
-                    }}><Download size={14} /> {isPublic ? 'Download Audit Report' : 'Export to Instantly CSV'}</button>
+                      const filename = `audit_report_${(lead.website || '').replace(/^https?:\/\//i, '').replace(/[/.]/g, '_')}.xlsx`;
+                      exportToExcel([lead], filename, isPublic);
+                    }}><Download size={14} /> {isPublic ? 'Download Audit Report' : 'Export to Excel'}</button>
                   )}
                   {/* <div className="avatar">JD</div> */}
                 </div>
