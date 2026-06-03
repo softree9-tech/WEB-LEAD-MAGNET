@@ -11,9 +11,6 @@ export default function Logo({ size = 142, className = "" }) {
           height: `${size}px`,
           width: 'auto',
           display: 'block',
-          // If the text in the logo is black, this filter turns the black text to white/silver
-          // while preserving the red/orange color of the logo mark.
-          // We can apply it via a CSS class.
         }}
       />
     </div>

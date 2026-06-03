@@ -493,7 +493,8 @@ export default function PublicAnalyze() {
               <aside className="mock-sidebar">
                 <div>
                   <div className="mock-sidebar-brand">
-                    <Logo size={24} />
+                    <div className="mock-brand-title">SOFTREE</div>
+                    <div className="mock-brand-sub">TECHNOLOGY</div>
                   </div>
 
                   <div className="mock-audit-meta">

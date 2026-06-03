@@ -79,7 +79,6 @@
   filter: invert(1) hue-rotate(180deg) brightness(1.6) contrast(1.1);
 }
 
-
 .portal-logo-title {
   font-size: 1.5rem;
   font-weight: 800;
@@ -895,6 +894,7 @@
   padding: 1px;
   background: linear-gradient(135deg, rgba(255, 255, 255, 0.05), transparent 40%, rgba(255, 122, 0, 0.03));
   -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+  mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
   -webkit-mask-composite: xor;
   mask-composite: exclude;
   pointer-events: none;
