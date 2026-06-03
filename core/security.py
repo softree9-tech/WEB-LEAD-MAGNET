@@ -2,6 +2,7 @@ import socket
 from urllib.parse import urlparse
 import ipaddress
 import requests
+from functools import lru_cache
 import re
 
 # ─── Parked / Dead Domain Detection Patterns ────────────────────────────────
@@ -33,6 +34,7 @@ _PARKED_PATTERNS = [
 _PARKED_REGEX = re.compile("|".join(_PARKED_PATTERNS), re.IGNORECASE)
 
 
+@lru_cache(maxsize=1024)
 def is_safe_url(url: str) -> bool:
     """
     Validates that a URL is safe to request.
