@@ -113,10 +113,10 @@ export default function PublicAnalyze() {
             <Link to="/" className="portal-logo-container">
               <Logo />
             </Link>
-            <Link to="/analyzer" className="portal-nav-badge">
+            <div className="portal-nav-badge" style={{ cursor: 'default' }}>
               <ShieldCheck size={14} style={{ color: 'var(--accent-orange)' }} />
               Lead Engine Portal
-            </Link>
+            </div>
           </div>
 
           <div className="portal-main-content" style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', minHeight: '80vh', textAlign: 'center', padding: '2rem' }}>
@@ -242,10 +242,10 @@ export default function PublicAnalyze() {
           <Link to="/" className="portal-logo-container">
             <Logo />
           </Link>
-          <Link to="/analyzer" className="portal-nav-badge">
+          <div className="portal-nav-badge" style={{ cursor: 'default' }}>
             <ShieldCheck size={14} style={{ color: 'var(--accent-orange)' }} />
             Lead Engine Portal
-          </Link>
+          </div>
         </div>
 
         <div className="portal-main-content" style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', minHeight: '80vh', textAlign: 'center', padding: '2rem' }}>
@@ -349,10 +349,10 @@ export default function PublicAnalyze() {
           <Link to="/" className="portal-logo-container">
             <Logo />
           </Link>
-          <Link to="/analyzer" className="portal-nav-badge">
+          <div className="portal-nav-badge" style={{ cursor: 'default' }}>
             <ShieldCheck size={14} style={{ color: 'var(--accent-orange)' }} />
             Lead Engine Portal
-          </Link>
+          </div>
         </div>
 
         <div className="portal-main-content" style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', minHeight: '80vh', textAlign: 'center', padding: '2rem' }}>
@@ -411,10 +411,10 @@ export default function PublicAnalyze() {
         <Link to="/" className="portal-logo-container">
           <Logo />
         </Link>
-        <Link to="/analyzer" className="portal-nav-badge">
+        <div className="portal-nav-badge" style={{ cursor: 'default' }}>
           <ShieldCheck size={14} style={{ marginRight: '6px' }} />
           Lead Engine Portal
-        </Link>
+        </div>
       </nav>
 
       <div className="portal-main-content">
