@@ -1005,32 +1005,34 @@ export default function LeadResults({ leads, isPublic = false }) {
         // If the website failed pre-analysis validation, show a clean error card
         // instead of rendering the full (empty/hallucinated) analysis dashboard.
         if (lead.validation_failed || (lead.error_detail && lead.design === 'Unknown' && lead.cta === 'Unknown' && lead.message === 'Unknown' && lead.trust === 'Unknown')) {
+          const isWarning = !!lead.technical_warning || (lead.error_detail && !lead.error_detail.includes("Invalid domain") && !lead.error_detail.includes("DNS resolution"));
+          
           return (
             <div key={index} className="glass-panel animate-fade-in" style={{
               padding: '2rem 2.5rem',
               display: 'flex',
               flexDirection: 'column',
               gap: '1.25rem',
-              borderLeft: '3px solid rgba(251, 191, 36, 0.5)',
-              background: 'rgba(251, 191, 36, 0.03)',
+              borderLeft: isWarning ? '3px solid rgba(251, 191, 36, 0.6)' : '3px solid rgba(239, 68, 68, 0.6)',
+              background: isWarning ? 'rgba(251, 191, 36, 0.03)' : 'rgba(239, 68, 68, 0.02)',
             }}>
               <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
                 <div style={{
                   width: '48px',
                   height: '48px',
                   borderRadius: '50%',
-                  background: 'rgba(251, 191, 36, 0.08)',
-                  border: '1px solid rgba(251, 191, 36, 0.2)',
+                  background: isWarning ? 'rgba(251, 191, 36, 0.08)' : 'rgba(239, 68, 68, 0.08)',
+                  border: isWarning ? '1px solid rgba(251, 191, 36, 0.2)' : '1px solid rgba(239, 68, 68, 0.2)',
                   display: 'flex',
                   alignItems: 'center',
                   justifyContent: 'center',
                   flexShrink: 0
                 }}>
-                  <AlertTriangle size={22} color="#fbbf24" />
+                  <AlertTriangle size={22} color={isWarning ? "#fbbf24" : "#ef4444"} />
                 </div>
                 <div style={{ flex: 1 }}>
-                  <h3 style={{ margin: 0, fontSize: '1.1rem', fontWeight: 700, color: '#fbbf24' }}>
-                    Website Validation Failed
+                  <h3 style={{ margin: 0, fontSize: '1.1rem', fontWeight: 700, color: isWarning ? '#fbbf24' : '#ef4444' }}>
+                    {isWarning ? "Website Accessible With Technical Issues" : "Website Validation Failed"}
                   </h3>
                   <p style={{ margin: '4px 0 0', fontSize: '0.85rem', color: 'var(--text-secondary)' }}>
                     {lead.website || 'Unknown URL'}
@@ -1049,13 +1051,13 @@ export default function LeadResults({ leads, isPublic = false }) {
               }}>
                 <X size={16} color="#ef4444" style={{ flexShrink: 0, marginTop: '2px' }} />
                 <p style={{ margin: 0, fontSize: '0.875rem', color: '#94a3b8', lineHeight: 1.6 }}>
-                  {lead.error_detail || 'Website is currently unreachable. AI analysis was not generated to ensure report accuracy.'}
+                  {lead.technical_warning || lead.error_detail || 'Website is currently experiencing technical issues. AI analysis could not be fully completed.'}
                 </p>
               </div>
 
               <div style={{ fontSize: '0.75rem', color: '#475569', display: 'flex', alignItems: 'center', gap: '6px' }}>
                 <Check size={12} color="#475569" />
-                No AI report was generated — preventing inaccurate or hallucinated results.
+                {isWarning ? "AI report generated using offline public signals." : "No AI report was generated — preventing inaccurate or hallucinated results."}
               </div>
             </div>
           );
@@ -1220,6 +1222,28 @@ Best,
                   {/* <div className="avatar">JD</div> */}
                 </div>
               </div>
+
+              {lead.technical_warning && (
+                <div className="glass-panel animate-fade-in" style={{
+                  padding: '1rem 1.5rem',
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: '1rem',
+                  borderLeft: '3px solid rgba(251, 191, 36, 0.6)',
+                  background: 'rgba(251, 191, 36, 0.04)',
+                  marginBottom: '1.5rem'
+                }}>
+                  <AlertTriangle size={20} color="#fbbf24" style={{ flexShrink: 0 }} />
+                  <div>
+                    <h4 style={{ margin: 0, fontSize: '0.95rem', fontWeight: 700, color: '#fbbf24' }}>
+                      Website Accessible With Technical Issues
+                    </h4>
+                    <p style={{ margin: '2px 0 0', fontSize: '0.825rem', color: 'var(--text-secondary)' }}>
+                      {lead.technical_warning}
+                    </p>
+                  </div>
+                </div>
+              )}
 
               <div className="quadrant-grid">
 

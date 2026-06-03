@@ -19,7 +19,12 @@ export const validateWebsite = async (website) => {
       website: website,
       recaptcha_token: 'admin_bypass'
     }, { timeout: 25000 });
-    return { valid: true, url: response.data.url };
+    return {
+      valid: true,
+      url: response.data.url,
+      warning: response.data.warning,
+      technical_warning: response.data.technical_warning
+    };
   } catch (error) {
     const detail = error.response?.data?.detail || 'Website validation failed.';
     return { valid: false, error: detail };

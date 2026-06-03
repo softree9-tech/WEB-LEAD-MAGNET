@@ -85,58 +85,60 @@ def validate_website(url: str) -> dict:
     """
     Comprehensive website validation that runs BEFORE any AI analysis.
     Returns a dict with:
-      - valid (bool): whether the website passed all checks
-      - error (str|None): professional error message if validation failed
+      - valid (bool): whether the website passed DNS resolution
+      - error (str|None): professional error message if validation failed (hard invalidation)
+      - warning (str|None): warning type if technical issues are present
+      - technical_warning (str|None): specific technical warnings (SSL, timeout, 403)
       - url (str): normalized URL
     
     Checks performed (in order):
-      1. Domain format validation
-      2. DNS resolution
-      3. HTTP accessibility (with timeout)
-      4. HTTP response success (status code)
-      5. Parked / dead / non-hosted domain detection
+      1. Domain format validation (Hard invalidation)
+      2. DNS resolution (Hard invalidation)
+      3. HTTP accessibility (Soft warning)
+      4. HTTP response success (Soft warning)
+      5. Parked / dead / non-hosted domain detection (Hard invalidation)
     """
     # ── Step 0: Normalize ───────────────────────────────────────────────────
     url = normalize_url(url)
     if not url:
-        return {"valid": False, "error": "No website URL provided.", "url": url}
+        return {"valid": False, "error": "Invalid domain — unable to locate website.", "url": url}
 
     # ── Step 1: Domain format validation ────────────────────────────────────
     try:
         parsed = urlparse(url)
         hostname = parsed.hostname
         if not hostname:
-            return {"valid": False, "error": "Invalid website URL format.", "url": url}
+            return {"valid": False, "error": "Invalid domain — unable to locate website.", "url": url}
 
         # Reject obviously invalid domain patterns
         if "." not in hostname:
-            return {"valid": False, "error": "Invalid domain format — a valid domain must include a TLD (e.g., .com, .org).", "url": url}
+            return {"valid": False, "error": "Invalid domain — unable to locate website.", "url": url}
 
         # Reject localhost / internal
         if hostname.lower() in ("localhost", "127.0.0.1", "0.0.0.0", "::1"):
-            return {"valid": False, "error": "Internal or localhost addresses are not allowed.", "url": url}
+            return {"valid": False, "error": "Invalid domain — unable to locate website.", "url": url}
 
     except Exception:
-        return {"valid": False, "error": "Invalid website URL format.", "url": url}
+        return {"valid": False, "error": "Invalid domain — unable to locate website.", "url": url}
 
     # ── Step 2: DNS resolution ──────────────────────────────────────────────
     try:
         ip_addr = socket.gethostbyname(hostname)
         ip = ipaddress.ip_address(ip_addr)
         if ip.is_private or ip.is_loopback or ip.is_reserved or ip.is_multicast or ip.is_link_local:
-            return {"valid": False, "error": "Invalid or unsafe website URL.", "url": url}
-    except socket.gaierror:
-        return {"valid": False, "error": f"DNS resolution failed — no active hosting detected for \"{hostname}\".", "url": url}
+            return {"valid": False, "error": "Invalid domain — unable to locate website.", "url": url}
     except Exception:
-        return {"valid": False, "error": f"Domain appears inactive or unavailable.", "url": url}
+        # DNS resolution completely fails, or hostname cannot be resolved
+        return {"valid": False, "error": "Invalid domain — unable to locate website.", "url": url}
 
-    # ── Step 3 & 4: HTTP accessibility + status code ────────────────────────
+    # ── Step 3 & 4: HTTP accessibility + status code (Non-blocking Warnings) ─
     try:
         headers = {
             "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36",
             "Accept": "text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8",
         }
-        response = requests.get(url, timeout=15, allow_redirects=True, headers=headers, stream=True)
+        # Bypassing SSL errors in validation call as well to allow expired cert sites to proceed
+        response = requests.get(url, timeout=10, allow_redirects=True, headers=headers, stream=True, verify=False)
 
         # Read a limited amount of body for parked-domain detection (first 50KB)
         body_chunk = ""
@@ -148,36 +150,55 @@ def validate_website(url: str) -> dict:
         finally:
             response.close()
 
-        # Check HTTP status
-        if response.status_code >= 500:
-            return {"valid": False, "error": f"Website returned a server error (HTTP {response.status_code}). The site may be down or misconfigured.", "url": url}
-
-        if response.status_code == 404:
-            return {"valid": False, "error": "Website returned a 404 — page not found.", "url": url}
-
-        if response.status_code >= 400:
-            return {"valid": False, "error": f"Website returned an error (HTTP {response.status_code}). Unable to access the site.", "url": url}
-
-        # ── Step 5: Parked / dead / non-hosted domain detection ─────────────
+        # Check for parked / dead / non-hosted domain detection (Hard invalidation if parked/empty)
         if body_chunk:
-            # Very short body with no meaningful content
             stripped = body_chunk.strip()
             if len(stripped) < 200 and not re.search(r"<(div|section|main|article|p|h[1-6])", stripped, re.IGNORECASE):
-                return {"valid": False, "error": "No active website content detected — domain appears inactive or not hosted.", "url": url}
+                return {"valid": False, "error": "Invalid domain — unable to locate website.", "url": url}
 
             if _PARKED_REGEX.search(body_chunk):
-                return {"valid": False, "error": "No active hosting detected for this domain — it appears to be parked, expired, or a default page.", "url": url}
+                return {"valid": False, "error": "Invalid domain — unable to locate website.", "url": url}
 
-    except requests.exceptions.Timeout:
-        return {"valid": False, "error": "Website timed out — unable to establish a connection within 15 seconds.", "url": url}
-    except requests.exceptions.TooManyRedirects:
-        return {"valid": False, "error": "Website has too many redirects and could not be reached.", "url": url}
+        # Check HTTP status for warnings
+        if response.status_code >= 400:
+            status_text = "page not found" if response.status_code == 404 else "access error"
+            return {
+                "valid": True,
+                "warning": "Website Accessible With Technical Issues",
+                "technical_warning": f"Website returned a {response.status_code} ({status_text}). Unable to access some public pages.",
+                "url": url
+            }
+
     except requests.exceptions.SSLError:
-        return {"valid": False, "error": "SSL certificate error — the website's security certificate is invalid or expired.", "url": url}
-    except requests.exceptions.ConnectionError:
-        return {"valid": False, "error": "Unable to establish a connection to the provided website.", "url": url}
-    except requests.exceptions.RequestException:
-        return {"valid": False, "error": "Website is currently unreachable.", "url": url}
+        return {
+            "valid": True,
+            "warning": "Website Accessible With Technical Issues",
+            "technical_warning": "SSL certificate error — the website's security certificate is invalid or expired.",
+            "url": url
+        }
+    except requests.exceptions.Timeout:
+        return {
+            "valid": True,
+            "warning": "Website Accessible With Technical Issues",
+            "technical_warning": "Website timed out — connection limit reached or slow response.",
+            "url": url
+        }
+    except requests.exceptions.TooManyRedirects:
+        return {
+            "valid": True,
+            "warning": "Website Accessible With Technical Issues",
+            "technical_warning": "Website has redirect loops or configuration issues.",
+            "url": url
+        }
+    except Exception as e:
+        # Any other connection/request issue (e.g. connection refused)
+        return {
+            "valid": True,
+            "warning": "Website Accessible With Technical Issues",
+            "technical_warning": f"Website is unreachable due to technical issues: {str(e)}",
+            "url": url
+        }
 
     # ── All checks passed ───────────────────────────────────────────────────
     return {"valid": True, "error": None, "url": url}
+

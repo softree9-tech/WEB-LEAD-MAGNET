@@ -110,9 +110,14 @@ def validate_website_endpoint(lead: LeadInput):
     """Pre-flight validation: checks DNS, HTTP accessibility, parked domains.
     Returns {valid, error, url} so the frontend can gate analysis."""
     validation = validate_website(lead.website)
-    if not validation["valid"]:
+    if not validation.get("valid", False):
         raise HTTPException(status_code=422, detail=validation["error"])
-    return {"valid": True, "url": validation["url"]}
+    return {
+        "valid": True,
+        "url": validation["url"],
+        "warning": validation.get("warning"),
+        "technical_warning": validation.get("technical_warning")
+    }
 
 
 @app.post("/api/process/single")
@@ -127,7 +132,7 @@ def process_single_lead(lead: LeadInput):
 
     # ─── Strict Website Validation ──────────────────────────────────────────
     validation = validate_website(lead.website)
-    if not validation["valid"]:
+    if not validation.get("valid", False):
         print(f"🚫 Website validation failed for {lead.website}: {validation['error']}")
         raise HTTPException(status_code=422, detail=validation["error"])
 
@@ -136,7 +141,8 @@ def process_single_lead(lead: LeadInput):
         "raw_email": lead.email,
         "raw_company": lead.company or "Unknown",
         "raw_role": lead.role or "Unknown",
-        "raw_website": lead.website
+        "raw_website": lead.website,
+        "technical_warning": validation.get("technical_warning")
     }
 
     # Build contact fields from form input (mirrors batch CSV apollo_fields structure)
@@ -165,6 +171,10 @@ def process_single_lead(lead: LeadInput):
         result.setdefault("message", "Unknown")
         result.setdefault("trust", "Unknown")
         result.setdefault("speed", "Unknown")
+        
+        if validation.get("technical_warning"):
+            result["technical_warning"] = validation.get("technical_warning")
+            
         # Attach original contact fields for export enrichment (consistent with batch)
         result["_apollo_fields"] = apollo_fields
         return result
@@ -204,13 +214,14 @@ async def _process_one_lead(initial_state: dict, label: str, apollo_fields: dict
             return _build_error_fallback(initial_state.get("raw_website", label), str(e), apollo_fields=apollo_fields)
 
 
-def _build_error_fallback(website: str, error_detail: str = "", apollo_fields: dict = None) -> dict:
+def _build_error_fallback(website: str, error_detail: str = "", apollo_fields: dict = None, technical_warning: str = None) -> dict:
     """Build a complete fallback result dict when a lead fails processing.
     Ensures every field the frontend expects is present with safe defaults.
     If apollo_fields is provided, it is included for CSV export enrichment."""
     fallback = {
         "website": website,
         "error_detail": error_detail,
+        "technical_warning": technical_warning,
         "final_score": 0,
         "design": "Unknown",
         "cta": "Unknown",
@@ -374,7 +385,7 @@ async def process_batch_leads(payload: LeadList):
 
         # ─── Strict Website Validation ──────────────────────────────────
         validation = validate_website(lead.website)
-        if not validation["valid"]:
+        if not validation.get("valid", False):
             print(f"🚫 Batch: skipping {lead.website} — {validation['error']}")
             continue
 
@@ -383,7 +394,8 @@ async def process_batch_leads(payload: LeadList):
             "raw_email": lead.email,
             "raw_company": lead.company or "Unknown",
             "raw_role": lead.role or "Unknown",
-            "raw_website": lead.website
+            "raw_website": lead.website,
+            "technical_warning": validation.get("technical_warning")
         }
         tasks.append(_process_one_lead(initial_state, lead.email or lead.website))
 
@@ -400,10 +412,10 @@ async def process_battle(payload: BattleInput):
 
     # ─── Strict Website Validation for both URLs ───────────────────────────
     primary_val = validate_website(payload.primary_website)
-    if not primary_val["valid"]:
+    if not primary_val.get("valid", False):
         raise HTTPException(status_code=422, detail=f"Primary website: {primary_val['error']}")
     competitor_val = validate_website(payload.competitor_website)
-    if not competitor_val["valid"]:
+    if not competitor_val.get("valid", False):
         raise HTTPException(status_code=422, detail=f"Competitor website: {competitor_val['error']}")
 
     primary_state = {
@@ -411,7 +423,8 @@ async def process_battle(payload: BattleInput):
         "raw_email": "",
         "raw_company": "Primary Company",
         "raw_role": "",
-        "raw_website": payload.primary_website
+        "raw_website": payload.primary_website,
+        "technical_warning": primary_val.get("technical_warning")
     }
     
     competitor_state = {
@@ -419,7 +432,8 @@ async def process_battle(payload: BattleInput):
         "raw_email": "",
         "raw_company": "Competitor Company",
         "raw_role": "",
-        "raw_website": payload.competitor_website
+        "raw_website": payload.competitor_website,
+        "technical_warning": competitor_val.get("technical_warning")
     }
 
     try:
@@ -432,6 +446,11 @@ async def process_battle(payload: BattleInput):
         
         primary_data = results[0].get("output_row", {})
         competitor_data = results[1].get("output_row", {})
+        
+        if primary_val.get("technical_warning"):
+            primary_data["technical_warning"] = primary_val.get("technical_warning")
+        if competitor_val.get("technical_warning"):
+            competitor_data["technical_warning"] = competitor_val.get("technical_warning")
         
         # Generate the Battle Card Comparison using AI
         llm = ChatOpenAI(
@@ -543,7 +562,7 @@ async def process_csv(file: UploadFile = File(...)):
 
             # ─── Strict Website Validation ──────────────────────────────
             validation = validate_website(website)
-            if not validation["valid"]:
+            if not validation.get("valid", False):
                 print(f"🚫 CSV row {i+1}: {website} — {validation['error']}")
                 # Collect contact fields even for failed validations
                 fail_apollo = {
@@ -575,7 +594,8 @@ async def process_csv(file: UploadFile = File(...)):
                 "raw_email": apollo_fields["Email"],
                 "raw_company": apollo_fields["Company Name"],
                 "raw_role": apollo_fields["Title"],
-                "raw_website": website
+                "raw_website": website,
+                "technical_warning": validation.get("technical_warning")
             }
             tasks.append(_process_one_lead(initial_state, website, apollo_fields=apollo_fields))
 

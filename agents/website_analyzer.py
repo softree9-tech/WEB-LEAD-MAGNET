@@ -3,6 +3,8 @@ import base64
 import time
 import re
 import requests
+import urllib3
+urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
 import concurrent.futures
 from urllib.parse import urljoin
 from bs4 import BeautifulSoup
@@ -413,11 +415,11 @@ def check_single_link(link: str) -> str:
             "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36",
             "Accept": "text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,*/*;q=0.8"
         }
-        res = requests.head(link, timeout=10, allow_redirects=True, headers=headers)
+        res = requests.head(link, timeout=10, allow_redirects=True, headers=headers, verify=False)
         
         # If server blocks HEAD requests, fallback to a lightweight streamed GET
         if res.status_code in [403, 405, 401, 301, 302, 999]:
-            res = requests.get(link, timeout=10, allow_redirects=True, headers=headers, stream=True)
+            res = requests.get(link, timeout=10, allow_redirects=True, headers=headers, stream=True, verify=False)
             res.raw.close()
             
         # Only explicitly flag pure dead pages to ensure 0 False Positives
@@ -717,7 +719,8 @@ def website_analyzer_agent(state: AgentState) -> AgentState:
         try:
             with sync_playwright() as p:
                 browser = p.chromium.launch(headless=True)
-                page = browser.new_page()
+                context = browser.new_context(ignore_https_errors=True)
+                page = context.new_page()
                 page.set_extra_http_headers({"User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64)"})
                 
                 response = page.goto(url, wait_until="domcontentloaded", timeout=20000)
@@ -860,7 +863,7 @@ def website_analyzer_agent(state: AgentState) -> AgentState:
             error_msg = str(e)
             # Fallback: attempt plain HTTP scrape to get at least HTML meta data
             try:
-                fallback_res = requests.get(url, timeout=10, headers={"User-Agent": "Mozilla/5.0"})
+                fallback_res = requests.get(url, timeout=10, headers={"User-Agent": "Mozilla/5.0"}, verify=False)
                 html = fallback_res.text
                 headers = dict(fallback_res.headers)
                 tech_stack = extract_tech_stack(html, headers)
@@ -916,7 +919,7 @@ def website_analyzer_agent(state: AgentState) -> AgentState:
         mobile_performance = pagespeed_data["mobile_performance"]
         if load_time == 0.0:
             try:
-                fast_res = requests.get(url, timeout=10)
+                fast_res = requests.get(url, timeout=10, verify=False)
                 load_time = round(fast_res.elapsed.total_seconds(), 2)
             except Exception:
                 load_time = 2.5
