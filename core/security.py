@@ -1,8 +1,9 @@
 import socket
-from urllib.parse import urlparse
+from urllib.parse import urlparse, urljoin
 import ipaddress
 import requests
 import re
+from functools import lru_cache
 
 # ─── Parked / Dead Domain Detection Patterns ────────────────────────────────
 _PARKED_PATTERNS = [
@@ -33,10 +34,12 @@ _PARKED_PATTERNS = [
 _PARKED_REGEX = re.compile("|".join(_PARKED_PATTERNS), re.IGNORECASE)
 
 
+@lru_cache(maxsize=1024)
 def is_safe_url(url: str) -> bool:
     """
     Validates that a URL is safe to request.
     Prevents SSRF by checking for private, loopback, and reserved IP ranges.
+    Uses socket.getaddrinfo to resolve all associated IPv4 and IPv6 addresses.
     """
     if not url:
         return False
@@ -54,17 +57,21 @@ def is_safe_url(url: str) -> bool:
             return False
 
         # Basic check for common local hostnames
-        if hostname.lower() in ('localhost', '127.0.0.1', '0.0.0.0', '::1'):
+        if hostname.lower() in ('localhost', '0.0.0.0', '::1'):
             return False
 
-        # Resolve hostname to IP
-        # This provides protection against standard SSRF.
-        # DNS rebinding protection would require pinning the IP for the subsequent request.
-        ip_addr = socket.gethostbyname(hostname)
-        ip = ipaddress.ip_address(ip_addr)
+        # Resolve hostname to all associated IP addresses (IPv4 and IPv6)
+        # This prevents SSRF bypasses via dual-stack resolution.
+        addr_info = socket.getaddrinfo(hostname, None)
+        for family, _, _, _, sockaddr in addr_info:
+            ip_str = sockaddr[0]
+            # Handle IPv6 literals with scope IDs if present (rare in public URLs)
+            if '%' in ip_str:
+                ip_str = ip_str.split('%')[0]
 
-        if ip.is_private or ip.is_loopback or ip.is_reserved or ip.is_multicast or ip.is_link_local:
-            return False
+            ip = ipaddress.ip_address(ip_str)
+            if ip.is_private or ip.is_loopback or ip.is_reserved or ip.is_multicast or ip.is_link_local:
+                return False
 
         return True
     except Exception:
@@ -137,8 +144,22 @@ def validate_website(url: str) -> dict:
             "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36",
             "Accept": "text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8",
         }
-        # Bypassing SSL errors in validation call as well to allow expired cert sites to proceed
-        response = requests.get(url, timeout=10, allow_redirects=True, headers=headers, stream=True, verify=False)
+
+        # Manually handle redirects to prevent SSRF bypass via internal redirect
+        current_url = url
+        max_redirects = 5
+        response = None
+
+        for _ in range(max_redirects):
+            response = requests.get(current_url, timeout=10, allow_redirects=False, headers=headers, stream=True, verify=False)
+            if 300 <= response.status_code < 400 and 'Location' in response.headers:
+                next_url = urljoin(current_url, response.headers['Location'])
+                if not is_safe_url(next_url):
+                    return {"valid": False, "error": "Invalid domain — redirected to unsafe location.", "url": next_url}
+                current_url = next_url
+                response.close()
+                continue
+            break
 
         # Read a limited amount of body for parked-domain detection (first 50KB)
         body_chunk = ""
