@@ -67,9 +67,15 @@
 
 .portal-logo-container {
   display: flex;
-  flex-direction: column;
+  flex-direction: row;
+  align-items: center;
   text-decoration: none;
 }
+
+.softree-logo-img {
+  filter: invert(1) hue-rotate(180deg) brightness(1.6) contrast(1.1);
+}
+
 
 .portal-logo-title {
   font-size: 1.5rem;

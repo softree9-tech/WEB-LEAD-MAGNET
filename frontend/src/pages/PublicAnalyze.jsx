@@ -3,6 +3,7 @@ import { Link } from 'react-router-dom';
 import LeadCaptureForm from '../components/LeadCaptureForm';
 import LeadResults from '../components/LeadResults';
 import { processSingleLead, validateWebsite } from '../api/api';
+import Logo from '../components/Logo';
 import { 
   Sparkles, 
   ArrowLeft, 
@@ -110,8 +111,7 @@ export default function PublicAnalyze() {
         <div className="public-portal-theme">
           <div className="portal-navbar">
             <Link to="/" className="portal-logo-container">
-              <span className="portal-logo-title">Softree</span>
-              <span className="portal-logo-subtitle">Technology</span>
+              <Logo />
             </Link>
             <Link to="/analyzer" className="portal-nav-badge">
               <ShieldCheck size={14} style={{ color: 'var(--accent-orange)' }} />
@@ -190,8 +190,7 @@ export default function PublicAnalyze() {
       <div className="public-portal-theme" style={{ display: 'block', minHeight: '100vh', backgroundAttachment: 'fixed' }}>
         <div className="portal-navbar">
           <Link to="/" className="portal-logo-container">
-            <span className="portal-logo-title">Softree</span>
-            <span className="portal-logo-subtitle">Technology</span>
+            <Logo />
           </Link>
           <button 
             onClick={handleReset} 
@@ -241,8 +240,7 @@ export default function PublicAnalyze() {
       <div className="public-portal-theme">
         <div className="portal-navbar">
           <Link to="/" className="portal-logo-container">
-            <span className="portal-logo-title">Softree</span>
-            <span className="portal-logo-subtitle">Technology</span>
+            <Logo />
           </Link>
           <Link to="/analyzer" className="portal-nav-badge">
             <ShieldCheck size={14} style={{ color: 'var(--accent-orange)' }} />
@@ -349,8 +347,7 @@ export default function PublicAnalyze() {
       <div className="public-portal-theme">
         <div className="portal-navbar">
           <Link to="/" className="portal-logo-container">
-            <span className="portal-logo-title">Softree</span>
-            <span className="portal-logo-subtitle">Technology</span>
+            <Logo />
           </Link>
           <Link to="/analyzer" className="portal-nav-badge">
             <ShieldCheck size={14} style={{ color: 'var(--accent-orange)' }} />
@@ -412,8 +409,7 @@ export default function PublicAnalyze() {
       {/* NAVBAR */}
       <nav className="portal-navbar">
         <Link to="/" className="portal-logo-container">
-          <span className="portal-logo-title">Softree</span>
-          <span className="portal-logo-subtitle">Technology</span>
+          <Logo />
         </Link>
         <Link to="/analyzer" className="portal-nav-badge">
           <ShieldCheck size={14} style={{ marginRight: '6px' }} />
@@ -497,8 +493,7 @@ export default function PublicAnalyze() {
               <aside className="mock-sidebar">
                 <div>
                   <div className="mock-sidebar-brand">
-                    <div className="mock-brand-title">Softree</div>
-                    <div className="mock-brand-sub">Technology</div>
+                    <Logo size={24} />
                   </div>
 
                   <div className="mock-audit-meta">

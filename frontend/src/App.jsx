@@ -4,6 +4,7 @@ import SingleLeadForm from './components/SingleLeadForm';
 import CSVUpload from './components/CSVUpload';
 import LeadResults from './components/LeadResults';
 import PublicAnalyze from './pages/PublicAnalyze';
+import Logo from './components/Logo';
 import './App.css';
 
 function Dashboard() {
@@ -26,6 +27,9 @@ function Dashboard() {
   return (
     <div className="app-container">
       <header className="header animate-fade-in">
+        <div style={{ display: 'flex', justifyContent: 'center', marginBottom: '1.5rem' }}>
+          <Logo size={54} showText={false} />
+        </div>
         <h1>Softree Lead Engine</h1>
         <p>AI-Powered Multi-Agent Lead Enrichment & Scoring</p>
       </header>
