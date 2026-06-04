@@ -30,7 +30,7 @@ from core.security import is_safe_url, validate_website
 
 # ─── Parallel Processing Config ─────────────────────────────────────────────
 # Max leads to process simultaneously. Keep low to avoid RAM/rate-limit issues.
-MAX_CONCURRENT_LEADS = 3
+MAX_CONCURRENT_LEADS = 2
 _semaphore = asyncio.Semaphore(MAX_CONCURRENT_LEADS)
 
 # Load environment variables (e.g., GEMINI_API_KEY)

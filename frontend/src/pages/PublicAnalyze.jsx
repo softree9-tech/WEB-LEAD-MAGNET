@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import LeadCaptureForm from '../components/LeadCaptureForm';
-import LeadResults from '../components/LeadResults';
+import LeadResults, { exportToExcel } from '../components/LeadResults';
 import { processSingleLead, validateWebsite } from '../api/api';
 import Logo from '../components/Logo';
 import { 
@@ -26,9 +26,11 @@ import {
   MousePointerClick, 
   Layout, 
   Check, 
-  Search 
+  Search,
+  RefreshCw
 } from 'lucide-react';
 import '../PublicPortal.css';
+import '../PremiumReport.css';
 
 export default function PublicAnalyze() {
   const [loading, setLoading] = useState(false);
@@ -106,6 +108,24 @@ export default function PublicAnalyze() {
   };
 
   if (result) {
+    // Computed KPIs for the executive hero
+    const seoScore = parseInt(result.seo_score || 0);
+    const aeoScore = parseInt(result.aeo_score || 0);
+    const consistencyVal = result.design === 'Modern' ? 90 : 60;
+    const flowVal = result.message === 'Clear' ? 80 : 50;
+    const mobileVal = result.seo_mobile ? 80 : 30;
+    const engagementVal = result.cta === 'Strong' ? 90 : 40;
+    const uxScore = Math.round((consistencyVal + flowVal + mobileVal + engagementVal) / 4);
+    const trustSignals = [
+      result.has_analytics?.google_analytics, result.has_analytics?.tag_manager,
+      result.has_analytics?.facebook_pixel, result.has_analytics?.linkedin_tag,
+      result.has_lead_capture, result.has_cta, result.has_newsletter,
+      result.seo_ssl, result.ssl_enforced, result.seo_title,
+      result.seo_meta_desc, result.seo_canonical, result.seo_og
+    ];
+    const trustScore = Math.round((trustSignals.filter(Boolean).length / 13) * 100);
+    const cleanDomain = result.website.replace(/^https?:\/\/(www\.)?/, '');
+
     if (!started) {
       return (
         <div className="public-portal-theme">
@@ -115,70 +135,63 @@ export default function PublicAnalyze() {
             </Link>
             <div className="portal-nav-badge" style={{ cursor: 'default' }}>
               <ShieldCheck size={14} style={{ color: 'var(--accent-orange)' }} />
-              Lead Engine Portal
+              AI Intelligence Report
             </div>
           </div>
 
           <div className="portal-main-content" style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', minHeight: '80vh', textAlign: 'center', padding: '2rem' }}>
-            <div className="form-card-glass animate-fade-in" style={{
-              padding: '3.5rem 2.5rem',
-              maxWidth: '550px',
-              width: '100%',
-              display: 'flex',
-              flexDirection: 'column',
-              alignItems: 'center',
-              gap: '2rem'
-            }}>
-              <div style={{
-                width: '70px',
-                height: '70px',
-                borderRadius: '50%',
-                background: 'rgba(255, 122, 0, 0.08)',
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-                color: '#FF7A00',
-                border: '1px solid rgba(255, 122, 0, 0.25)',
-                boxShadow: '0 0 20px rgba(255, 122, 0, 0.1)'
-              }}>
+            <div className="form-card-glass analysis-gate-card animate-fade-in">
+              <div className="gate-icon-ring">
                 <ShieldCheck size={36} />
               </div>
 
               <div>
                 <h2 style={{ fontSize: '1.75rem', fontWeight: 800, marginBottom: '0.5rem', color: '#fff' }}>
-                  Analysis Complete!
+                  Intelligence Report Ready
                 </h2>
                 <p style={{ color: 'var(--text-gray)', fontSize: '0.95rem', lineHeight: 1.6 }}>
-                  Our AI agents successfully scanned <strong style={{ color: '#fff' }}>{result.website.replace(/^https?:\/\/(www\.)?/, '')}</strong>.<br />
-                  We identified critical conversion opportunities, SEO visibility gaps, and trust decay metrics.
+                  Our AI agents completed a deep analysis of <strong style={{ color: '#FF7A00' }}>{cleanDomain}</strong>.<br />
+                  Your executive intelligence report contains strategic insights across {7 + (result.battle_data ? 1 : 0)} categories.
                 </p>
               </div>
 
-              <div style={{ width: '100%', background: 'rgba(255, 255, 255, 0.02)', border: '1px solid rgba(255,255,255,0.05)', borderRadius: '12px', padding: '1.25rem', display: 'flex', flexDirection: 'column', gap: '0.75rem', textAlign: 'left' }}>
-                <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', fontSize: '0.85rem' }}>
-                  <span style={{ color: '#FF7A00' }}>✓</span>
-                  <span style={{ color: 'var(--text-gray)' }}>Domain verified & parsed</span>
+              <div className="gate-checklist">
+                {[
+                  'Domain verified & full-page structure parsed',
+                  'Executive presence & brand credibility scored',
+                  'Conversion intelligence & CTA analysis compiled',
+                  'SEO performance & AI visibility audited',
+                  'Strategic action plan generated'
+                ].map((item, i) => (
+                  <div className="gate-check-item" key={i}>
+                    <div className="gate-check-icon"><Check size={12} /></div>
+                    <span>{item}</span>
+                  </div>
+                ))}
+              </div>
+
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: '0.75rem', width: '100%' }}>
+                <div style={{ background: 'rgba(255,122,0,0.05)', border: '1px solid rgba(255,122,0,0.12)', borderRadius: '12px', padding: '0.75rem', textAlign: 'center' }}>
+                  <div style={{ fontSize: '1.25rem', fontWeight: 800, color: '#FF7A00' }}>{seoScore}</div>
+                  <div style={{ fontSize: '0.65rem', color: '#64748b', fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.05em' }}>SEO Score</div>
                 </div>
-                <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', fontSize: '0.85rem' }}>
-                  <span style={{ color: '#FF7A00' }}>✓</span>
-                  <span style={{ color: 'var(--text-gray)' }}>AI Conversion Strategy compiled</span>
+                <div style={{ background: 'rgba(255,122,0,0.05)', border: '1px solid rgba(255,122,0,0.12)', borderRadius: '12px', padding: '0.75rem', textAlign: 'center' }}>
+                  <div style={{ fontSize: '1.25rem', fontWeight: 800, color: '#FF7A00' }}>{uxScore}</div>
+                  <div style={{ fontSize: '0.65rem', color: '#64748b', fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.05em' }}>UX Score</div>
                 </div>
-                <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', fontSize: '0.85rem' }}>
-                  <span style={{ color: '#FF7A00' }}>✓</span>
-                  <span style={{ color: 'var(--text-gray)' }}>Search Visibility report prepared</span>
+                <div style={{ background: 'rgba(255,122,0,0.05)', border: '1px solid rgba(255,122,0,0.12)', borderRadius: '12px', padding: '0.75rem', textAlign: 'center' }}>
+                  <div style={{ fontSize: '1.25rem', fontWeight: 800, color: '#FF7A00' }}>{trustScore}</div>
+                  <div style={{ fontSize: '0.65rem', color: '#64748b', fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.05em' }}>Trust Score</div>
                 </div>
               </div>
 
               <button 
                 onClick={() => setStarted(true)} 
                 className="btn-premium-cta" 
-                style={{ 
-                  width: '100%',
-                  fontSize: '1.1rem'
-                }}
+                style={{ width: '100%', fontSize: '1.1rem' }}
               >
                 <Sparkles size={18} className="btn-premium-cta-icon" />
-                Get Started
+                View Executive Intelligence Report
               </button>
             </div>
           </div>
@@ -192,43 +205,131 @@ export default function PublicAnalyze() {
           <Link to="/" className="portal-logo-container">
             <Logo />
           </Link>
-          <button 
-            onClick={handleReset} 
-            className="portal-nav-badge"
-            style={{
-              display: 'flex',
-              alignItems: 'center',
-              gap: '6px',
-              cursor: 'pointer',
-              background: 'transparent'
-            }}
-          >
-            <ArrowLeft size={14} />
-            Analyze Another URL
-          </button>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
+            <button 
+              onClick={handleReset} 
+              className="portal-nav-badge"
+              style={{
+                display: 'flex',
+                alignItems: 'center',
+                gap: '6px',
+                cursor: 'pointer',
+                background: 'transparent'
+              }}
+            >
+              <ArrowLeft size={14} />
+              New Analysis
+            </button>
+          </div>
         </div>
 
-        <div className="portal-container" style={{ padding: '4rem 2rem', maxWidth: '1400px' }}>
-          <header className="animate-fade-in" style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '2.5rem', flexWrap: 'wrap', gap: '1rem' }}>
-            <div>
-              <div className="orange-badge" style={{ marginBottom: '12px' }}>
-                <ShieldCheck size={14} />
-                Analysis Completed
+        <div className="portal-container" style={{ padding: '0 2rem 4rem', maxWidth: '1400px' }}>
+          
+          {/* ── EXECUTIVE HERO ──────────────────────────── */}
+          <div className="executive-hero premium-animate premium-animate-d1">
+            <div className="executive-hero-inner">
+              <div className="exec-badge-row">
+                <div className="exec-status-badge">
+                  <ShieldCheck size={13} />
+                  AI Analysis Complete
+                </div>
+                <span className="exec-date-badge">
+                  {new Date().toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' })}
+                </span>
               </div>
-              <h1 style={{ 
-                fontSize: '2.25rem', 
-                background: 'linear-gradient(135deg, #fff, #94a3b8)', 
-                WebkitBackgroundClip: 'text', 
-                WebkitTextFillColor: 'transparent',
-                fontWeight: 800 
-              }}>
-                Audit for {result.website.replace(/^https?:\/\/(www\.)?/, '')}
-              </h1>
-            </div>
-          </header>
 
-          <div className="animate-fade-in" style={{ animationDelay: '0.1s' }}>
+              <h1 className="exec-title">
+                Executive Intelligence Report<br />
+                <span className="domain-highlight">{cleanDomain}</span>
+              </h1>
+
+              <p className="exec-subtitle">
+                {result.executive_summary || "Comprehensive AI-powered analysis covering conversion optimization, brand presence, technical performance, and strategic growth opportunities."}
+              </p>
+            </div>
+          </div>
+
+          {/* ── KPI STRIP ──────────────────────────────── */}
+          <div className="exec-kpi-strip premium-animate premium-animate-d2">
+            <div className="exec-kpi-card">
+              <span className="kpi-label">SEO Performance</span>
+              <div className="kpi-value-row">
+                <span className="kpi-value">{seoScore}</span>
+                <span className="kpi-unit">/100</span>
+              </div>
+              <div className="kpi-bar"><div className="kpi-bar-fill" style={{ width: `${seoScore}%` }} /></div>
+              <span className="kpi-sub">{seoScore > 80 ? 'Excellent' : seoScore > 50 ? 'Average' : 'Needs Work'}</span>
+            </div>
+
+            <div className="exec-kpi-card">
+              <span className="kpi-label">UX & Conversion</span>
+              <div className="kpi-value-row">
+                <span className="kpi-value">{uxScore}</span>
+                <span className="kpi-unit">/100</span>
+              </div>
+              <div className="kpi-bar"><div className="kpi-bar-fill" style={{ width: `${uxScore}%` }} /></div>
+              <span className="kpi-sub">{uxScore > 80 ? 'Strong' : uxScore > 60 ? 'Moderate' : 'Weak'}</span>
+            </div>
+
+            <div className="exec-kpi-card">
+              <span className="kpi-label">Trust & Credibility</span>
+              <div className="kpi-value-row">
+                <span className="kpi-value">{trustScore}</span>
+                <span className="kpi-unit">/100</span>
+              </div>
+              <div className="kpi-bar"><div className="kpi-bar-fill" style={{ width: `${trustScore}%` }} /></div>
+              <span className="kpi-sub">{trustScore > 75 ? 'Low Risk' : trustScore > 40 ? 'Moderate Risk' : 'High Risk'}</span>
+            </div>
+
+            <div className="exec-kpi-card">
+              <span className="kpi-label">AI Visibility</span>
+              <div className="kpi-value-row">
+                <span className="kpi-value">{aeoScore}</span>
+                <span className="kpi-unit">/100</span>
+              </div>
+              <div className="kpi-bar"><div className="kpi-bar-fill" style={{ width: `${aeoScore}%` }} /></div>
+              <span className="kpi-sub">{aeoScore > 60 ? 'Visible' : aeoScore > 30 ? 'Low Visibility' : 'Invisible'}</span>
+            </div>
+          </div>
+
+          {/* ── ACTIONS BAR ────────────────────────────── */}
+          <div className="exec-actions-bar premium-animate premium-animate-d3">
+            <div className="exec-actions-left">
+              <div className="exec-status-badge" style={{ background: 'rgba(16, 185, 129, 0.08)', borderColor: 'rgba(16, 185, 129, 0.3)', color: '#10b981' }}>
+                <Cpu size={12} />
+                {result.first_impression_verdict || 'Average'} Presence
+              </div>
+              <span style={{ fontSize: '0.75rem', color: '#475569' }}>
+                Presence Score: <strong style={{ color: '#fff' }}>{result.first_impression_score || 0}/10</strong>
+              </span>
+            </div>
+            <div className="exec-actions-right">
+              <button className="action-btn" onClick={() => window.location.reload()}>
+                <RefreshCw size={14} /> Recalculate
+              </button>
+              <button className="action-btn primary" onClick={() => {
+                const filename = `executive_report_${cleanDomain.replace(/[/.]/g, '_')}.xlsx`;
+                exportToExcel([result], filename, true);
+              }}>
+                <Download size={14} /> Download Report
+              </button>
+            </div>
+          </div>
+
+          {/* ── RESULTS ────────────────────────────────── */}
+          <div className="premium-animate premium-animate-d4">
             <LeadResults leads={[result]} isPublic={true} />
+          </div>
+
+          {/* ── REPORT FOOTER ──────────────────────────── */}
+          <div className="report-footer premium-animate premium-animate-d5">
+            <div className="report-footer-brand">
+              <Sparkles size={14} color="#FF7A00" />
+              Powered by Softree AI Intelligence Engine
+            </div>
+            <div style={{ fontSize: '0.72rem', color: '#475569' }}>
+              Report generated {new Date().toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })} • Confidential
+            </div>
           </div>
         </div>
       </div>

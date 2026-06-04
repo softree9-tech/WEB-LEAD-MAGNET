@@ -32,7 +32,7 @@ const sanitizeText = (text) => {
     .trim();
 };
 
-const exportToExcel = async (leads, filename, isPublic) => {
+export const exportToExcel = async (leads, filename, isPublic) => {
   try {
     const ExcelJS = await import('exceljs');
     const Workbook = ExcelJS.Workbook || ExcelJS.default.Workbook;
