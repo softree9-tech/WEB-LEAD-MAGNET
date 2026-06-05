@@ -90,7 +90,8 @@ function ScoreRing({ score, size = 140, strokeWidth = 8, label }) {
   return (
     <div className="relative" style={{ width: size, height: size }}>
       <svg width={size} height={size} viewBox={`0 0 ${size} ${size}`}>
-        <circle cx={size / 2} cy={size / 2} r={r} fill="none" stroke="rgba(255,107,0,0.06)" strokeWidth={strokeWidth} />
+        <circle cx={size / 2} cy={size / 2} r={r - strokeWidth / 2} fill="var(--color-inner-ring-bg, #E7EBF0)" />
+        <circle cx={size / 2} cy={size / 2} r={r} fill="none" stroke="var(--color-ring-track, rgba(10,10,26,0.18))" strokeWidth={strokeWidth} />
         <motion.circle
           cx={size / 2} cy={size / 2} r={r} fill="none" stroke="url(#geoScoreGrad)" strokeWidth={strokeWidth}
           strokeDasharray={circ} strokeLinecap="round"
@@ -102,13 +103,13 @@ function ScoreRing({ score, size = 140, strokeWidth = 8, label }) {
         <defs>
           <linearGradient id="geoScoreGrad" x1="0%" y1="0%" x2="100%" y2="100%">
             <stop offset="0%" stopColor="#FF6B00" />
-            <stop offset="100%" stopColor="#FFB15C" />
+            <stop offset="100%" stopColor="#FF8A1E" />
           </linearGradient>
         </defs>
       </svg>
       <div className="absolute inset-0 flex flex-col items-center justify-center">
         <motion.span
-          className="text-4xl font-extrabold text-white"
+          className="text-4xl font-extrabold text-text-primary"
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           transition={{ delay: 0.5 }}
@@ -130,14 +131,14 @@ function PlatformCard({ name, score, color, delay = 0 }) {
   return (
     <motion.div
       initial="hidden" whileInView="visible" viewport={{ once: true }} custom={delay} variants={fadeUp}
-      whileHover={{ y: -3, borderColor: 'rgba(255,107,0,0.2)' }}
+      whileHover={{ y: -3, borderColor: 'rgba(255,88,18,0.2)' }}
       className="geo-glass p-6 transition-all duration-300"
     >
       <div className="flex items-center justify-between mb-4">
-        <h4 className="text-white text-sm font-bold">{name}</h4>
+        <h4 className="text-text-primary text-sm font-bold">{name}</h4>
         <span className="text-xs font-bold" style={{ color }}>{score}/100</span>
       </div>
-      <div className="w-full h-2 rounded-full bg-white/[0.04] overflow-hidden mb-3">
+      <div className="w-full h-2 rounded-full bg-[var(--color-ring-track,rgba(10,10,26,0.18))] overflow-hidden mb-3">
         <motion.div
           className="h-full rounded-full"
           style={{ background: `linear-gradient(90deg, ${color}, ${color}88)` }}
@@ -159,7 +160,7 @@ function PlatformCard({ name, score, color, delay = 0 }) {
 export default function GeoResultsDashboard({ data }) {
   const s = computeGeoScores(data);
 
-  const impactColors = { High: '#FF6B00', Medium: '#FFB15C', Low: '#64748B' };
+  const impactColors = { High: '#FF6B00', Medium: '#FF8A1E', Low: '#64748B' };
   const difficultyColors = { Easy: '#10B981', Medium: '#F59E0B', Hard: '#EF4444' };
 
   return (
@@ -167,9 +168,9 @@ export default function GeoResultsDashboard({ data }) {
 
       {/* ── 1. GEO SCORE HERO ──────────────────────────────────── */}
       <motion.section initial="hidden" whileInView="visible" viewport={{ once: true }} className="relative">
-        <div className="geo-glass p-10 md:p-14 relative overflow-hidden" style={{ borderColor: 'rgba(255,107,0,0.12)' }}>
+        <div className="geo-glass p-10 md:p-14 relative overflow-hidden" style={{ borderColor: 'rgba(255,88,18,0.12)' }}>
           {/* Ambient glow */}
-          <div className="geo-ambient-glow w-80 h-80 bg-orange-500/8 -top-20 -right-20 absolute" />
+          <div className="geo-ambient-glow w-80 h-80 bg-orange-500/4 -top-20 -right-20 absolute" />
 
           <div className="flex flex-col lg:flex-row items-center gap-10 relative z-10">
             {/* Score ring */}
@@ -181,10 +182,10 @@ export default function GeoResultsDashboard({ data }) {
             <div className="flex-1 text-center lg:text-left">
               <motion.div variants={fadeUp} custom={1} className="flex items-center gap-2 justify-center lg:justify-start mb-3">
                 <div className="px-3 py-1 rounded-full border border-orange-500/20 bg-orange-500/5">
-                  <span className="text-orange-400 text-xs font-semibold uppercase tracking-widest">GEO Intelligence Report</span>
+                  <span className="text-orange-500 text-xs font-semibold uppercase tracking-widest">GEO Intelligence Report</span>
                 </div>
               </motion.div>
-              <motion.h2 variants={fadeUp} custom={2} className="text-2xl md:text-3xl font-extrabold text-white mb-2">
+              <motion.h2 variants={fadeUp} custom={2} className="text-2xl md:text-3xl font-extrabold text-text-primary mb-2">
                 AI Visibility Score: <span className="geo-gradient-text">{s.aiVisibility}/100</span>
               </motion.h2>
               <motion.p variants={fadeUp} custom={3} className="text-text-secondary text-sm leading-relaxed mb-6 max-w-lg">
@@ -203,8 +204,8 @@ export default function GeoResultsDashboard({ data }) {
                   { label: 'Trust', value: s.trust },
                   { label: 'UX', value: s.ux },
                 ].map(m => (
-                  <div key={m.label} className="rounded-xl bg-white/[0.02] border border-white/[0.04] p-3 text-center">
-                    <p className="text-white text-lg font-bold">{m.value}</p>
+                  <div key={m.label} className="rounded-xl bg-[var(--color-analytics-boxes,#E5EAF1)] border border-border-glass p-3 text-center">
+                    <p className="text-text-primary text-lg font-bold">{m.value}</p>
                     <p className="text-text-muted text-[10px] font-semibold uppercase tracking-wider">{m.label}</p>
                   </div>
                 ))}
@@ -231,8 +232,8 @@ export default function GeoResultsDashboard({ data }) {
       {/* ── 2. AI PLATFORM VISIBILITY ──────────────────────────── */}
       <section>
         <motion.div initial="hidden" whileInView="visible" viewport={{ once: true }} className="mb-8">
-          <motion.p variants={fadeUp} custom={0} className="text-orange-400 text-xs font-semibold uppercase tracking-widest mb-2">Platform Analysis</motion.p>
-          <motion.h3 variants={fadeUp} custom={1} className="text-2xl font-extrabold text-white">AI Platform Visibility</motion.h3>
+          <motion.p variants={fadeUp} custom={0} className="text-orange-500 text-xs font-semibold uppercase tracking-widest mb-2">Platform Analysis</motion.p>
+          <motion.h3 variants={fadeUp} custom={1} className="text-2xl font-extrabold text-text-primary">AI Platform Visibility</motion.h3>
         </motion.div>
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5">
           <PlatformCard name="ChatGPT" score={s.chatgpt} color="#10B981" delay={0} />
@@ -246,19 +247,19 @@ export default function GeoResultsDashboard({ data }) {
       {s.entities.length > 0 && (
         <section>
           <motion.div initial="hidden" whileInView="visible" viewport={{ once: true }} className="mb-8">
-            <motion.p variants={fadeUp} custom={0} className="text-orange-400 text-xs font-semibold uppercase tracking-widest mb-2">Entity Analysis</motion.p>
-            <motion.h3 variants={fadeUp} custom={1} className="text-2xl font-extrabold text-white">Entity Recognition</motion.h3>
+            <motion.p variants={fadeUp} custom={0} className="text-orange-500 text-xs font-semibold uppercase tracking-widest mb-2">Entity Analysis</motion.p>
+            <motion.h3 variants={fadeUp} custom={1} className="text-2xl font-extrabold text-text-primary">Entity Recognition</motion.h3>
           </motion.div>
           <motion.div initial="hidden" whileInView="visible" viewport={{ once: true }}
-            className="geo-glass p-8" style={{ borderColor: 'rgba(255,107,0,0.08)' }}>
+            className="geo-glass p-8" style={{ borderColor: 'rgba(10, 10, 26, 0.08)' }}>
             <div className="flex flex-wrap gap-3">
               {s.entities.map((ent, i) => (
                 <motion.div key={i} variants={fadeUp} custom={i}
-                  whileHover={{ borderColor: 'rgba(255,107,0,0.3)', y: -2 }}
-                  className="flex items-center gap-2 px-4 py-2 rounded-xl bg-white/[0.02] border border-white/[0.06] transition-all cursor-default">
-                  <span className="text-[10px] font-bold uppercase tracking-wider text-orange-400/70">{ent.type}</span>
-                  <span className="w-px h-3 bg-white/10" />
-                  <span className="text-white text-xs font-medium">{ent.value}</span>
+                  whileHover={{ borderColor: 'rgba(255,88,18,0.22)', y: -2 }}
+                  className="flex items-center gap-2 px-4 py-2 rounded-xl bg-[var(--color-muted-boxes,#ECEFF3)] border border-border-glass transition-all cursor-default">
+                  <span className="text-[10px] font-bold uppercase tracking-wider text-orange-500/70">{ent.type}</span>
+                  <span className="w-px h-3 bg-black/10" />
+                  <span className="text-text-primary text-xs font-medium">{ent.value}</span>
                 </motion.div>
               ))}
             </div>
@@ -269,17 +270,17 @@ export default function GeoResultsDashboard({ data }) {
       {/* ── 4. GEO RECOMMENDATIONS ─────────────────────────────── */}
       <section>
         <motion.div initial="hidden" whileInView="visible" viewport={{ once: true }} className="mb-8">
-          <motion.p variants={fadeUp} custom={0} className="text-orange-400 text-xs font-semibold uppercase tracking-widest mb-2">Action Plan</motion.p>
-          <motion.h3 variants={fadeUp} custom={1} className="text-2xl font-extrabold text-white">GEO Recommendations</motion.h3>
+          <motion.p variants={fadeUp} custom={0} className="text-orange-500 text-xs font-semibold uppercase tracking-widest mb-2">Action Plan</motion.p>
+          <motion.h3 variants={fadeUp} custom={1} className="text-2xl font-extrabold text-text-primary">GEO Recommendations</motion.h3>
         </motion.div>
         <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
           {s.recommendations.map((rec, i) => (
             <motion.div key={i} initial="hidden" whileInView="visible" viewport={{ once: true }} custom={i}
-              variants={fadeUp} whileHover={{ y: -3, borderColor: 'rgba(255,107,0,0.2)' }}
+              variants={fadeUp} whileHover={{ y: -3, borderColor: 'rgba(255,88,18,0.2)' }}
               className="geo-glass p-6 transition-all duration-300 group">
               <div className="flex items-start justify-between mb-3">
-                <div className="w-9 h-9 rounded-xl bg-orange-500/8 border border-orange-500/15 flex items-center justify-center group-hover:bg-orange-500/12 transition-colors flex-shrink-0">
-                  <Lightbulb size={16} className="text-orange-400" />
+                <div className="w-9 h-9 rounded-xl bg-orange-500/5 border border-orange-500/15 flex items-center justify-center group-hover:bg-orange-500/10 transition-colors flex-shrink-0">
+                  <Lightbulb size={16} className="text-orange-500" />
                 </div>
                 <div className="flex items-center gap-2">
                   <span className="px-2 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-wider"
@@ -292,7 +293,7 @@ export default function GeoResultsDashboard({ data }) {
                   </span>
                 </div>
               </div>
-              <h4 className="text-white text-sm font-bold mb-1">{rec.title}</h4>
+              <h4 className="text-text-primary text-sm font-bold mb-1">{rec.title}</h4>
               <p className="text-text-muted text-xs leading-relaxed">{rec.desc}</p>
             </motion.div>
           ))}
@@ -302,8 +303,8 @@ export default function GeoResultsDashboard({ data }) {
       {/* ── 5. AI CITATION READINESS ───────────────────────────── */}
       <section>
         <motion.div initial="hidden" whileInView="visible" viewport={{ once: true }} className="mb-8">
-          <motion.p variants={fadeUp} custom={0} className="text-orange-400 text-xs font-semibold uppercase tracking-widest mb-2">Readiness</motion.p>
-          <motion.h3 variants={fadeUp} custom={1} className="text-2xl font-extrabold text-white">AI Citation Readiness</motion.h3>
+          <motion.p variants={fadeUp} custom={0} className="text-orange-500 text-xs font-semibold uppercase tracking-widest mb-2">Readiness</motion.p>
+          <motion.h3 variants={fadeUp} custom={1} className="text-2xl font-extrabold text-text-primary">AI Citation Readiness</motion.h3>
         </motion.div>
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5">
           {[
@@ -315,10 +316,10 @@ export default function GeoResultsDashboard({ data }) {
             <motion.div key={item.label} initial="hidden" whileInView="visible" viewport={{ once: true }} custom={i}
               variants={fadeUp} whileHover={{ y: -3 }}
               className="geo-glass p-6 transition-all duration-300 text-center">
-              <item.icon size={22} className="text-orange-400 mx-auto mb-3" />
-              <p className="text-2xl font-extrabold text-white mb-1">{item.score}%</p>
+              <item.icon size={22} className="text-orange-500 mx-auto mb-3" />
+              <p className="text-2xl font-extrabold text-text-primary mb-1">{item.score}%</p>
               <p className="text-text-muted text-xs font-medium uppercase tracking-wider mb-3">{item.label}</p>
-              <div className="w-full h-1.5 rounded-full bg-white/[0.04] overflow-hidden">
+              <div className="w-full h-1.5 rounded-full bg-[var(--color-ring-track,rgba(10,10,26,0.18))] overflow-hidden">
                 <motion.div
                   className="h-full rounded-full bg-gradient-to-r from-orange-500 to-orange-300"
                   initial={{ width: 0 }}
@@ -334,9 +335,9 @@ export default function GeoResultsDashboard({ data }) {
 
       {/* ── Report Footer ──────────────────────────────────────── */}
       <motion.div initial="hidden" whileInView="visible" viewport={{ once: true }} variants={fadeUp}
-        className="text-center py-8 border-t border-white/[0.04]">
+        className="text-center py-8 border-t border-border-glass">
         <div className="flex items-center justify-center gap-2 mb-2">
-          <Sparkles size={14} className="text-orange-400" />
+          <Sparkles size={14} className="text-orange-500" />
           <span className="text-text-secondary text-sm font-medium">Powered by Softree AI Intelligence Engine</span>
         </div>
         <p className="text-text-muted text-xs">

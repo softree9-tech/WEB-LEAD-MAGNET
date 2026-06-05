@@ -16,12 +16,12 @@ export default function GeoDashboardPreview() {
       className="geo-float relative"
     >
       {/* Ambient glow */}
-      <div className="geo-ambient-glow w-72 h-72 bg-orange-500/10 -top-20 -right-20 absolute" />
+      <div className="geo-ambient-glow w-72 h-72 bg-orange-500/6 -top-20 -right-20 absolute" />
 
       {/* Main dashboard card */}
-      <div className="geo-glass p-6 relative overflow-hidden" style={{ borderColor: 'rgba(255,107,0,0.12)' }}>
+      <div className="geo-glass p-6 relative overflow-hidden" style={{ borderColor: 'rgba(255,88,18,0.10)' }}>
         {/* Scan line */}
-        <div className="absolute left-0 w-full h-px bg-gradient-to-r from-transparent via-orange-500/40 to-transparent"
+        <div className="absolute left-0 w-full h-px bg-gradient-to-r from-transparent via-orange-500/30 to-transparent"
           style={{ animation: 'geo-scan-line 3s linear infinite' }} />
 
         {/* Header */}
@@ -31,8 +31,8 @@ export default function GeoDashboardPreview() {
             <p className="text-text-secondary text-xs">Real-time GEO Intelligence</p>
           </div>
           <div className="flex items-center gap-1.5 px-3 py-1 rounded-full border border-green-500/30 bg-green-500/5">
-            <span className="w-1.5 h-1.5 rounded-full bg-green-400 animate-pulse" />
-            <span className="text-green-400 text-xs font-medium">Live</span>
+            <span className="w-1.5 h-1.5 rounded-full bg-green-500 animate-pulse" />
+            <span className="text-green-600 text-xs font-medium">Live</span>
           </div>
         </div>
 
@@ -41,7 +41,7 @@ export default function GeoDashboardPreview() {
           {/* Main Score Ring */}
           <div className="relative flex-shrink-0">
             <svg width="120" height="120" viewBox="0 0 120 120">
-              <circle cx="60" cy="60" r="45" fill="none" stroke="rgba(255,107,0,0.08)" strokeWidth="8" />
+              <circle cx="60" cy="60" r="45" fill="none" stroke="rgba(255,88,18,0.08)" strokeWidth="8" />
               <circle cx="60" cy="60" r="45" fill="none" stroke="url(#scoreGrad)" strokeWidth="8"
                 strokeDasharray="283" strokeDashoffset={scoreRingOffset}
                 strokeLinecap="round" transform="rotate(-90 60 60)"
@@ -49,16 +49,16 @@ export default function GeoDashboardPreview() {
               <defs>
                 <linearGradient id="scoreGrad" x1="0%" y1="0%" x2="100%" y2="100%">
                   <stop offset="0%" stopColor="#FF6B00" />
-                  <stop offset="100%" stopColor="#FFB15C" />
+                  <stop offset="100%" stopColor="#FF8A1E" />
                 </linearGradient>
               </defs>
             </svg>
             <div className="absolute inset-0 flex flex-col items-center justify-center">
-              <span className="text-3xl font-extrabold text-white">78</span>
+              <span className="text-3xl font-extrabold text-text-primary">78</span>
               <span className="text-text-muted text-[10px] font-semibold uppercase tracking-wider">AI Score</span>
             </div>
             {/* Pulse ring */}
-            <div className="absolute inset-0 rounded-full border border-orange-500/20" style={{ animation: 'geo-pulse-ring 3s ease-in-out infinite' }} />
+            <div className="absolute inset-0 rounded-full border border-orange-500/15" style={{ animation: 'geo-pulse-ring 3s ease-in-out infinite' }} />
           </div>
 
           {/* Individual AI Scores */}
@@ -71,9 +71,9 @@ export default function GeoDashboardPreview() {
               <div key={ai.name}>
                 <div className="flex justify-between mb-1">
                   <span className="text-text-secondary text-xs font-medium">{ai.name}</span>
-                  <span className="text-white text-xs font-bold">{ai.score}%</span>
+                  <span className="text-text-primary text-xs font-bold">{ai.score}%</span>
                 </div>
-                <div className="w-full h-1.5 rounded-full bg-white/5 overflow-hidden">
+                <div className="w-full h-1.5 rounded-full bg-black/[0.04] overflow-hidden">
                   <div className="h-full rounded-full" style={{
                     width: `${ai.score}%`,
                     background: `linear-gradient(90deg, ${ai.color}, ${ai.color}88)`,
@@ -92,10 +92,10 @@ export default function GeoDashboardPreview() {
             { label: 'Schema Score', value: '67%', trend: '+8%' },
             { label: 'Citations', value: '23', trend: '+5' },
           ].map((m) => (
-            <div key={m.label} className="rounded-xl bg-white/[0.02] border border-white/[0.04] p-3 text-center">
-              <p className="text-white text-base font-bold">{m.value}</p>
+            <div key={m.label} className="rounded-xl bg-geo-bg-deep border border-border-glass p-3 text-center">
+              <p className="text-text-primary text-base font-bold">{m.value}</p>
               <p className="text-text-muted text-[10px] font-medium uppercase tracking-wider mt-0.5">{m.label}</p>
-              <p className="text-green-400 text-[10px] font-semibold mt-1">{m.trend}</p>
+              <p className="text-green-600 text-[10px] font-semibold mt-1">{m.trend}</p>
             </div>
           ))}
         </div>
@@ -105,9 +105,9 @@ export default function GeoDashboardPreview() {
           animate={{ y: [0, -6, 0] }}
           transition={{ duration: 4, repeat: Infinity, ease: 'easeInOut' }}
           className="absolute -right-4 top-16 geo-glass px-3 py-2 rounded-xl shadow-lg"
-          style={{ borderColor: 'rgba(255,107,0,0.15)', fontSize: '11px', maxWidth: '160px' }}
+          style={{ borderColor: 'rgba(255,88,18,0.12)', fontSize: '11px', maxWidth: '160px' }}
         >
-          <p className="text-orange-400 font-bold text-[10px] uppercase tracking-wider mb-0.5">Recommendation</p>
+          <p className="text-orange-500 font-bold text-[10px] uppercase tracking-wider mb-0.5">Recommendation</p>
           <p className="text-text-secondary text-[10px] leading-tight">Add FAQ schema to improve AI citations by 40%</p>
         </motion.div>
 
@@ -116,13 +116,13 @@ export default function GeoDashboardPreview() {
           animate={{ y: [0, -8, 0] }}
           transition={{ duration: 5, repeat: Infinity, ease: 'easeInOut', delay: 1 }}
           className="absolute -left-4 bottom-20 geo-glass px-3 py-2 rounded-xl shadow-lg"
-          style={{ borderColor: 'rgba(255,107,0,0.1)' }}
+          style={{ borderColor: 'rgba(255,88,18,0.08)' }}
         >
           <p className="text-text-muted text-[10px] font-semibold mb-1">Weekly Trend</p>
           <svg width="80" height="28" viewBox="0 0 80 28">
             <defs>
               <linearGradient id="tinyChart" x1="0" y1="0" x2="0" y2="1">
-                <stop offset="0%" stopColor="#FF6B00" stopOpacity="0.3" />
+                <stop offset="0%" stopColor="#FF6B00" stopOpacity="0.2" />
                 <stop offset="100%" stopColor="#FF6B00" stopOpacity="0" />
               </linearGradient>
             </defs>

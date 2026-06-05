@@ -31,7 +31,7 @@ export default function GeoNavbar() {
           <img
             src="/softree_logo.png"
             alt="Softree Technology"
-            style={{ height: '115px', width: 'auto', display: 'block', filter: 'invert(1) hue-rotate(180deg)' }}
+            style={{ height: '115px', width: 'auto', display: 'block' }}
           />
         </a>
 
@@ -39,7 +39,7 @@ export default function GeoNavbar() {
         <div className="geo-navbar-links hidden md:flex items-center gap-8">
           {links.map(l => (
             <a key={l.href} href={l.href} onClick={(e) => scrollTo(e, l.href)}
-              className="text-text-secondary text-sm font-medium hover:text-white transition-colors duration-200 no-underline">
+              className="text-text-secondary text-sm font-medium hover:text-text-primary transition-colors duration-200 no-underline">
               {l.label}
             </a>
           ))}

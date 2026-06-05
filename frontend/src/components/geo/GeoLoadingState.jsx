@@ -33,7 +33,7 @@ export default function GeoLoadingState() {
       className="w-full max-w-xl mx-auto py-20 px-6"
     >
       <div className="geo-glass p-10 relative overflow-hidden text-center"
-        style={{ borderColor: 'rgba(255,107,0,0.15)' }}>
+        style={{ borderColor: 'rgba(255,88,18,0.12)' }}>
 
         {/* Scanning beam */}
         <div className="absolute top-0 left-0 w-full h-[3px] overflow-hidden">
@@ -54,7 +54,7 @@ export default function GeoLoadingState() {
           />
           {/* Spinning ring */}
           <svg className="absolute inset-0 w-full h-full" viewBox="0 0 112 112">
-            <circle cx="56" cy="56" r="50" fill="none" stroke="rgba(255,107,0,0.08)" strokeWidth="4" />
+            <circle cx="56" cy="56" r="50" fill="none" stroke="rgba(255,88,18,0.08)" strokeWidth="4" />
             <motion.circle
               cx="56" cy="56" r="50" fill="none" stroke="url(#loadGrad)" strokeWidth="4"
               strokeDasharray="314" strokeDashoffset="220" strokeLinecap="round"
@@ -65,7 +65,7 @@ export default function GeoLoadingState() {
             <defs>
               <linearGradient id="loadGrad" x1="0%" y1="0%" x2="100%" y2="100%">
                 <stop offset="0%" stopColor="#FF6B00" />
-                <stop offset="100%" stopColor="#FFB15C" />
+                <stop offset="100%" stopColor="#FF8A1E" />
               </linearGradient>
             </defs>
           </svg>
@@ -79,19 +79,19 @@ export default function GeoLoadingState() {
                 exit={{ opacity: 0, scale: 0.8 }}
                 transition={{ duration: 0.3 }}
               >
-                <CurrentIcon size={32} className="text-orange-400" />
+                <CurrentIcon size={32} className="text-orange-500" />
               </motion.div>
             </AnimatePresence>
           </div>
         </div>
 
         {/* Title */}
-        <h3 className="text-xl font-bold text-white mb-2">
+        <h3 className="text-xl font-bold text-text-primary mb-2">
           Generating Your GEO Intelligence Report
         </h3>
 
         {/* Progress bar */}
-        <div className="w-full h-1.5 rounded-full bg-white/[0.04] overflow-hidden mb-5 mt-6">
+        <div className="w-full h-1.5 rounded-full bg-black/[0.04] overflow-hidden mb-5 mt-6">
           <motion.div
             className="h-full rounded-full bg-gradient-to-r from-orange-500 to-orange-300"
             animate={{ width: `${progress}%` }}
@@ -114,7 +114,7 @@ export default function GeoLoadingState() {
         </AnimatePresence>
 
         {/* Bottom indicators */}
-        <div className="flex items-center justify-center gap-6 mt-8 pt-6 border-t border-white/[0.04]">
+        <div className="flex items-center justify-center gap-6 mt-8 pt-6 border-t border-border-glass">
           {[
             { icon: Brain, label: 'Entity Analysis' },
             { icon: Search, label: 'Schema Audit' },

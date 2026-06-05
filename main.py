@@ -46,7 +46,7 @@ app = FastAPI(
 # Set FRONTEND_URL env var on Render to your Vercel domain
 _frontend_url = os.getenv("FRONTEND_URL", "")
 _allowed_origins = [
-    "http://localhost:5176",   # Vite dev server
+    "http://localhost:5173",   # Vite dev server
     "http://localhost:4173",   # Vite preview
     "https://web-lead-magnet-seven.vercel.app",   # Vercel production
 ]

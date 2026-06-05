@@ -416,7 +416,7 @@ function calculateMobileResponsivenessScore(lead) {
     else lowRiskSections++;
 
     const insight = (sec.insight || '').toLowerCase();
-    
+
     // 1 & 2: clipped components, cropped buttons/CTAs
     if (/clip|cut.?off|truncat/.test(insight)) {
       if (/cta|button|link|icon/.test(insight)) {
@@ -550,7 +550,7 @@ function calculateMobileResponsivenessScore(lead) {
   if (issuesDetected.inconsistentSpacing) consistencyScore -= 5;
   if (issuesDetected.brokenAlignment) consistencyScore -= 6;
   if (issuesDetected.excessiveSpacing) consistencyScore -= 4;
-  
+
   // Mixed risk levels indicates inconsistency
   const riskLevels = new Set(sections.filter(s => s != null).map(sec => (sec?.risk || 'Low').toLowerCase()));
   if (riskLevels.size >= 3) consistencyScore -= 5;
@@ -569,9 +569,9 @@ function calculateMobileResponsivenessScore(lead) {
   };
 
   const failedCategoriesCount = Object.values(categoryScores).filter(val => val < 13).length;
-  
+
   let rawTotal = breakpointScore + layoutScore + renderingScore + overflowScore + consistencyScore;
-  
+
   // Apply additional failed category penalty for realistic scoring
   rawTotal -= failedCategoriesCount * 5;
 
@@ -646,7 +646,7 @@ function calculateMobileResponsivenessScore(lead) {
   // Ensure 100% is extremely difficult to achieve unless flawless
   const hasAnyIssues = detectedIssues.length > 0;
   const isPerfect = !hasAnyIssues && (uxRating === 'excellent') && (conversionRisk === 'low') && (mobilePerf === 0 || mobilePerf >= 95) && loadTime <= 1.5;
-  
+
   if (!isPerfect && totalScore >= 95) {
     totalScore = 94;
   }
@@ -691,13 +691,13 @@ function MobileWalkthrough({ lead }) {
   const sections = rawSections.length > 0
     ? rawSections
     : [
-        {
-          name: "Mobile Overview",
-          insight: lead.mobile_ai_insight || "Primary CTA might be difficult to notice on smaller mobile devices, reducing conversion potential.",
-          risk: lead.mobile_conversion_risk || "Moderate",
-          b64_image: lead.b64_image_mobile || ""
-        }
-      ];
+      {
+        name: "Mobile Overview",
+        insight: lead.mobile_ai_insight || "Primary CTA might be difficult to notice on smaller mobile devices, reducing conversion potential.",
+        risk: lead.mobile_conversion_risk || "Moderate",
+        b64_image: lead.b64_image_mobile || ""
+      }
+    ];
 
   const [currentIndex, setCurrentIndex] = useState(0);
   const [direction, setDirection] = useState(1);
@@ -721,10 +721,10 @@ function MobileWalkthrough({ lead }) {
 
   const currentSection = sections[currentIndex] || sections[0] || { name: 'Overview', insight: '', risk: 'Moderate', b64_image: '' };
   const riskValue = currentSection?.risk || 'Moderate';
-  const riskClass = riskValue.toLowerCase() === 'critical' || riskValue.toLowerCase() === 'high' 
-    ? 'critical' 
-    : riskValue.toLowerCase() === 'moderate' 
-      ? 'moderate' 
+  const riskClass = riskValue.toLowerCase() === 'critical' || riskValue.toLowerCase() === 'high'
+    ? 'critical'
+    : riskValue.toLowerCase() === 'moderate'
+      ? 'moderate'
       : 'low';
 
   const slideVariants = {
@@ -760,7 +760,7 @@ function MobileWalkthrough({ lead }) {
   const convRiskClass = (lead.mobile_conversion_risk || 'Moderate').toLowerCase();
 
   return (
-    <div 
+    <div
       className="mobile-walkthrough-carousel"
       style={{ display: 'flex', flexDirection: 'column', height: '100%' }}
       onMouseEnter={() => setIsPaused(true)}
@@ -807,9 +807,9 @@ function MobileWalkthrough({ lead }) {
                 }}
               >
                 {currentSection.b64_image ? (
-                  <img 
-                    src={`data:image/jpeg;base64,${currentSection.b64_image}`} 
-                    alt={currentSection.name} 
+                  <img
+                    src={`data:image/jpeg;base64,${currentSection.b64_image}`}
+                    alt={currentSection.name}
                     className="mobile-screenshot"
                     style={{
                       width: '100%',
@@ -881,7 +881,7 @@ function MobileWalkthrough({ lead }) {
           {respMetrics.issueCount > 0 && (
             <span className="resp-issue-count">{respMetrics.issueCount} issue{respMetrics.issueCount !== 1 ? 's' : ''} detected</span>
           )}
-          
+
           {/* HUD Tooltip detail breakdown */}
           <div className="responsiveness-tooltip">
             <div className="tooltip-title">Responsiveness Audit Breakdown</div>
@@ -947,7 +947,7 @@ function MobileWalkthrough({ lead }) {
           <span className="mobile-ai-label">Live Screen Critique</span>
         </div>
         <AnimatePresence mode="wait">
-          <motion.p 
+          <motion.p
             key={currentIndex}
             initial={{ opacity: 0, y: 5 }}
             animate={{ opacity: 1, y: 0 }}
@@ -1006,7 +1006,7 @@ export default function LeadResults({ leads, isPublic = false }) {
         // instead of rendering the full (empty/hallucinated) analysis dashboard.
         if (lead.validation_failed || (lead.error_detail && lead.design === 'Unknown' && lead.cta === 'Unknown' && lead.message === 'Unknown' && lead.trust === 'Unknown')) {
           const isWarning = !!lead.technical_warning || (lead.error_detail && !lead.error_detail.includes("Invalid domain") && !lead.error_detail.includes("DNS resolution"));
-          
+
           return (
             <div key={index} className="glass-panel animate-fade-in" style={{
               padding: '2rem 2.5rem',
@@ -1314,7 +1314,7 @@ Best,
                       {lead.first_impression_verdict || 'Average'}
                     </div>
                   </div>
-                  
+
                   <div className="executive-summary-box" style={{ background: 'rgba(59, 130, 246, 0.05)', padding: '1.25rem', borderRadius: '12px', borderLeft: '4px solid #3b82f6', marginBottom: '1.5rem' }}>
                     <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', marginBottom: '0.5rem' }}>
                       <Bot size={16} color="#3b82f6" />
@@ -1340,11 +1340,11 @@ Best,
                     </div>
                   </div>
 
-                  <div style={{ display: 'flex', alignItems: 'center', gap: '1.5rem', marginBottom: '1.5rem', padding: '1rem', background: 'rgba(0,0,0,0.15)', borderRadius: '12px' }}>
+                  <div className="presence-score-box" style={{ display: 'flex', alignItems: 'center', gap: '1.5rem', marginBottom: '1.5rem', padding: '1rem', background: 'rgba(0,0,0,0.15)', borderRadius: '12px' }}>
                     <div style={{ textAlign: 'center', minWidth: '80px' }}>
-                      <div style={{ fontSize: '0.7rem', textTransform: 'uppercase', color: '#64748b', fontWeight: 700, marginBottom: '0.25rem' }}>Presence Score</div>
+                      <div style={{ fontSize: '0.7rem', textTransform: 'uppercase', color: '#5c5555ff', fontWeight: 700, marginBottom: '0.25rem' }}>Presence Score</div>
                       <div className="impression-score-large" style={{ fontSize: '2rem', display: 'flex', alignItems: 'baseline', justifyContent: 'center' }}>
-                        {lead.first_impression_score || 0}<span style={{ fontSize: '1rem', color: '#64748b', fontWeight: 500, marginLeft: '2px' }}>/10</span>
+                        {lead.first_impression_score || 0}<span style={{ fontSize: '1rem', color: '#706969ff', fontWeight: 500, marginLeft: '2px' }}>/10</span>
                       </div>
                     </div>
                     <div style={{ flex: 1, borderLeft: '1px solid rgba(255,255,255,0.05)', paddingLeft: '1.5rem' }}>
@@ -1355,7 +1355,7 @@ Best,
                     </div>
                   </div>
 
-                   <div className="impression-factors" style={{ display: 'flex', flexWrap: 'wrap', gap: '0.5rem', justifyContent: 'center', marginBottom: '1.5rem' }}>
+                  <div className="impression-factors" style={{ display: 'flex', flexWrap: 'wrap', gap: '0.5rem', justifyContent: 'center', marginBottom: '1.5rem' }}>
                     <div className="factor-tag" style={{ border: '1px solid rgba(59, 130, 246, 0.2)' }}><Activity size={12} /> Branding</div>
                     <div className="factor-tag" style={{ border: '1px solid rgba(59, 130, 246, 0.2)' }}><LayoutDashboard size={12} /> Layout</div>
                     <div className="factor-tag" style={{ border: '1px solid rgba(59, 130, 246, 0.2)' }}><Target size={12} /> CTA Clarity</div>
@@ -1373,7 +1373,7 @@ Best,
                       </div>
                     </div>
 
-                    <div style={{ background: 'rgba(0,0,0,0.15)', padding: '1rem', borderRadius: '12px', marginBottom: '1rem' }}>
+                    <div className="messaging-insight-box" style={{ background: 'rgba(0,0,0,0.15)', padding: '1rem', borderRadius: '12px', marginBottom: '1rem' }}>
                       <p style={{ fontSize: '0.85rem', color: 'var(--text-secondary)', margin: '0 0 0.75rem 0', fontStyle: 'italic', lineHeight: '1.5' }}>
                         "{lead.communication_effectiveness_insight || "Analyzing messaging effectiveness..."}"
                       </p>
@@ -1425,7 +1425,7 @@ Best,
                   </div>
                   <div className="ux-content">
                     <div className="ring-container">
-                      <div className="ring glow-ring" style={{ background: `conic-gradient(#06b6d4 ${uxScore}%, transparent 0)` }}>
+                      <div className="ring glow-ring" style={{ background: `conic-gradient(#06b6d4 ${uxScore}%, var(--ring-track-color, transparent) 0)` }}>
                         <div className="inner-circle">
                           <span className="big-score">{uxScore}</span>
                           <span className="out-of">/100</span>
@@ -1488,7 +1488,7 @@ Best,
                     </div>
 
                     <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem', marginBottom: '1.5rem' }}>
-                      <div style={{ background: 'rgba(0,0,0,0.15)', padding: '1rem', borderRadius: '10px', display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
+                      <div className="trust-decay-stat-box" style={{ background: 'rgba(0,0,0,0.15)', padding: '1rem', borderRadius: '10px', display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
                         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                           <span style={{ fontSize: '0.75rem', color: '#64748b', fontWeight: 600 }}>Maintenance Confidence</span>
                           <span style={{ fontSize: '0.85rem', color: '#06b6d4', fontWeight: 700 }}>{lead.maintenance_confidence || 100}%</span>
@@ -1498,7 +1498,7 @@ Best,
                         </div>
                         <p style={{ fontSize: '0.7rem', color: '#94a3b8', margin: 0 }}>System analysis of content freshness & technical health.</p>
                       </div>
-                      <div style={{ background: 'rgba(0,0,0,0.15)', padding: '1rem', borderRadius: '10px' }}>
+                      <div className="trust-decay-outdated-box" style={{ background: 'rgba(0,0,0,0.15)', padding: '1rem', borderRadius: '10px' }}>
                         <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', marginBottom: '0.5rem' }}>
                           <RefreshCw size={14} color="#f59e0b" />
                           <span style={{ fontSize: '0.75rem', color: '#f59e0b', fontWeight: 700, textTransform: 'uppercase' }}>Outdated Signals</span>
@@ -1615,16 +1615,16 @@ Best,
                   </div>
                   <div className="seo-dials-container">
                     <div className="corner-dial topleft">
-                      <div className="mini-ring" style={{ background: `conic-gradient(#3b82f6 ${lead.lighthouse_performance || 50}%, transparent 0)` }}><div className="mini-inner">{lead.lighthouse_performance || 50}%</div></div>
+                      <div className="mini-ring" style={{ background: `conic-gradient(#3b82f6 ${lead.lighthouse_performance || 50}%, var(--ring-track-color, transparent) 0)` }}><div className="mini-inner">{lead.lighthouse_performance || 50}%</div></div>
                       <span>Performance</span>
                     </div>
                     <div className="corner-dial topright">
-                      <div className="mini-ring" style={{ background: `conic-gradient(#3b82f6 ${lead.lighthouse_accessibility || 50}%, transparent 0)` }}><div className="mini-inner">{lead.lighthouse_accessibility || 50}%</div></div>
+                      <div className="mini-ring" style={{ background: `conic-gradient(#3b82f6 ${lead.lighthouse_accessibility || 50}%, var(--ring-track-color, transparent) 0)` }}><div className="mini-inner">{lead.lighthouse_accessibility || 50}%</div></div>
                       <span>Accessibility</span>
                     </div>
 
                     <div className="center-dial">
-                      <div className="ring glow-ring seo-ring" style={{ background: `conic-gradient(#10b981 ${seoScore}%, transparent 0)` }}>
+                      <div className="ring glow-ring seo-ring" style={{ background: `conic-gradient(#10b981 ${seoScore}%, var(--ring-track-color, transparent) 0)` }}>
                         <div className="inner-circle">
                           <span className="big-score">{seoScore}</span>
                           <span className="out-of">/100</span>
@@ -1634,11 +1634,11 @@ Best,
                     </div>
 
                     <div className="corner-dial bottomleft">
-                      <div className="mini-ring" style={{ background: `conic-gradient(#a855f7 ${lead.mobile_performance || 50}%, transparent 0)` }}><div className="mini-inner">{lead.mobile_performance || 50}%</div></div>
+                      <div className="mini-ring" style={{ background: `conic-gradient(#a855f7 ${lead.mobile_performance || 50}%, var(--ring-track-color, transparent) 0)` }}><div className="mini-inner">{lead.mobile_performance || 50}%</div></div>
                       <span>Mobile UX</span>
                     </div>
                     <div className="corner-dial bottomright">
-                      <div className="mini-ring" style={{ background: `conic-gradient(#3b82f6 ${seoScore}%, transparent 0)` }}><div className="mini-inner">{seoScore}%</div></div>
+                      <div className="mini-ring" style={{ background: `conic-gradient(#3b82f6 ${seoScore}%, var(--ring-track-color, transparent) 0)` }}><div className="mini-inner">{seoScore}%</div></div>
                       <span>Best Practices</span>
                     </div>
                   </div>
@@ -1658,18 +1658,18 @@ Best,
                     </div>
                   )}
 
-                  <div style={{ marginTop: '1rem', background: 'rgba(0,0,0,0.2)', padding: '1rem', borderRadius: '12px', fontSize: '0.85rem' }}>
+                  <div className="tech-stats-box" style={{ marginTop: '1rem', background: 'rgba(0,0,0,0.2)', padding: '1rem', borderRadius: '12px', fontSize: '0.85rem' }}>
                     <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '0.5rem' }}>
                       <span style={{ color: 'var(--text-secondary)' }}>Live Page Load Speed:</span>
                       <span style={{ fontWeight: 600, color: parseFloat(lead.load_time) < 2.5 ? '#10b981' : '#ef4444' }}>{lead.load_time}s</span>
                     </div>
                     <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '0.5rem' }}>
                       <span style={{ color: 'var(--text-secondary)' }}>Primary Tech Stack:</span>
-                      <span style={{ fontWeight: 600, textAlign: 'right' }}>{lead.tech_stack || 'Unknown'}</span>
+                      <span style={{ fontWeight: 600, textAlign: 'right', color: 'var(--text-white, #e2e8f0)' }}>{lead.tech_stack || 'Unknown'}</span>
                     </div>
                     <div style={{ display: 'flex', justifyContent: 'space-between' }}>
                       <span style={{ color: 'var(--text-secondary)' }}>Platform Last Modified:</span>
-                      <span style={{ fontWeight: 600, textAlign: 'right' }}>{lead.last_modified}</span>
+                      <span style={{ fontWeight: 600, textAlign: 'right', color: 'var(--text-white, #e2e8f0)' }}>{lead.last_modified}</span>
                     </div>
                   </div>
                 </div>
@@ -1830,16 +1830,16 @@ Best,
                         <Sparkles size={14} color="#f97316" />
                         <span style={{ fontSize: '0.75rem', fontWeight: 700, color: '#f97316' }}>AI CTA Optimization</span>
                       </div>
-                      <p style={{ fontSize: '0.8rem', color: '#e2e8f0', margin: 0, fontWeight: 500 }}>{lead.cta_ai_optimization_recommendation || lead.cta_optimization_recommendation || "Optimize above-the-fold CTA placement and clarity."}</p>
+                      <p style={{ fontSize: '0.8rem', color: 'var(--text-white, #e2e8f0)', margin: 0, fontWeight: 500 }}>{lead.cta_ai_optimization_recommendation || lead.cta_optimization_recommendation || "Optimize above-the-fold CTA placement and clarity."}</p>
                     </div>
-                    <div style={{ background: 'rgba(0,0,0,0.2)', padding: '0.75rem', borderRadius: '10px', border: '1px solid rgba(255,255,255,0.03)' }}>
+                    <div className="cta-optimization-recommendation-box" style={{ background: 'rgba(0,0,0,0.2)', padding: '0.75rem', borderRadius: '10px', border: '1px solid rgba(255,255,255,0.03)' }}>
                       <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', marginBottom: '0.25rem' }}>
                         <Smartphone size={14} color="#3b82f6" />
                         <span style={{ fontSize: '0.75rem', fontWeight: 700, color: '#3b82f6' }}>Mobile Conversion</span>
                       </div>
                       <p style={{ fontSize: '0.8rem', color: '#94a3b8', margin: 0 }}>{lead.mobile_conversion_recommendation || "Simplify mobile contact access to reduce conversion friction."}</p>
                     </div>
-                    <div style={{ background: 'rgba(0,0,0,0.2)', padding: '0.75rem', borderRadius: '10px', border: '1px solid rgba(255,255,255,0.03)' }}>
+                    <div className="cta-optimization-recommendation-box" style={{ background: 'rgba(0,0,0,0.2)', padding: '0.75rem', borderRadius: '10px', border: '1px solid rgba(255,255,255,0.03)' }}>
                       <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', marginBottom: '0.25rem' }}>
                         <TrendingDown size={14} color="#ef4444" style={{ transform: 'rotate(180deg)' }} />
                         <span style={{ fontSize: '0.75rem', fontWeight: 700, color: '#ef4444' }}>Funnel Insight</span>
@@ -1880,7 +1880,7 @@ Best,
                         <div className="bar-fill" style={{ width: `${lead.industry_percentile || 0}%`, background: 'linear-gradient(90deg, #06b6d4, #3b82f6)' }}></div>
                       </div>
                       <div style={{ fontSize: '0.8rem', color: 'var(--text-secondary)' }}>
-                        Outperforming <span style={{ fontWeight: 700, color: '#e2e8f0' }}>{lead.industry_percentile || 0}%</span> of industry competitors.
+                        Outperforming <span style={{ fontWeight: 700, color: 'var(--text-white, #e2e8f0)' }}>{lead.industry_percentile || 0}%</span> of industry competitors.
                       </div>
                     </div>
 
@@ -1893,30 +1893,30 @@ Best,
                         <div className="bar-fill" style={{ width: `${lead.lead_quality_score || 0}%`, background: 'linear-gradient(90deg, #10b981, #3b82f6)' }}></div>
                       </div>
                       <div style={{ fontSize: '0.8rem', color: 'var(--text-secondary)' }}>
-                        Assessment: <span style={{ fontWeight: 700, color: '#e2e8f0' }}>{(lead.lead_quality_score || 0) > 75 ? 'High Value' : (lead.lead_quality_score || 0) > 40 ? 'Moderate Value' : 'Low Value'} Lead</span>
+                        Assessment: <span style={{ fontWeight: 700, color: 'var(--text-white, #e2e8f0)' }}>{(lead.lead_quality_score || 0) > 75 ? 'High Value' : (lead.lead_quality_score || 0) > 40 ? 'Moderate Value' : 'Low Value'} Lead</span>
                       </div>
                     </div>
                   </div>
 
                   {/* Intent & Readiness Grid */}
                   <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem', marginBottom: '1.5rem' }}>
-                    <div style={{ background: 'rgba(0,0,0,0.15)', padding: '1rem', borderRadius: '12px', border: '1px solid rgba(255,255,255,0.05)' }}>
+                    <div className="intent-readiness-card" style={{ background: 'rgba(0,0,0,0.15)', padding: '1rem', borderRadius: '12px', border: '1px solid rgba(255,255,255,0.05)' }}>
                       <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', marginBottom: '0.5rem', color: '#06b6d4', fontSize: '0.8rem', fontWeight: 700 }}>
                         <Target size={14} /> Buyer Intent Strength
                       </div>
                       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                        <span style={{ fontSize: '1.1rem', fontWeight: 800, color: '#e2e8f0' }}>{lead.buyer_intent_strength || 'Moderate'}</span>
+                        <span style={{ fontSize: '1.1rem', fontWeight: 800, color: 'var(--text-white, #e2e8f0)' }}>{lead.buyer_intent_strength || 'Moderate'}</span>
                         <div style={{ fontSize: '0.75rem', fontWeight: 600, padding: '2px 8px', borderRadius: '4px', background: 'rgba(6, 182, 212, 0.1)', color: '#06b6d4' }}>
                           {lead.primary_website_type || 'Informational'}
                         </div>
                       </div>
                     </div>
-                    <div style={{ background: 'rgba(0,0,0,0.15)', padding: '1rem', borderRadius: '12px', border: '1px solid rgba(255,255,255,0.05)' }}>
+                    <div className="intent-readiness-card" style={{ background: 'rgba(0,0,0,0.15)', padding: '1rem', borderRadius: '12px', border: '1px solid rgba(255,255,255,0.05)' }}>
                       <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', marginBottom: '0.5rem', color: '#10b981', fontSize: '0.8rem', fontWeight: 700 }}>
                         <Zap size={14} /> Commercial Readiness
                       </div>
                       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                        <span style={{ fontSize: '1.1rem', fontWeight: 800, color: '#e2e8f0' }}>{lead.commercial_readiness_maturity || 'Moderate'}</span>
+                        <span style={{ fontSize: '1.1rem', fontWeight: 800, color: 'var(--text-white, #e2e8f0)' }}>{lead.commercial_readiness_maturity || 'Moderate'}</span>
                         <div className={`severity-badge severity-${(lead.commercial_readiness_maturity || 'Low').toLowerCase() === 'advanced' ? 'excellent' : (lead.commercial_readiness_maturity || 'Low').toLowerCase() === 'high' ? 'moderate' : 'low'}`} style={{ fontSize: '0.7rem' }}>
                           Maturity
                         </div>
@@ -1925,29 +1925,29 @@ Best,
                   </div>
 
                   <div className="market-metrics-grid" style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: '0.75rem', marginBottom: '1.5rem' }}>
-                    <div style={{ background: 'rgba(0,0,0,0.2)', padding: '0.75rem', borderRadius: '8px', border: '1px solid rgba(255,255,255,0.05)', textAlign: 'center' }}>
+                    <div className="market-metric-box" style={{ background: 'rgba(0,0,0,0.2)', padding: '0.75rem', borderRadius: '8px', border: '1px solid rgba(255,255,255,0.05)', textAlign: 'center' }}>
                       <div style={{ fontSize: '0.65rem', color: '#64748b', fontWeight: 700, textTransform: 'uppercase', marginBottom: '4px' }}>Business Maturity</div>
-                      <div style={{ fontSize: '0.85rem', color: '#e2e8f0', fontWeight: 600 }}>{lead.business_maturity_level || 'Unknown'}</div>
+                      <div style={{ fontSize: '0.85rem', color: 'var(--text-white, #e2e8f0)', fontWeight: 600 }}>{lead.business_maturity_level || 'Unknown'}</div>
                     </div>
-                    <div style={{ background: 'rgba(0,0,0,0.2)', padding: '0.75rem', borderRadius: '8px', border: '1px solid rgba(255,255,255,0.05)', textAlign: 'center' }}>
+                    <div className="market-metric-box" style={{ background: 'rgba(0,0,0,0.2)', padding: '0.75rem', borderRadius: '8px', border: '1px solid rgba(255,255,255,0.05)', textAlign: 'center' }}>
                       <div style={{ fontSize: '0.65rem', color: '#64748b', fontWeight: 700, textTransform: 'uppercase', marginBottom: '4px' }}>Sales Potential</div>
                       <div style={{ fontSize: '0.85rem', color: lead.sales_potential === 'High' ? '#10b981' : lead.sales_potential === 'Moderate' ? '#3b82f6' : '#ef4444', fontWeight: 600 }}>{lead.sales_potential || 'Moderate'}</div>
                     </div>
-                    <div style={{ background: 'rgba(0,0,0,0.2)', padding: '0.75rem', borderRadius: '8px', border: '1px solid rgba(255,255,255,0.05)', textAlign: 'center' }}>
+                    <div className="market-metric-box" style={{ background: 'rgba(0,0,0,0.2)', padding: '0.75rem', borderRadius: '8px', border: '1px solid rgba(255,255,255,0.05)', textAlign: 'center' }}>
                       <div style={{ fontSize: '0.65rem', color: '#64748b', fontWeight: 700, textTransform: 'uppercase', marginBottom: '4px' }}>Growth Potential</div>
                       <div style={{ fontSize: '0.85rem', color: lead.growth_potential === 'High' ? '#10b981' : lead.growth_potential === 'Moderate' ? '#3b82f6' : '#ef4444', fontWeight: 600 }}>{lead.growth_potential || 'Moderate'}</div>
                     </div>
-                    <div style={{ background: 'rgba(0,0,0,0.2)', padding: '0.75rem', borderRadius: '8px', border: '1px solid rgba(255,255,255,0.05)', textAlign: 'center' }}>
+                    <div className="market-metric-box" style={{ background: 'rgba(0,0,0,0.2)', padding: '0.75rem', borderRadius: '8px', border: '1px solid rgba(255,255,255,0.05)', textAlign: 'center' }}>
                       <div style={{ fontSize: '0.65rem', color: '#64748b', fontWeight: 700, textTransform: 'uppercase', marginBottom: '4px' }}>Sales Maturity</div>
-                      <div style={{ fontSize: '0.85rem', color: '#e2e8f0', fontWeight: 600 }}>{lead.sales_positioning_maturity_score || 0}%</div>
+                      <div style={{ fontSize: '0.85rem', color: 'var(--text-white, #e2e8f0)', fontWeight: 600 }}>{lead.sales_positioning_maturity_score || 0}%</div>
                     </div>
-                    <div style={{ background: 'rgba(0,0,0,0.2)', padding: '0.75rem', borderRadius: '8px', border: '1px solid rgba(255,255,255,0.05)', textAlign: 'center' }}>
+                    <div className="market-metric-box" style={{ background: 'rgba(0,0,0,0.2)', padding: '0.75rem', borderRadius: '8px', border: '1px solid rgba(255,255,255,0.05)', textAlign: 'center' }}>
                       <div style={{ fontSize: '0.65rem', color: '#64748b', fontWeight: 700, textTransform: 'uppercase', marginBottom: '4px' }}>Enterprise Focus</div>
-                      <div style={{ fontSize: '0.85rem', color: '#e2e8f0', fontWeight: 600 }}>{lead.enterprise_sales_orientation_score || 0}%</div>
+                      <div style={{ fontSize: '0.85rem', color: 'var(--text-white, #e2e8f0)', fontWeight: 600 }}>{lead.enterprise_sales_orientation_score || 0}%</div>
                     </div>
-                    <div style={{ background: 'rgba(0,0,0,0.2)', padding: '0.75rem', borderRadius: '8px', border: '1px solid rgba(255,255,255,0.05)', textAlign: 'center' }}>
+                    <div className="market-metric-box" style={{ background: 'rgba(0,0,0,0.2)', padding: '0.75rem', borderRadius: '8px', border: '1px solid rgba(255,255,255,0.05)', textAlign: 'center' }}>
                       <div style={{ fontSize: '0.65rem', color: '#64748b', fontWeight: 700, textTransform: 'uppercase', marginBottom: '4px' }}>Readiness Level</div>
-                      <div style={{ fontSize: '0.85rem', color: '#e2e8f0', fontWeight: 600 }}>{lead.commercial_readiness_level_score || 0}%</div>
+                      <div style={{ fontSize: '0.85rem', color: 'var(--text-white, #e2e8f0)', fontWeight: 600 }}>{lead.commercial_readiness_level_score || 0}%</div>
                     </div>
                   </div>
 
@@ -2097,9 +2097,9 @@ Best,
                         </span>
                       </div>
                       <div className="bar-track" style={{ height: '8px' }}>
-                        <div 
-                          className="bar-fill" 
-                          style={{ 
+                        <div
+                          className="bar-fill"
+                          style={{
                             width: `${lead.momentum_score || 0}%`,
                             background: 'linear-gradient(90deg, #06b6d4, #8b5cf6)'
                           }}
@@ -2246,7 +2246,7 @@ Best,
 
                     {/* Right Column — Insights & Probe Response */}
                     <div className="aeo-right-col">
-                      <div style={{ background: 'rgba(0,0,0,0.2)', padding: '1rem', borderRadius: '12px', fontSize: '0.85rem' }}>
+                      <div className="aeo-visibility-box" style={{ background: 'rgba(0,0,0,0.2)', padding: '1rem', borderRadius: '12px', fontSize: '0.85rem' }}>
                         <h3 style={{ color: '#f97316', margin: '0 0 0.5rem 0', fontSize: '0.9rem' }}><span className="icon">👁️</span> Visibility Status</h3>
                         <p style={{ margin: '0 0 1rem 0', color: 'var(--text-secondary)' }}>{lead.aeo_status}</p>
 

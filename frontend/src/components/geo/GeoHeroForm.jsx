@@ -53,16 +53,16 @@ export default function GeoHeroForm({ onSubmit, loading }) {
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.6, delay: 0.2 }}
       className="geo-glass p-7 relative overflow-hidden"
-      style={{ borderColor: 'rgba(255,107,0,0.15)', animation: 'geo-border-glow 4s ease-in-out infinite' }}
+      style={{ borderColor: 'rgba(255,88,18,0.12)', animation: 'geo-border-glow 4s ease-in-out infinite' }}
     >
       {/* Ambient top glow */}
-      <div className="absolute top-0 left-1/2 -translate-x-1/2 w-48 h-1 bg-gradient-to-r from-transparent via-orange-500/40 to-transparent rounded-full" />
+      <div className="absolute top-0 left-1/2 -translate-x-1/2 w-48 h-1 bg-gradient-to-r from-transparent via-orange-500/30 to-transparent rounded-full" />
 
       <form onSubmit={handleSubmit} className="space-y-5">
         {/* URL Field */}
         <div>
           <label className="flex items-center gap-2 text-text-secondary text-sm font-medium mb-2">
-            <Globe size={14} className="text-orange-400" />
+            <Globe size={14} className="text-orange-500" />
             Website URL
           </label>
           <input
@@ -71,15 +71,15 @@ export default function GeoHeroForm({ onSubmit, loading }) {
             onChange={(e) => { setUrl(e.target.value); setErrors(p => ({ ...p, url: '' })); checkDomainMatch(e.target.value, email); }}
             placeholder="https://yourwebsite.com"
             disabled={loading}
-            className={`w-full px-4 py-3 rounded-xl bg-white/[0.03] border text-white text-sm outline-none transition-all duration-200 placeholder:text-text-muted focus:border-orange-500/40 focus:shadow-[0_0_0_3px_rgba(255,107,0,0.08)] disabled:opacity-50 ${errors.url ? 'border-red-500/50' : 'border-white/[0.06]'}`}
+            className={`w-full px-4 py-3 rounded-xl bg-geo-bg-deep border text-text-primary text-sm outline-none transition-all duration-200 placeholder:text-text-muted focus:border-orange-500/40 focus:shadow-[0_0_0_3px_rgba(255,88,18,0.06)] disabled:opacity-50 ${errors.url ? 'border-red-500/50' : 'border-border-glass'}`}
           />
-          {errors.url && <p className="text-red-400 text-xs mt-1.5 flex items-center gap-1"><AlertTriangle size={11} />{errors.url}</p>}
+          {errors.url && <p className="text-red-500 text-xs mt-1.5 flex items-center gap-1"><AlertTriangle size={11} />{errors.url}</p>}
         </div>
 
         {/* Email Field */}
         <div>
           <label className="flex items-center gap-2 text-text-secondary text-sm font-medium mb-2">
-            <Mail size={14} className="text-orange-400" />
+            <Mail size={14} className="text-orange-500" />
             Business Email
           </label>
           <input
@@ -88,11 +88,11 @@ export default function GeoHeroForm({ onSubmit, loading }) {
             onChange={(e) => { setEmail(e.target.value); setErrors(p => ({ ...p, email: '' })); checkDomainMatch(url, e.target.value); }}
             placeholder="you@company.com"
             disabled={loading}
-            className={`w-full px-4 py-3 rounded-xl bg-white/[0.03] border text-white text-sm outline-none transition-all duration-200 placeholder:text-text-muted focus:border-orange-500/40 focus:shadow-[0_0_0_3px_rgba(255,107,0,0.08)] disabled:opacity-50 ${errors.email ? 'border-red-500/50' : 'border-white/[0.06]'}`}
+            className={`w-full px-4 py-3 rounded-xl bg-geo-bg-deep border text-text-primary text-sm outline-none transition-all duration-200 placeholder:text-text-muted focus:border-orange-500/40 focus:shadow-[0_0_0_3px_rgba(255,88,18,0.06)] disabled:opacity-50 ${errors.email ? 'border-red-500/50' : 'border-border-glass'}`}
           />
-          {errors.email && <p className="text-red-400 text-xs mt-1.5 flex items-center gap-1"><AlertTriangle size={11} />{errors.email}</p>}
+          {errors.email && <p className="text-red-500 text-xs mt-1.5 flex items-center gap-1"><AlertTriangle size={11} />{errors.email}</p>}
           {domainWarning && !errors.email && (
-            <p className="text-yellow-400/80 text-xs mt-1.5 flex items-center gap-1"><AlertTriangle size={11} />{domainWarning}</p>
+            <p className="text-yellow-600 text-xs mt-1.5 flex items-center gap-1"><AlertTriangle size={11} />{domainWarning}</p>
           )}
         </div>
 
@@ -125,7 +125,7 @@ export default function GeoHeroForm({ onSubmit, loading }) {
             { icon: FileText, text: 'Detailed report' },
           ].map(({ icon: Icon, text }) => (
             <div key={text} className="flex items-center gap-1.5 text-text-muted text-[11px]">
-              <Icon size={12} className="text-orange-500/60" />
+              <Icon size={12} className="text-orange-500/50" />
               {text}
             </div>
           ))}
