@@ -410,22 +410,53 @@ Be honest - if you don't have specific information about them, say so clearly.""
 def check_single_link(link: str) -> str:
     if not is_safe_url(link):
         return ""
+    res = None
     try:
         headers = {
             "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36",
             "Accept": "text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,*/*;q=0.8"
         }
-        res = requests.head(link, timeout=10, allow_redirects=True, headers=headers, verify=False)
         
-        # If server blocks HEAD requests, fallback to a lightweight streamed GET
-        if res.status_code in [403, 405, 401, 301, 302, 999]:
-            res = requests.get(link, timeout=10, allow_redirects=True, headers=headers, stream=True, verify=False)
-            res.raw.close()
+        # Manual redirect validation to prevent redirect SSRF
+        current_url = link
+        max_redirects = 3
+
+        for _ in range(max_redirects + 1):
+            # CRITICAL: Validate current URL before EVERY request (initial and redirects)
+            if not is_safe_url(current_url):
+                if res:
+                    res.close()
+                return ""
+
+            res = requests.head(current_url, timeout=10, allow_redirects=False, headers=headers, verify=False)
+
+            # If server blocks HEAD requests, fallback to a lightweight streamed GET
+            if res.status_code in [403, 405, 401, 999]:
+                res.close()
+                res = requests.get(current_url, timeout=10, allow_redirects=False, headers=headers, stream=True, verify=False)
+                res.raw.close()
             
+            if res.status_code in (301, 302, 303, 307, 308):
+                location = res.headers.get('Location')
+                if not location:
+                    break
+                current_url = urljoin(current_url, location)
+                res.close()
+                continue
+            else:
+                break
+
+        if not res:
+            return ""
+
         # Only explicitly flag pure dead pages to ensure 0 False Positives
-        if res.status_code == 404 or res.status_code >= 500:
+        status_code = res.status_code
+        res.close()
+        if status_code == 404 or status_code >= 500:
             return link
     except Exception:
+        if res:
+            res.close()
         # If the server times out or throws an SSL error due to our rapid 15 thread burst, 
         # silently ignore it so we do not embarrass the salesperson with a False Positive.
         return ""
