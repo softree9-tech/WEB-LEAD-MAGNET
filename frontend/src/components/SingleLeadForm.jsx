@@ -32,7 +32,7 @@ export default function SingleLeadForm({ onResult }) {
           return;
         }
       }
-    } catch (err) {
+    } catch {
       setError('Validation check failed. Please try again.');
       setValidating(false);
       return;
@@ -60,8 +60,8 @@ export default function SingleLeadForm({ onResult }) {
       onResult(data);
       setUrl('');
       setCompetitorUrl('');
-    } catch (err) {
-      setError(err.response?.data?.detail || err.message);
+    } catch (Err) {
+      setError(Err.response?.data?.detail || Err.message);
     } finally {
       setLoading(false);
     }
