@@ -19,6 +19,7 @@ import socket
 import ssl
 from datetime import datetime
 import json
+from typing import Union
 
 def check_ssl_certificate(url: str) -> dict:
     if not is_safe_url(url):
@@ -431,8 +432,11 @@ def check_single_link(link: str) -> str:
         return ""
     return ""
 
-def count_broken_links(html: str, base_url: str) -> list:
-    soup = BeautifulSoup(html, "html.parser")
+def count_broken_links(html: Union[str, BeautifulSoup], base_url: str) -> dict:
+    if isinstance(html, BeautifulSoup):
+        soup = html
+    else:
+        soup = BeautifulSoup(html, "html.parser")
     raw_links = [a.get('href') for a in soup.find_all('a', href=True)]
     
     valid_links = set()
@@ -726,21 +730,25 @@ def website_analyzer_agent(state: AgentState) -> AgentState:
                 response = page.goto(url, wait_until="domcontentloaded", timeout=20000)
                 html = page.content()
                 headers = response.headers if response else {}
+
+                # Consolidate DOM parsing: Initialize soup once and reuse it
+                soup = BeautifulSoup(html, "html.parser")
+
                 tech_stack = extract_tech_stack(html, headers)
                 last_modified = extract_last_modified(headers, html)
-                link_data = count_broken_links(html, url)
+                link_data = count_broken_links(soup, url)
                 broken_links = link_data["broken_list"]
                 total_links = link_data["total"]
                 
                 analytics_data = check_analytics(html)
                 
-                soup = BeautifulSoup(html, "html.parser")
                 has_lead_capture = check_lead_capture(soup, html)
-                has_cta = check_cta_presence(soup, html)
-                has_newsletter = check_newsletter(soup)
                 image_alt_data = check_image_alt_tags(soup)
                 has_dead_socials = check_social_links(soup)
                 conversion_elements = check_conversion_elements(soup, html)
+                # Reuse data from conversion_elements instead of redundant helper calls
+                has_cta = conversion_elements.get("cta_presence", False)
+                has_newsletter = conversion_elements.get("newsletter_signup", False)
                 schema_data = check_schema_markup(soup)
                 
                 # Extract SEO Metrics before stripping code
@@ -866,16 +874,20 @@ def website_analyzer_agent(state: AgentState) -> AgentState:
                 fallback_res = requests.get(url, timeout=10, headers={"User-Agent": "Mozilla/5.0"}, verify=False)
                 html = fallback_res.text
                 headers = dict(fallback_res.headers)
+
+                # Consolidate DOM parsing in fallback path
+                soup = BeautifulSoup(html, "html.parser")
+
                 tech_stack = extract_tech_stack(html, headers)
                 last_modified = extract_last_modified(headers, html)
                 analytics_data = check_analytics(html)
-                soup = BeautifulSoup(html, "html.parser")
                 has_lead_capture = check_lead_capture(soup, html)
-                has_cta = check_cta_presence(soup, html)
-                has_newsletter = check_newsletter(soup)
                 image_alt_data = check_image_alt_tags(soup)
                 has_dead_socials = check_social_links(soup)
                 conversion_elements = check_conversion_elements(soup, html)
+                # Reuse data from conversion_elements in fallback path
+                has_cta = conversion_elements.get("cta_presence", False)
+                has_newsletter = conversion_elements.get("newsletter_signup", False)
                 schema_data = check_schema_markup(soup)
                 seo_mobile = bool(soup.find("meta", attrs={"name": "viewport"}))
                 seo_meta_desc = bool(soup.find("meta", attrs={"name": "description"}))
