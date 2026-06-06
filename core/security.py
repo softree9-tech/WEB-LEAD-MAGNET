@@ -57,14 +57,14 @@ def is_safe_url(url: str) -> bool:
         if hostname.lower() in ('localhost', '127.0.0.1', '0.0.0.0', '::1'):
             return False
 
-        # Resolve hostname to IP
-        # This provides protection against standard SSRF.
-        # DNS rebinding protection would require pinning the IP for the subsequent request.
-        ip_addr = socket.gethostbyname(hostname)
-        ip = ipaddress.ip_address(ip_addr)
-
-        if ip.is_private or ip.is_loopback or ip.is_reserved or ip.is_multicast or ip.is_link_local:
-            return False
+        # Resolve hostname to all associated IPs (IPv4 and IPv6)
+        # This provides protection against dual-stack SSRF.
+        addr_info = socket.getaddrinfo(hostname, None)
+        for item in addr_info:
+            ip_addr = item[4][0]
+            ip = ipaddress.ip_address(ip_addr)
+            if ip.is_private or ip.is_loopback or ip.is_reserved or ip.is_multicast or ip.is_link_local:
+                return False
 
         return True
     except Exception:
@@ -123,10 +123,12 @@ def validate_website(url: str) -> dict:
 
     # ── Step 2: DNS resolution ──────────────────────────────────────────────
     try:
-        ip_addr = socket.gethostbyname(hostname)
-        ip = ipaddress.ip_address(ip_addr)
-        if ip.is_private or ip.is_loopback or ip.is_reserved or ip.is_multicast or ip.is_link_local:
-            return {"valid": False, "error": "Invalid domain — unable to locate website.", "url": url}
+        addr_info = socket.getaddrinfo(hostname, None)
+        for item in addr_info:
+            ip_addr = item[4][0]
+            ip = ipaddress.ip_address(ip_addr)
+            if ip.is_private or ip.is_loopback or ip.is_reserved or ip.is_multicast or ip.is_link_local:
+                return {"valid": False, "error": "Invalid domain — unable to locate website.", "url": url}
     except Exception:
         # DNS resolution completely fails, or hostname cannot be resolved
         return {"valid": False, "error": "Invalid domain — unable to locate website.", "url": url}
@@ -137,8 +139,28 @@ def validate_website(url: str) -> dict:
             "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36",
             "Accept": "text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8",
         }
-        # Bypassing SSL errors in validation call as well to allow expired cert sites to proceed
-        response = requests.get(url, timeout=10, allow_redirects=True, headers=headers, stream=True, verify=False)
+
+        # Manually follow redirects to prevent SSRF via redirect
+        current_url, max_redirects, response = url, 5, None
+        for _ in range(max_redirects):
+            res = requests.get(current_url, timeout=10, allow_redirects=False, headers=headers, stream=True, verify=False)
+            if res.status_code in (301, 302, 303, 307, 308):
+                redirect_url = res.headers.get("Location")
+                if not redirect_url:
+                    response = res
+                    break
+                from urllib.parse import urljoin
+                current_url = urljoin(current_url, redirect_url)
+                if not is_safe_url(current_url):
+                    res.close()
+                    return {"valid": False, "error": "Invalid domain — unable to locate website.", "url": url}
+                res.close()
+                continue
+            response = res
+            break
+
+        if not response:
+            return {"valid": False, "error": "Too many redirects.", "url": url}
 
         # Read a limited amount of body for parked-domain detection (first 50KB)
         body_chunk = ""
