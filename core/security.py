@@ -3,6 +3,17 @@ from urllib.parse import urlparse
 import ipaddress
 import requests
 import re
+from functools import lru_cache
+
+@lru_cache(maxsize=1024)
+def _resolve_hostname(hostname: str) -> list:
+    """Resolves a hostname to a list of IP addresses (IPv4 & IPv6)."""
+    try:
+        # Use getaddrinfo to get all possible IP addresses for the hostname
+        addr_info = socket.getaddrinfo(hostname, None)
+        return list(set(info[4][0] for info in addr_info))
+    except Exception:
+        return []
 
 # ─── Parked / Dead Domain Detection Patterns ────────────────────────────────
 _PARKED_PATTERNS = [
@@ -36,7 +47,8 @@ _PARKED_REGEX = re.compile("|".join(_PARKED_PATTERNS), re.IGNORECASE)
 def is_safe_url(url: str) -> bool:
     """
     Validates that a URL is safe to request.
-    Prevents SSRF by checking for private, loopback, and reserved IP ranges.
+    Prevents SSRF by checking for private, loopback, and reserved IP ranges
+    across all resolved IP addresses (IPv4 and IPv6).
     """
     if not url:
         return False
@@ -53,18 +65,24 @@ def is_safe_url(url: str) -> bool:
         if not hostname:
             return False
 
-        # Basic check for common local hostnames
-        if hostname.lower() in ('localhost', '127.0.0.1', '0.0.0.0', '::1'):
+        # Basic check for common local hostnames/IPs
+        if hostname.lower() in ('localhost', '127.0.0.1', '0.0.0.0', '::1', '::'):
             return False
 
-        # Resolve hostname to IP
-        # This provides protection against standard SSRF.
-        # DNS rebinding protection would require pinning the IP for the subsequent request.
-        ip_addr = socket.gethostbyname(hostname)
-        ip = ipaddress.ip_address(ip_addr)
+        # Resolve hostname to all associated IPs
+        ip_addresses = _resolve_hostname(hostname)
+        if not ip_addresses:
+            # If we can't resolve it, it might be an IP literal or just invalid
+            try:
+                # Handle potential IP literals in hostname
+                ip_addresses = [str(ipaddress.ip_address(hostname.strip("[]")))]
+            except ValueError:
+                return False
 
-        if ip.is_private or ip.is_loopback or ip.is_reserved or ip.is_multicast or ip.is_link_local:
-            return False
+        for ip_addr in ip_addresses:
+            ip = ipaddress.ip_address(ip_addr)
+            if ip.is_private or ip.is_loopback or ip.is_reserved or ip.is_multicast or ip.is_link_local:
+                return False
 
         return True
     except Exception:
@@ -123,10 +141,14 @@ def validate_website(url: str) -> dict:
 
     # ── Step 2: DNS resolution ──────────────────────────────────────────────
     try:
-        ip_addr = socket.gethostbyname(hostname)
-        ip = ipaddress.ip_address(ip_addr)
-        if ip.is_private or ip.is_loopback or ip.is_reserved or ip.is_multicast or ip.is_link_local:
+        ip_addresses = _resolve_hostname(hostname)
+        if not ip_addresses:
             return {"valid": False, "error": "Invalid domain — unable to locate website.", "url": url}
+
+        for ip_addr in ip_addresses:
+            ip = ipaddress.ip_address(ip_addr)
+            if ip.is_private or ip.is_loopback or ip.is_reserved or ip.is_multicast or ip.is_link_local:
+                return {"valid": False, "error": "Invalid domain — unable to locate website.", "url": url}
     except Exception:
         # DNS resolution completely fails, or hostname cannot be resolved
         return {"valid": False, "error": "Invalid domain — unable to locate website.", "url": url}

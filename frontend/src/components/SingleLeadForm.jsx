@@ -53,7 +53,7 @@ export default function SingleLeadForm({ onResult }) {
           name: 'Unknown',
           email: 'unknown@example.com',
           website: url,
-          recaptcha_token: 'admin_bypass'
+          recaptcha_token: import.meta.env.VITE_RECAPTCHA_BYPASS_TOKEN || 'admin_bypass'
         });
       }
 

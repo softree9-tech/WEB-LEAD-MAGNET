@@ -123,7 +123,8 @@ def validate_website_endpoint(lead: LeadInput):
 @app.post("/api/process/single")
 def process_single_lead(lead: LeadInput):
     # Verify reCAPTCHA token (unless bypassed for admin dashboard tools)
-    if lead.recaptcha_token != "admin_bypass":
+    bypass_token = os.getenv("RECAPTCHA_BYPASS_TOKEN")
+    if not bypass_token or lead.recaptcha_token != bypass_token:
         if not lead.recaptcha_token or not verify_recaptcha(lead.recaptcha_token):
             raise HTTPException(status_code=400, detail="reCAPTCHA verification failed")
 
@@ -218,9 +219,15 @@ def _build_error_fallback(website: str, error_detail: str = "", apollo_fields: d
     """Build a complete fallback result dict when a lead fails processing.
     Ensures every field the frontend expects is present with safe defaults.
     If apollo_fields is provided, it is included for CSV export enrichment."""
+
+    # Generic message to avoid leaking internal system/exception details
+    safe_error = "Analysis could not be completed due to a processing error."
+    if error_detail and "Invalid domain" in error_detail:
+        safe_error = error_detail # Keep professional validation errors
+
     fallback = {
         "website": website,
-        "error_detail": error_detail,
+        "error_detail": safe_error,
         "technical_warning": technical_warning,
         "final_score": 0,
         "design": "Unknown",
