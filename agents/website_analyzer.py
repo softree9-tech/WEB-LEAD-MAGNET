@@ -407,7 +407,7 @@ Be honest - if you don't have specific information about them, say so clearly.""
         aeo_result["aeo_raw_response"] = "AEO probe failed."
     return aeo_result
 
-def check_single_link(link: str) -> str:
+def check_single_link(link: str, session: requests.Session = None) -> str:
     if not is_safe_url(link):
         return ""
     try:
@@ -415,12 +415,16 @@ def check_single_link(link: str) -> str:
             "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36",
             "Accept": "text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,*/*;q=0.8"
         }
-        res = requests.head(link, timeout=10, allow_redirects=True, headers=headers, verify=False)
+        # Use session if provided for connection pooling
+        fetcher = session if session else requests
+
+        res = fetcher.head(link, timeout=10, allow_redirects=True, headers=headers, verify=False)
         
         # If server blocks HEAD requests, fallback to a lightweight streamed GET
         if res.status_code in [403, 405, 401, 301, 302, 999]:
-            res = requests.get(link, timeout=10, allow_redirects=True, headers=headers, stream=True, verify=False)
-            res.raw.close()
+            res = fetcher.get(link, timeout=10, allow_redirects=True, headers=headers, stream=True, verify=False)
+            if hasattr(res, 'raw'):
+                res.raw.close()
             
         # Only explicitly flag pure dead pages to ensure 0 False Positives
         if res.status_code == 404 or res.status_code >= 500:
@@ -450,10 +454,13 @@ def count_broken_links(html: str, base_url: str) -> list:
     links_to_test = list(valid_links)[:50]
     broken_list = []
     if links_to_test:
-        with concurrent.futures.ThreadPoolExecutor(max_workers=15) as executor:
-            results = executor.map(check_single_link, links_to_test)
-            for dead_link in results:
-                if dead_link: broken_list.append(dead_link)
+        with requests.Session() as session:
+            # Enable connection pooling for the 50 links
+            with concurrent.futures.ThreadPoolExecutor(max_workers=15) as executor:
+                futures = [executor.submit(check_single_link, link, session) for link in links_to_test]
+                for future in concurrent.futures.as_completed(futures):
+                    dead_link = future.result()
+                    if dead_link: broken_list.append(dead_link)
     return {"broken_list": broken_list, "total": len(links_to_test)}
 
 def extract_tech_stack(html: str, headers: dict) -> str:
