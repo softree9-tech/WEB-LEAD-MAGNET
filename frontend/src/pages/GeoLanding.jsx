@@ -47,7 +47,7 @@ export default function GeoLanding() {
         name: 'GEO Audit',
         email: formData.email,
         website: formData.website,
-        recaptcha_token: 'admin_bypass'
+        recaptcha_token: import.meta.env.VITE_RECAPTCHA_BYPASS_TOKEN || 'admin_bypass'
       };
       const data = await processSingleLead(payload);
       const processed = data.output_row || data;

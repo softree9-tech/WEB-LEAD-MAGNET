@@ -17,7 +17,7 @@ export const validateWebsite = async (website) => {
       name: 'Validation',
       email: 'validate@check.com',
       website: website,
-      recaptcha_token: 'admin_bypass'
+      recaptcha_token: import.meta.env.VITE_RECAPTCHA_BYPASS_TOKEN || 'admin_bypass'
     }, { timeout: 25000 });
     return {
       valid: true,
