@@ -407,7 +407,7 @@ Be honest - if you don't have specific information about them, say so clearly.""
         aeo_result["aeo_raw_response"] = "AEO probe failed."
     return aeo_result
 
-def check_single_link(link: str) -> str:
+def check_single_link(link: str, session: requests.Session = None) -> str:
     if not is_safe_url(link):
         return ""
     try:
@@ -415,11 +415,13 @@ def check_single_link(link: str) -> str:
             "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36",
             "Accept": "text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,*/*;q=0.8"
         }
-        res = requests.head(link, timeout=10, allow_redirects=True, headers=headers, verify=False)
+        getter = session.head if session else requests.head
+        res = getter(link, timeout=10, allow_redirects=True, headers=headers, verify=False)
         
         # If server blocks HEAD requests, fallback to a lightweight streamed GET
         if res.status_code in [403, 405, 401, 301, 302, 999]:
-            res = requests.get(link, timeout=10, allow_redirects=True, headers=headers, stream=True, verify=False)
+            getter_f = session.get if session else requests.get
+            res = getter_f(link, timeout=10, allow_redirects=True, headers=headers, stream=True, verify=False)
             res.raw.close()
             
         # Only explicitly flag pure dead pages to ensure 0 False Positives
@@ -450,10 +452,12 @@ def count_broken_links(html: str, base_url: str) -> list:
     links_to_test = list(valid_links)[:50]
     broken_list = []
     if links_to_test:
-        with concurrent.futures.ThreadPoolExecutor(max_workers=15) as executor:
-            results = executor.map(check_single_link, links_to_test)
-            for dead_link in results:
-                if dead_link: broken_list.append(dead_link)
+        with requests.Session() as session:
+            with concurrent.futures.ThreadPoolExecutor(max_workers=15) as executor:
+                # Pass the session to each worker to enable connection pooling
+                results = executor.map(lambda l: check_single_link(l, session), links_to_test)
+                for dead_link in results:
+                    if dead_link: broken_list.append(dead_link)
     return {"broken_list": broken_list, "total": len(links_to_test)}
 
 def extract_tech_stack(html: str, headers: dict) -> str:
@@ -736,11 +740,11 @@ def website_analyzer_agent(state: AgentState) -> AgentState:
                 
                 soup = BeautifulSoup(html, "html.parser")
                 has_lead_capture = check_lead_capture(soup, html)
-                has_cta = check_cta_presence(soup, html)
-                has_newsletter = check_newsletter(soup)
+                conversion_elements = check_conversion_elements(soup, html)
+                has_cta = conversion_elements.get("cta_presence", False)
+                has_newsletter = conversion_elements.get("newsletter_signup", False)
                 image_alt_data = check_image_alt_tags(soup)
                 has_dead_socials = check_social_links(soup)
-                conversion_elements = check_conversion_elements(soup, html)
                 schema_data = check_schema_markup(soup)
                 
                 # Extract SEO Metrics before stripping code
@@ -871,11 +875,11 @@ def website_analyzer_agent(state: AgentState) -> AgentState:
                 analytics_data = check_analytics(html)
                 soup = BeautifulSoup(html, "html.parser")
                 has_lead_capture = check_lead_capture(soup, html)
-                has_cta = check_cta_presence(soup, html)
-                has_newsletter = check_newsletter(soup)
+                conversion_elements = check_conversion_elements(soup, html)
+                has_cta = conversion_elements.get("cta_presence", False)
+                has_newsletter = conversion_elements.get("newsletter_signup", False)
                 image_alt_data = check_image_alt_tags(soup)
                 has_dead_socials = check_social_links(soup)
-                conversion_elements = check_conversion_elements(soup, html)
                 schema_data = check_schema_markup(soup)
                 seo_mobile = bool(soup.find("meta", attrs={"name": "viewport"}))
                 seo_meta_desc = bool(soup.find("meta", attrs={"name": "description"}))
