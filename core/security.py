@@ -1,8 +1,9 @@
 import socket
-from urllib.parse import urlparse
+from urllib.parse import urlparse, urljoin
 import ipaddress
 import requests
 import re
+from functools import lru_cache
 
 # ─── Parked / Dead Domain Detection Patterns ────────────────────────────────
 _PARKED_PATTERNS = [
@@ -33,10 +34,23 @@ _PARKED_PATTERNS = [
 _PARKED_REGEX = re.compile("|".join(_PARKED_PATTERNS), re.IGNORECASE)
 
 
+@lru_cache(maxsize=1024)
+def _resolve_hostname(hostname: str) -> list:
+    """Resolves a hostname to a list of IP addresses (both IPv4 and IPv6)."""
+    try:
+        # getaddrinfo returns a list of 5-tuples: (family, type, proto, canonname, sockaddr)
+        # sockaddr is (address, port) for IPv4 and (address, port, flow info, scope id) for IPv6
+        results = socket.getaddrinfo(hostname, None)
+        return list(set(r[4][0] for r in results))
+    except Exception:
+        return []
+
+
 def is_safe_url(url: str) -> bool:
     """
     Validates that a URL is safe to request.
     Prevents SSRF by checking for private, loopback, and reserved IP ranges.
+    Checks all resolved IP addresses (multi-IP and IPv6 support).
     """
     if not url:
         return False
@@ -57,18 +71,71 @@ def is_safe_url(url: str) -> bool:
         if hostname.lower() in ('localhost', '127.0.0.1', '0.0.0.0', '::1'):
             return False
 
-        # Resolve hostname to IP
-        # This provides protection against standard SSRF.
-        # DNS rebinding protection would require pinning the IP for the subsequent request.
-        ip_addr = socket.gethostbyname(hostname)
-        ip = ipaddress.ip_address(ip_addr)
+        # Resolve hostname to all associated IPs
+        ip_addresses = _resolve_hostname(hostname)
+        if not ip_addresses:
+            # If we can't resolve it, we can't be sure it's safe if it was intended to be an IP
+            # But usually it means the domain doesn't exist.
+            # However, if hostname itself is an IP, it might still work.
+            try:
+                ip_addresses = [str(ipaddress.ip_address(hostname))]
+            except ValueError:
+                return False
 
-        if ip.is_private or ip.is_loopback or ip.is_reserved or ip.is_multicast or ip.is_link_local:
-            return False
+        for ip_addr in ip_addresses:
+            ip = ipaddress.ip_address(ip_addr)
+            if ip.is_private or ip.is_loopback or ip.is_reserved or ip.is_multicast or ip.is_link_local:
+                return False
+
+            # Check for IPv4-mapped IPv6 addresses (e.g., ::ffff:127.0.0.1)
+            if isinstance(ip, ipaddress.IPv6Address) and ip.ipv4_mapped:
+                if ip.ipv4_mapped.is_private or ip.ipv4_mapped.is_loopback:
+                    return False
 
         return True
     except Exception:
         return False
+
+
+def safe_request(method, url, max_redirects=5, **kwargs):
+    """
+    Performs a secure HTTP request with manual redirect handling and SSRF validation at each hop.
+    Returns the final response object or raises a requests.exceptions.RequestException / ValueError.
+    """
+    # Force allow_redirects=False to handle them manually
+    kwargs['allow_redirects'] = False
+
+    current_url = url
+    if not is_safe_url(current_url):
+        raise ValueError(f"Unsafe URL blocked: {current_url}")
+
+    for _ in range(max_redirects + 1):
+        # We use the provided method (get, head, etc.)
+        response = requests.request(method, current_url, **kwargs)
+
+        if response.status_code in (301, 302, 303, 307, 308):
+            new_url = response.headers.get("Location")
+            if not new_url:
+                return response
+
+            new_url = urljoin(current_url, new_url)
+
+            # Close intermediate response if it's a stream
+            if kwargs.get('stream'):
+                response.close()
+
+            # SECURITY: Validate each hop
+            if not is_safe_url(new_url):
+                if not kwargs.get('stream'): # ensure non-stream is also handled if possible, though requests handles body usually
+                    response.close()
+                raise ValueError(f"Unsafe redirect blocked: {new_url}")
+
+            current_url = new_url
+            continue
+        else:
+            return response
+
+    raise requests.exceptions.TooManyRedirects(f"Exceeded {max_redirects} redirects")
 
 
 def normalize_url(url: str) -> str:
@@ -121,14 +188,8 @@ def validate_website(url: str) -> dict:
     except Exception:
         return {"valid": False, "error": "Invalid domain — unable to locate website.", "url": url}
 
-    # ── Step 2: DNS resolution ──────────────────────────────────────────────
-    try:
-        ip_addr = socket.gethostbyname(hostname)
-        ip = ipaddress.ip_address(ip_addr)
-        if ip.is_private or ip.is_loopback or ip.is_reserved or ip.is_multicast or ip.is_link_local:
-            return {"valid": False, "error": "Invalid domain — unable to locate website.", "url": url}
-    except Exception:
-        # DNS resolution completely fails, or hostname cannot be resolved
+    # ── Step 2: DNS & Safety Check ──────────────────────────────────────────
+    if not is_safe_url(url):
         return {"valid": False, "error": "Invalid domain — unable to locate website.", "url": url}
 
     # ── Step 3 & 4: HTTP accessibility + status code (Non-blocking Warnings) ─
@@ -137,8 +198,12 @@ def validate_website(url: str) -> dict:
             "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36",
             "Accept": "text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8",
         }
+
         # Bypassing SSL errors in validation call as well to allow expired cert sites to proceed
-        response = requests.get(url, timeout=10, allow_redirects=True, headers=headers, stream=True, verify=False)
+        try:
+            response = safe_request("GET", url, timeout=10, headers=headers, stream=True, verify=False)
+        except ValueError:
+            return {"valid": False, "error": "Invalid domain — unable to locate website.", "url": url}
 
         # Read a limited amount of body for parked-domain detection (first 50KB)
         body_chunk = ""
