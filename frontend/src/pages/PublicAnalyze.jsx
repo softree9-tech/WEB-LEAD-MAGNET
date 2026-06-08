@@ -39,6 +39,8 @@ export default function PublicAnalyze() {
   const [result, setResult] = useState(null);
   const [started, setStarted] = useState(false);
   const [loadingStep, setLoadingStep] = useState(0);
+  const [lastFormData, setLastFormData] = useState(null);
+  const [isRecalculating, setIsRecalculating] = useState(false);
 
   // Simulated status updates for the premium agent analysis loader
   const loadingSteps = [
@@ -58,28 +60,35 @@ export default function PublicAnalyze() {
     return () => clearInterval(interval);
   }, [loading]);
 
-  const handleSubmit = async (formData) => {
+  const handleSubmit = async (formData, isRecalc = false) => {
     setError(null);
 
     // ── Step 1: Pre-flight website validation ───────────────────────────
-    setValidating(true);
+    if (!isRecalc) setValidating(true);
     try {
       const validation = await validateWebsite(formData.website);
       if (!validation.valid) {
         setError(validation.error);
-        setValidating(false);
+        if (!isRecalc) setValidating(false);
+        else setIsRecalculating(false);
         return;
       }
     } catch (err) {
       setError('Unable to verify the website. Please check the URL and try again.');
-      setValidating(false);
+      if (!isRecalc) setValidating(false);
+      else setIsRecalculating(false);
       return;
     }
-    setValidating(false);
+    if (!isRecalc) setValidating(false);
 
     // ── Step 2: Run full AI analysis ────────────────────────────────────
-    setLoading(true);
-    setLoadingStep(0);
+    setLastFormData(formData);
+    if (isRecalc) {
+      setIsRecalculating(true);
+    } else {
+      setLoading(true);
+      setLoadingStep(0);
+    }
 
     try {
       const payload = {
@@ -97,7 +106,8 @@ export default function PublicAnalyze() {
       const detail = err.response?.data?.detail || err.message || "An unexpected error occurred during the analysis.";
       setError(detail);
     } finally {
-      setLoading(false);
+      if (isRecalc) setIsRecalculating(false);
+      else setLoading(false);
     }
   };
 
@@ -336,8 +346,10 @@ export default function PublicAnalyze() {
               </span>
             </div>
             <div className="exec-actions-right">
-              <button className="action-btn" onClick={() => window.location.reload()}>
-                <RefreshCw size={14} /> Recalculate
+              <button className="action-btn" onClick={() => {
+                if (lastFormData) handleSubmit({ ...lastFormData, recaptchaToken: "admin_bypass" }, true);
+              }} disabled={isRecalculating}>
+                <RefreshCw size={14} className={isRecalculating ? "spinning" : ""} /> {isRecalculating ? "Recalculating..." : "Recalculate"}
               </button>
               <button className="action-btn primary" onClick={() => {
                 const filename = `executive_report_${cleanDomain.replace(/[/.]/g, '_')}.xlsx`;
