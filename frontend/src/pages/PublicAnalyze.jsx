@@ -129,13 +129,34 @@ export default function PublicAnalyze() {
     if (!started) {
       return (
         <div className="public-portal-theme">
-          <div className="portal-navbar">
-            <Link to="/" className="portal-logo-container">
-              <Logo />
-            </Link>
-            <div className="portal-nav-badge" style={{ cursor: 'default' }}>
-              <ShieldCheck size={14} style={{ color: 'var(--accent-orange)' }} />
-              AI Intelligence Report
+          <div className="portal-navbar" style={{ borderBottom: '1px solid rgba(10,10,26,0.08)' }}>
+            <div className="mx-auto w-full max-w-7xl flex items-center justify-between" style={{ padding: '0 1rem' }}>
+              <Link to="/" className="portal-logo-container" style={{ textDecoration: 'none' }}>
+                <Logo size={28} />
+              </Link>
+            <button 
+              onClick={handleReset}
+              style={{
+                display: 'flex',
+                alignItems: 'center',
+                gap: '6px',
+                cursor: 'pointer',
+                background: '#fff',
+                color: '#FF6B00',
+                border: '1px solid rgba(255, 107, 0, 0.3)',
+                padding: '0.5rem 1rem',
+                borderRadius: '6px',
+                fontSize: '0.75rem',
+                fontWeight: 700,
+                textTransform: 'uppercase',
+                transition: 'all 0.2s'
+              }}
+              onMouseOver={(e) => e.currentTarget.style.background = '#FFF0E6'}
+              onMouseOut={(e) => e.currentTarget.style.background = '#fff'}
+            >
+              <ArrowLeft size={14} />
+              New Analysis
+            </button>
             </div>
           </div>
 
@@ -201,29 +222,40 @@ export default function PublicAnalyze() {
 
     return (
       <div className="public-portal-theme" style={{ display: 'block', minHeight: '100vh', backgroundAttachment: 'fixed' }}>
-        <div className="portal-navbar">
-          <Link to="/" className="portal-logo-container">
-            <Logo />
-          </Link>
+        <div className="portal-navbar" style={{ borderBottom: '1px solid rgba(10,10,26,0.08)' }}>
+          <div className="mx-auto w-full max-w-7xl flex items-center justify-between" style={{ padding: '0 1rem' }}>
+            <Link to="/" className="portal-logo-container" style={{ textDecoration: 'none' }}>
+              <Logo size={28} />
+            </Link>
           <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
             <button 
               onClick={handleReset} 
-              className="portal-nav-badge"
               style={{
                 display: 'flex',
                 alignItems: 'center',
                 gap: '6px',
                 cursor: 'pointer',
-                background: 'transparent'
+                background: '#fff',
+                color: '#FF6B00',
+                border: '1px solid rgba(255, 107, 0, 0.3)',
+                padding: '0.5rem 1rem',
+                borderRadius: '6px',
+                fontSize: '0.75rem',
+                fontWeight: 700,
+                textTransform: 'uppercase',
+                transition: 'all 0.2s'
               }}
+              onMouseOver={(e) => e.currentTarget.style.background = '#FFF0E6'}
+              onMouseOut={(e) => e.currentTarget.style.background = '#fff'}
             >
               <ArrowLeft size={14} />
               New Analysis
             </button>
+            </div>
           </div>
         </div>
 
-        <div className="portal-container" style={{ padding: '0 2rem 4rem', maxWidth: '1400px' }}>
+        <div className="portal-container" style={{ padding: '75px 2rem 4rem', maxWidth: '1400px' }}>
           
           {/* ── EXECUTIVE HERO ──────────────────────────── */}
           <div className="executive-hero premium-animate premium-animate-d1">
@@ -300,7 +332,7 @@ export default function PublicAnalyze() {
                 {result.first_impression_verdict || 'Average'} Presence
               </div>
               <span style={{ fontSize: '0.75rem', color: '#475569' }}>
-                Presence Score: <strong style={{ color: '#fff' }}>{result.first_impression_score || 0}/10</strong>
+                Presence Score: <strong style={{ color: '#0a0a1a' }}>{result.first_impression_score || 0}/10</strong>
               </span>
             </div>
             <div className="exec-actions-right">
@@ -339,13 +371,11 @@ export default function PublicAnalyze() {
   if (loading) {
     return (
       <div className="public-portal-theme">
-        <div className="portal-navbar">
-          <Link to="/" className="portal-logo-container">
-            <Logo />
-          </Link>
-          <div className="portal-nav-badge" style={{ cursor: 'default' }}>
-            <ShieldCheck size={14} style={{ color: 'var(--accent-orange)' }} />
-            Lead Engine Portal
+        <div className="portal-navbar" style={{ borderBottom: '1px solid rgba(10,10,26,0.08)' }}>
+          <div className="mx-auto w-full max-w-7xl flex items-center justify-between" style={{ padding: '0 1rem' }}>
+            <Link to="/" className="portal-logo-container" style={{ textDecoration: 'none' }}>
+              <Logo size={28} />
+            </Link>
           </div>
         </div>
 
@@ -508,13 +538,15 @@ export default function PublicAnalyze() {
   return (
     <div className="public-portal-theme">
       {/* NAVBAR */}
-      <nav className="portal-navbar">
-        <Link to="/" className="portal-logo-container">
-          <Logo />
-        </Link>
-        <div className="portal-nav-badge" style={{ cursor: 'default' }}>
-          <ShieldCheck size={14} style={{ marginRight: '6px' }} />
-          Lead Engine Portal
+      <nav className="portal-navbar" style={{ borderBottom: '1px solid rgba(10,10,26,0.08)' }}>
+        <div className="mx-auto w-full max-w-7xl flex items-center justify-between" style={{ padding: '0 1rem' }}>
+          <Link to="/" className="portal-logo-container" style={{ textDecoration: 'none' }}>
+            <Logo size={28} />
+          </Link>
+          <div className="portal-nav-badge" style={{ cursor: 'default' }}>
+            <ShieldCheck size={14} style={{ marginRight: '6px' }} />
+            Lead Engine Portal
+          </div>
         </div>
       </nav>
 

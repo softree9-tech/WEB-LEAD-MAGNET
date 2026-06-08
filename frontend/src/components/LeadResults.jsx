@@ -1,7 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import '../LeadResults.css';
-import { ExternalLink, RefreshCw, Download, Monitor, Mail, Lock, FileCode, Check, X, Search, Activity, BarChart3, Settings, ChevronUp, LayoutDashboard, FileText, Bot, Target, Smartphone, Copy, TrendingDown, AlertTriangle, Sword, Trophy, Zap, Sparkles } from 'lucide-react';
+import ViewportDashboard from './ViewportDashboard';
+import { ExternalLink, RefreshCw, Download, Monitor, Mail, Lock, FileCode, Check, X, Search, Activity, BarChart3, Settings, ChevronUp, LayoutDashboard, ShieldCheck, FileText, Bot, Target, Smartphone, Copy, TrendingDown, AlertTriangle, Sword, Trophy, Zap, Sparkles } from 'lucide-react';
 
 /**
  * Enterprise-Grade Mobile Responsiveness Evaluation Engine
@@ -144,7 +145,13 @@ export const exportToExcel = async (leads, filename, isPublic) => {
       { header: 'Email Full Body', key: 'emailfullbody' }
     ];
 
-    worksheet.columns = columnsList.map(col => ({
+    const publicExcludedKeys = ['title', 'company_name', 'competitor_website', 'battle_winner', 'battle_verdict', 'emailfullbody'];
+    
+    const finalColumns = isPublic 
+      ? columnsList.filter(col => !publicExcludedKeys.includes(col.key))
+      : columnsList;
+
+    worksheet.columns = finalColumns.map(col => ({
       header: col.header,
       key: col.key,
       width: 25
@@ -1129,126 +1136,7 @@ Best,
 [Your Name]`;
 
 
-        return (
-          <div key={index} className="elite-dashboard">
-            <div className="elite-sidebar">
-              <div className="brand-icon">P</div>
-
-              <div className="nav-tooltip-wrap">
-                <button
-                  aria-label="Dashboard Overview"
-                  title="Dashboard Overview"
-                  className="nav-btn-reset"
-                  onClick={() => document.getElementById(`lead-${index}`).scrollIntoView({ behavior: 'smooth' })}
-                >
-                  <LayoutDashboard size={20} className="nav-icon active" />
-                </button>
-              </div>
-
-              {!isPublic && (
-                <div className="nav-tooltip-wrap">
-                  <button
-                    aria-label="AI Outreach Email"
-                    title="AI Outreach Email"
-                    className="nav-btn-reset"
-                    onClick={() => document.getElementById(`lead-${index}-outreach`).scrollIntoView({ behavior: 'smooth' })}
-                  >
-                    <FileText size={20} className="nav-icon" />
-                  </button>
-                </div>
-              )}
-
-              <div className="nav-tooltip-wrap">
-                <button
-                  aria-label="SEO Performance"
-                  title="SEO Performance"
-                  className="nav-btn-reset"
-                  onClick={() => document.getElementById(`lead-${index}-seo`).scrollIntoView({ behavior: 'smooth' })}
-                >
-                  <BarChart3 size={20} className="nav-icon" />
-                </button>
-              </div>
-
-              <div className="nav-tooltip-wrap">
-                <button
-                  aria-label="Trust Intelligence"
-                  title="Trust Intelligence"
-                  className="nav-btn-reset"
-                  onClick={() => document.getElementById(`lead-${index}-trust`).scrollIntoView({ behavior: 'smooth' })}
-                >
-                  <Activity size={20} className="nav-icon" />
-                </button>
-              </div>
-
-              {!isPublic && (
-                <div className="nav-tooltip-wrap" style={{ marginTop: 'auto' }}>
-                  <button
-                    aria-label="Settings"
-                    title="Settings"
-                    className="nav-btn-reset"
-                    onClick={() => alert('Settings coming soon!')}
-                  >
-                    <Settings size={20} className="nav-icon" />
-                  </button>
-                </div>
-              )}
-
-              <div className="nav-tooltip-wrap" style={{ marginTop: isPublic ? 'auto' : '0', marginBottom: '2rem' }}>
-                <button
-                  aria-label="Return to Top"
-                  title="Return to Top"
-                  className="nav-btn-reset"
-                  onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })}
-                >
-                  <ChevronUp size={20} className="nav-icon" />
-                </button>
-              </div>
-            </div>
-
-            <div className="elite-main" id={`lead-${index}`}>
-              <div className="elite-header">
-                <div>
-                  <h1 className="report-title">WEBSITE PERFORMANCE REPORT: <span className="highlight-domain">{(lead.website || '').replace(/^https?:\/\//i, '')}</span></h1>
-                  <p className="report-date">Data as of: {new Date().toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}</p>
-                </div>
-                <div className="header-actions">
-                  <button className="action-btn" onClick={() => window.location.reload()}><RefreshCw size={14} /> Recalculate</button>
-                  {true && (
-                    <button className="action-btn primary" onClick={() => {
-                      const filename = `audit_report_${(lead.website || '').replace(/^https?:\/\//i, '').replace(/[/.]/g, '_')}.xlsx`;
-                      exportToExcel([lead], filename, isPublic);
-                    }}><Download size={14} /> {isPublic ? 'Download Audit Report' : 'Export to Excel'}</button>
-                  )}
-                  {/* <div className="avatar">JD</div> */}
-                </div>
-              </div>
-
-              {lead.technical_warning && (
-                <div className="glass-panel animate-fade-in" style={{
-                  padding: '1rem 1.5rem',
-                  display: 'flex',
-                  alignItems: 'center',
-                  gap: '1rem',
-                  borderLeft: '3px solid rgba(251, 191, 36, 0.6)',
-                  background: 'rgba(251, 191, 36, 0.04)',
-                  marginBottom: '1.5rem'
-                }}>
-                  <AlertTriangle size={20} color="#fbbf24" style={{ flexShrink: 0 }} />
-                  <div>
-                    <h4 style={{ margin: 0, fontSize: '0.95rem', fontWeight: 700, color: '#fbbf24' }}>
-                      Website Accessible With Technical Issues
-                    </h4>
-                    <p style={{ margin: '2px 0 0', fontSize: '0.825rem', color: 'var(--text-secondary)' }}>
-                      {lead.technical_warning}
-                    </p>
-                  </div>
-                </div>
-              )}
-
-              <div className="quadrant-grid">
-
-                {/* 0. Competitor Battle Card (Full Width) */}
-                {lead.battle_data && (
+        const battleCard = lead.battle_data ? (
                   <div className="quad-card battle-card animate-slide-up">
                     <div className="battle-header">
                       <div className="battle-title">
@@ -1304,10 +1192,10 @@ Best,
                       </div>
                     </div>
                   </div>
-                )}
+                ) : null;
 
-                {/* 0. Executive Presence Intelligence */}
-                <div className="quad-card first-impression-card animate-slide-up">
+        const presenceCard = (
+          <div className="quad-card first-impression-card animate-slide-up">
                   <div className="quad-header">
                     <h2>Executive Presence Intelligence</h2>
                     <div className={`verdict-badge verdict-${(lead.first_impression_verdict || 'Average').toLowerCase()}`}>
@@ -1411,14 +1299,16 @@ Best,
                     </div>
                   </div>
                 </div>
+        );
 
-                {/* 0.5. Mobile Experience Walkthrough Carousel */}
-                <div className="quad-card mobile-reality-card animate-slide-up">
+        const mobileCard = (
+          <div className="quad-card mobile-reality-card animate-slide-up">
                   <MobileWalkthrough lead={lead} />
                 </div>
+        );
 
-                {/* 1. UX Scorecard */}
-                <div className="quad-card">
+        const uxCard = (
+          <div className="quad-card">
                   <div className="quad-header">
                     <h2>Rebranding UX Scorecard</h2>
                     <div className="grade-badge">Grade: {uxScore > 80 ? 'A' : uxScore > 70 ? 'B+' : uxScore > 60 ? 'B' : 'C'} | {uxScore}%</div>
@@ -1531,9 +1421,10 @@ Best,
                     </div>
                   </div>
                 </div>
+        );
 
-                {/* 2. AI Trust Intelligence */}
-                <div className="quad-card" id={`lead-${index}-trust`}>
+        const trustCard = (
+          <div className="quad-card" id={`lead-${index}-trust`}>
                   <div className="quad-header">
                     <h2>AI Trust Intelligence</h2>
                     <div className={`trust-risk-badge risk-${trustRisk.toLowerCase()}`}>
@@ -1604,9 +1495,10 @@ Best,
                     </div>
                   </div>
                 </div>
+        );
 
-                {/* 3. Google SEO */}
-                <div className="quad-card" id={`lead-${index}-seo`}>
+        const seoCard = (
+          <div className="quad-card" id={`lead-${index}-seo`}>
                   <div className="quad-header" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
                     <h2>Google SEO Score</h2>
                     <div style={{ fontSize: '0.7rem', padding: '4px 8px', borderRadius: '4px', background: lead.lighthouse_api_success ? 'rgba(16, 185, 129, 0.1)' : 'rgba(239, 68, 68, 0.1)', color: lead.lighthouse_api_success ? '#10b981' : '#ef4444' }}>
@@ -1673,9 +1565,10 @@ Best,
                     </div>
                   </div>
                 </div>
+        );
 
-                {/* 4. Revenue Impact Forecast */}
-                <div className="quad-card revenue-leak-card animate-slide-up">
+        const revenueCard = (
+          <div className="quad-card revenue-leak-card animate-slide-up">
                   <div className="quad-header">
                     <h2 style={{ color: '#ef4444', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
                       <TrendingDown size={20} /> Revenue Impact Forecast
@@ -1732,9 +1625,10 @@ Best,
                     </p>
                   </div>
                 </div>
+        );
 
-                {/* 5. Conversion Opportunity Intelligence */}
-                <div className="quad-card conversion-intelligence-card animate-slide-up">
+        const conversionCard = (
+          <div className="quad-card conversion-intelligence-card animate-slide-up">
                   <div className="quad-header">
                     <h2 style={{ color: '#f97316', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
                       <Bot size={20} /> Conversion Opportunity Intelligence
@@ -1858,9 +1752,10 @@ Best,
                     </p>
                   </div>
                 </div>
+        );
 
-                {/* 5.5 Market Position Intelligence */}
-                <div className="quad-card market-position-card animate-slide-up">
+        const marketCard = (
+          <div className="quad-card market-position-card animate-slide-up">
                   <div className="quad-header">
                     <h2 style={{ color: '#06b6d4', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
                       <TrendingDown size={20} style={{ transform: 'rotate(180deg)' }} /> Market Position Intelligence
@@ -1971,10 +1866,10 @@ Best,
                     </p>
                   </div>
                 </div>
+        );
 
-
-                {/* 5.6 Schema & AI Visibility Gap */}
-                <div className="quad-card schema-card animate-slide-up">
+        const schemaCard = (
+          <div className="quad-card schema-card animate-slide-up">
                   <div className="quad-header">
                     <h2 style={{ color: '#10b981', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
                       <FileCode size={20} /> Schema & AI Visibility Gap
@@ -2021,9 +1916,10 @@ Best,
                     </p>
                   </div>
                 </div>
+        );
 
-                {/* 5.7 Keyword Visibility Gap */}
-                <div className="quad-card keyword-gap-card animate-slide-up">
+        const keywordCard = (
+          <div className="quad-card keyword-gap-card animate-slide-up">
                   <div className="quad-header">
                     <h2 style={{ color: '#8b5cf6', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
                       <Search size={20} /> Keyword Visibility Gap
@@ -2071,9 +1967,10 @@ Best,
                     </p>
                   </div>
                 </div>
+        );
 
-                {/* 5.8 Competitor Momentum Tracker */}
-                <div className="quad-card momentum-tracker-card animate-slide-up">
+        const momentumCard = (
+          <div className="quad-card momentum-tracker-card animate-slide-up">
                   <div className="quad-header">
                     <h2 style={{ color: '#06b6d4', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
                       <Zap size={20} /> Competitor Momentum Tracker
@@ -2146,9 +2043,10 @@ Best,
                     </p>
                   </div>
                 </div>
+        );
 
-                {/* 5.9 AI Strategic Action Plan */}
-                <div className="quad-card action-plan-card animate-slide-up">
+        const actionCard = (
+          <div className="quad-card action-plan-card animate-slide-up">
                   <div className="quad-header">
                     <h2 style={{ color: '#8b5cf6', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
                       <Sparkles size={20} /> AI Strategic Action Plan
@@ -2189,10 +2087,10 @@ Best,
                     )}
                   </div>
                 </div>
+        );
 
-                {/* 6. AI Search Visibility & Ranking — Full Width */}
-
-                <div className="quad-card aeo-card-wide" style={{ gridColumn: '1 / -1' }}>
+        const aeoCard = (
+          <div className="quad-card aeo-card-wide" style={{ gridColumn: '1 / -1' }}>
                   <div className="quad-header">
                     <h2>AI Search Visibility &amp; Ranking</h2>
                     <div className="ai-logos" style={{ margin: 0 }}>
@@ -2265,8 +2163,136 @@ Best,
                     </div>
                   </div>
                 </div>
+        );
 
+        return (
+          <div key={index} className={isPublic ? "public-viewport-container" : "elite-dashboard"}>
+            {!isPublic && (
+              <div className="elite-sidebar">
+                <div className="brand-icon">P</div>
+
+                <div className="nav-tooltip-wrap">
+                  <button
+                    aria-label="Dashboard Overview"
+                    title="Dashboard Overview"
+                    className="nav-btn-reset"
+                    onClick={() => document.getElementById(`lead-${index}`).scrollIntoView({ behavior: 'smooth' })}
+                  >
+                    <LayoutDashboard size={20} className="nav-icon active" />
+                  </button>
+                </div>
+
+                <div className="nav-tooltip-wrap">
+                  <button
+                    aria-label="Trust Signals"
+                    title="Trust Signals"
+                    className="nav-btn-reset"
+                    onClick={() => document.getElementById(`lead-${index}-trust`).scrollIntoView({ behavior: 'smooth' })}
+                  >
+                    <ShieldCheck size={20} className="nav-icon" />
+                  </button>
+                </div>
+
+                <div className="nav-tooltip-wrap">
+                  <button
+                    aria-label="Google SEO"
+                    title="Google SEO"
+                    className="nav-btn-reset"
+                    onClick={() => document.getElementById(`lead-${index}-seo`).scrollIntoView({ behavior: 'smooth' })}
+                  >
+                    <Search size={20} className="nav-icon" />
+                  </button>
+                </div>
+
+                <div className="nav-tooltip-wrap">
+                  <button
+                    aria-label="AI Outreach Email"
+                    title="AI Outreach Email"
+                    className="nav-btn-reset"
+                    onClick={() => document.getElementById(`lead-${index}-outreach`).scrollIntoView({ behavior: 'smooth' })}
+                  >
+                    <Mail size={20} className="nav-icon" />
+                  </button>
+                </div>
               </div>
+            )}
+
+            <div className={isPublic ? "public-viewport-main" : "elite-main"} id={`lead-${index}`}>
+              {!isPublic && (
+                <div className="elite-header">
+                  <div>
+                    <h1 className="report-title">WEBSITE PERFORMANCE REPORT: <span className="highlight-domain">{(lead.website || '').replace(/^https?:\/\//i, '')}</span></h1>
+                    <p className="report-date">Data as of: {new Date().toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}</p>
+                  </div>
+                  <div className="header-actions">
+                    <button className="action-btn" onClick={() => window.location.reload()}><RefreshCw size={14} /> Recalculate</button>
+                    {true && (
+                      <button className="action-btn primary" onClick={() => {
+                        const filename = `audit_report_${(lead.website || '').replace(/^https?:\/\//i, '').replace(/[/.]/g, '_')}.xlsx`;
+                        exportToExcel([lead], filename, isPublic);
+                      }}><Download size={14} /> {isPublic ? 'Download Audit Report' : 'Export to Excel'}</button>
+                    )}
+                  </div>
+                </div>
+              )}
+
+              {!isPublic && lead.technical_warning && (
+                <div className="glass-panel animate-fade-in" style={{
+                  padding: '1rem 1.5rem',
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: '1rem',
+                  borderLeft: '3px solid rgba(251, 191, 36, 0.6)',
+                  background: 'rgba(251, 191, 36, 0.04)',
+                  marginBottom: '1.5rem'
+                }}>
+                  <AlertTriangle size={20} color="#fbbf24" style={{ flexShrink: 0 }} />
+                  <div>
+                    <h4 style={{ margin: 0, fontSize: '0.95rem', fontWeight: 700, color: '#fbbf24' }}>
+                      Website Accessible With Technical Issues
+                    </h4>
+                    <p style={{ margin: '2px 0 0', fontSize: '0.825rem', color: 'var(--text-secondary)' }}>
+                      {lead.technical_warning}
+                    </p>
+                  </div>
+                </div>
+              )}
+
+              {isPublic ? (
+                <ViewportDashboard hasBattleCard={!!lead.battle_data} website={lead.website || ''}>
+                  {battleCard}
+                  {presenceCard}
+                  {mobileCard}
+                  {uxCard}
+                  {trustCard}
+                  {seoCard}
+                  {revenueCard}
+                  {conversionCard}
+                  {marketCard}
+                  {schemaCard}
+                  {keywordCard}
+                  {momentumCard}
+                  {actionCard}
+                  {aeoCard}
+                </ViewportDashboard>
+              ) : (
+                <div className="quadrant-grid">
+                  {battleCard}
+                  {presenceCard}
+                  {mobileCard}
+                  {uxCard}
+                  {trustCard}
+                  {seoCard}
+                  {revenueCard}
+                  {conversionCard}
+                  {marketCard}
+                  {schemaCard}
+                  {keywordCard}
+                  {momentumCard}
+                  {actionCard}
+                  {aeoCard}
+                </div>
+              )}
 
               {!isPublic && (
                 <div className="quad-card" id={`lead-${index}-outreach`} style={{ marginTop: '1.5rem', flex: 'none' }}>

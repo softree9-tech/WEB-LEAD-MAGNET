@@ -280,7 +280,7 @@ export default function LeadCaptureForm({ onSubmit, loading, error }) {
         <div className="form-inline-benefits">
           <div className="form-inline-benefit-item">
             <Clock size={14} />
-            <span>Takes less than 60s</span>
+            <span>Get report within minutes</span>
           </div>
           <div className="form-inline-benefit-item">
             <CreditCard size={14} />

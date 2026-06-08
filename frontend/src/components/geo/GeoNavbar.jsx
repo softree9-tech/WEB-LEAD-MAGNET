@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
+import Logo from '../Logo';
 
 export default function GeoNavbar() {
   const [scrolled, setScrolled] = useState(false);
@@ -28,11 +29,7 @@ export default function GeoNavbar() {
       <div className="mx-auto max-w-7xl px-6 py-3 flex items-center justify-between">
         {/* Softree Logo */}
         <a href="/geo" className="flex items-center gap-2 no-underline">
-          <img
-            src="/softree_logo.png"
-            alt="Softree Technology"
-            style={{ height: '115px', width: 'auto', display: 'block' }}
-          />
+          <Logo size={28} />
         </a>
 
         {/* Center Links */}
