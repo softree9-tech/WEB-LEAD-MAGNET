@@ -85,6 +85,28 @@ export default function GeoDashboardPreview() {
           </div>
         </div>
 
+        {/* Floating analytics mini chart */}
+        <div className="flex justify-end mb-6 relative z-10">
+          <motion.div
+            animate={{ y: [0, -6, 0] }}
+            transition={{ duration: 4, repeat: Infinity, ease: 'easeInOut', delay: 1 }}
+            className="geo-glass px-3 py-2 rounded-xl shadow-lg"
+            style={{ borderColor: 'rgba(255,88,18,0.12)' }}
+          >
+            <p className="text-text-muted text-[10px] font-semibold mb-1">Weekly Trend</p>
+            <svg width="80" height="28" viewBox="0 0 80 28">
+              <defs>
+                <linearGradient id="tinyChart" x1="0" y1="0" x2="0" y2="1">
+                  <stop offset="0%" stopColor="#FF6B00" stopOpacity="0.2" />
+                  <stop offset="100%" stopColor="#FF6B00" stopOpacity="0" />
+                </linearGradient>
+              </defs>
+              <path d="M0 24 L13 20 L26 22 L39 14 L52 16 L65 8 L80 4 L80 28 L0 28Z" fill="url(#tinyChart)" />
+              <path d="M0 24 L13 20 L26 22 L39 14 L52 16 L65 8 L80 4" fill="none" stroke="#FF6B00" strokeWidth="1.5" strokeLinecap="round" />
+            </svg>
+          </motion.div>
+        </div>
+
         {/* Bottom Metrics Row */}
         <div className="grid grid-cols-3 gap-3">
           {[
@@ -111,25 +133,6 @@ export default function GeoDashboardPreview() {
           <p className="text-text-secondary text-[10px] leading-tight">Add FAQ schema to improve AI citations by 40%</p>
         </motion.div>
 
-        {/* Floating analytics mini chart */}
-        <motion.div
-          animate={{ y: [0, -8, 0] }}
-          transition={{ duration: 5, repeat: Infinity, ease: 'easeInOut', delay: 1 }}
-          className="absolute -left-4 bottom-20 geo-glass px-3 py-2 rounded-xl shadow-lg"
-          style={{ borderColor: 'rgba(255,88,18,0.08)' }}
-        >
-          <p className="text-text-muted text-[10px] font-semibold mb-1">Weekly Trend</p>
-          <svg width="80" height="28" viewBox="0 0 80 28">
-            <defs>
-              <linearGradient id="tinyChart" x1="0" y1="0" x2="0" y2="1">
-                <stop offset="0%" stopColor="#FF6B00" stopOpacity="0.2" />
-                <stop offset="100%" stopColor="#FF6B00" stopOpacity="0" />
-              </linearGradient>
-            </defs>
-            <path d="M0 24 L13 20 L26 22 L39 14 L52 16 L65 8 L80 4 L80 28 L0 28Z" fill="url(#tinyChart)" />
-            <path d="M0 24 L13 20 L26 22 L39 14 L52 16 L65 8 L80 4" fill="none" stroke="#FF6B00" strokeWidth="1.5" strokeLinecap="round" />
-          </svg>
-        </motion.div>
       </div>
     </motion.div>
   );

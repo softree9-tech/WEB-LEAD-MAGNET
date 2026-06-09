@@ -67,7 +67,18 @@ export const processCSV = async (file) => {
     });
     return response.data;
   } catch (error) {
-    console.error('Error processing CSV:', error);
+    throw error;
+  }
+};
+
+export const emailReport = async (emailData) => {
+  try {
+    const response = await axios.post(`${API_BASE_URL}/email_report`, emailData, {
+      timeout: 30000
+    });
+    return response.data;
+  } catch (error) {
+    console.error('Error emailing report:', error);
     throw error;
   }
 };

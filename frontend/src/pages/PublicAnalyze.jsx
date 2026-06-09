@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import LeadCaptureForm from '../components/LeadCaptureForm';
 import LeadResults, { exportToExcel } from '../components/LeadResults';
-import { processSingleLead, validateWebsite } from '../api/api';
+import { processSingleLead, validateWebsite, emailReport } from '../api/api';
 import Logo from '../components/Logo';
 import { 
   Sparkles, 
@@ -27,7 +27,9 @@ import {
   Layout, 
   Check, 
   Search,
-  RefreshCw
+  RefreshCw,
+  Mail,
+  Loader2
 } from 'lucide-react';
 import '../PublicPortal.css';
 import '../PremiumReport.css';
@@ -41,6 +43,14 @@ export default function PublicAnalyze() {
   const [loadingStep, setLoadingStep] = useState(0);
   const [lastFormData, setLastFormData] = useState(null);
   const [isRecalculating, setIsRecalculating] = useState(false);
+
+  // Email report states
+  const [showEmailCaptcha, setShowEmailCaptcha] = useState(false);
+  const [emailing, setEmailing] = useState(false);
+  const [emailDelivered, setEmailDelivered] = useState(false);
+  const [emailToast, setEmailToast] = useState(null);
+  const emailRecaptchaRef = React.useRef(null);
+  const emailWidgetIdRef = React.useRef(null);
 
   // Simulated status updates for the premium agent analysis loader
   const loadingSteps = [
@@ -59,6 +69,62 @@ export default function PublicAnalyze() {
     }, 4500); // Progress through steps every 4.5 seconds
     return () => clearInterval(interval);
   }, [loading]);
+
+  useEffect(() => {
+    if (!showEmailCaptcha) return;
+    const siteKey = import.meta.env.VITE_RECAPTCHA_SITE_KEY || '6LeIxAcTAAAAAJcZVRqyHh71UMIEGNQ_MXjiZKhI';
+
+    const renderWidget = () => {
+      if (emailWidgetIdRef.current !== null) return;
+      if (!emailRecaptchaRef.current) return;
+      try {
+        emailWidgetIdRef.current = window.grecaptcha.render(emailRecaptchaRef.current, {
+          sitekey: siteKey,
+          callback: (token) => {
+            setShowEmailCaptcha(false);
+            handleEmailDelivery(token);
+          }
+        });
+      } catch (err) {
+        console.warn("reCAPTCHA render skipped:", err.message);
+      }
+    };
+
+    const interval = setInterval(() => {
+      if (window.grecaptcha && window.grecaptcha.render) {
+        clearInterval(interval);
+        renderWidget();
+      }
+    }, 300);
+
+    return () => {
+      clearInterval(interval);
+      if (emailWidgetIdRef.current !== null) {
+        try { window.grecaptcha.reset(emailWidgetIdRef.current); } catch (_) {}
+        emailWidgetIdRef.current = null;
+      }
+    };
+  }, [showEmailCaptcha]);
+
+  const handleEmailDelivery = async (captchaToken) => {
+    setEmailing(true);
+    try {
+      const payload = {
+        email: lastFormData?.email || result.email || 'unknown@example.com',
+        result: result,
+        recaptcha_token: captchaToken
+      };
+      await emailReport(payload);
+      setEmailDelivered(true);
+      setEmailToast('Executive report has been delivered to your business email.');
+      setTimeout(() => setEmailToast(null), 5000);
+    } catch (err) {
+      console.error('Email report failed', err);
+      alert('Failed to email the report. Please try again.');
+    } finally {
+      setEmailing(false);
+    }
+  };
 
   const handleSubmit = async (formData, isRecalc = false) => {
     setError(null);
@@ -351,14 +417,65 @@ export default function PublicAnalyze() {
               }} disabled={isRecalculating}>
                 <RefreshCw size={14} className={isRecalculating ? "spinning" : ""} /> {isRecalculating ? "Recalculating..." : "Recalculate"}
               </button>
-              <button className="action-btn primary" onClick={() => {
-                const filename = `executive_report_${cleanDomain.replace(/[/.]/g, '_')}.xlsx`;
-                exportToExcel([result], filename, true);
-              }}>
-                <Download size={14} /> Download Report
+              <button 
+                className={`action-btn primary ${emailing ? 'spinning-parent' : ''} ${emailDelivered ? 'success-btn' : ''}`}
+                onClick={() => {
+                  if (emailDelivered || emailing) return;
+                  setShowEmailCaptcha(true);
+                }}
+                disabled={emailDelivered || emailing}
+                style={{ position: 'relative', overflow: 'hidden' }}
+              >
+                {emailing ? (
+                  <><Loader2 size={14} className="spinning" /> Delivering PDF...</>
+                ) : emailDelivered ? (
+                  <><Check size={14} /> Delivered Successfully</>
+                ) : (
+                  <><Mail size={14} /> Email Full Report</>
+                )}
               </button>
             </div>
           </div>
+          
+          {emailToast && (
+            <div style={{
+              position: 'fixed', bottom: '2rem', right: '2rem', 
+              background: '#10b981', color: 'white', padding: '1rem 1.5rem',
+              borderRadius: '8px', boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.1)',
+              display: 'flex', alignItems: 'center', gap: '0.75rem', zIndex: 9999,
+              animation: 'fade-in 0.3s ease-out'
+            }}>
+              <Check size={18} />
+              <span style={{ fontWeight: 600 }}>{emailToast}</span>
+            </div>
+          )}
+
+          {showEmailCaptcha && (
+            <div style={{
+              position: 'fixed', top: 0, left: 0, right: 0, bottom: 0,
+              background: 'rgba(0,0,0,0.6)', display: 'flex', alignItems: 'center',
+              justifyContent: 'center', zIndex: 9999
+            }}>
+              <div style={{
+                background: 'white', padding: '2rem', borderRadius: '12px',
+                display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '1rem'
+              }}>
+                <h3 style={{ fontSize: '1.2rem', fontWeight: 700, margin: 0, color: '#0f172a' }}>Security Verification</h3>
+                <p style={{ margin: 0, color: '#64748b', fontSize: '0.9rem' }}>Please verify to receive your PDF report.</p>
+                <div ref={emailRecaptchaRef}></div>
+                <button 
+                  onClick={() => setShowEmailCaptcha(false)}
+                  style={{
+                    marginTop: '1rem', background: 'transparent', border: 'none',
+                    color: '#64748b', cursor: 'pointer', fontSize: '0.9rem',
+                    textDecoration: 'underline'
+                  }}
+                >
+                  Cancel
+                </button>
+              </div>
+            </div>
+          )}
 
           {/* ── RESULTS ────────────────────────────────── */}
           <div className="premium-animate premium-animate-d4">

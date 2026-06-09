@@ -79,7 +79,7 @@ export default function GeoLanding() {
               initial={{ opacity: 0, x: -10 }}
               animate={{ opacity: 1, x: 0 }}
               onClick={() => setResults(null)}
-              className="flex items-center gap-2 text-text-secondary text-sm hover:text-white transition-colors bg-transparent border-none cursor-pointer font-medium"
+              className="flex items-center gap-2 text-text-secondary text-sm hover:text-[#0a0a1a] transition-colors duration-300 bg-transparent border-none cursor-pointer font-medium"
             >
               <ArrowLeft size={16} />
               New GEO Audit
