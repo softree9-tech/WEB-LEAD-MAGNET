@@ -25,14 +25,8 @@ export default function GeoLoadingState() {
   const CurrentIcon = steps[step].icon;
 
   return (
-    <motion.div
-      initial={{ opacity: 0, y: 30 }}
-      animate={{ opacity: 1, y: 0 }}
-      exit={{ opacity: 0, y: -20 }}
-      transition={{ duration: 0.5 }}
-      className="w-full max-w-xl mx-auto py-20 px-6"
-    >
-      <div className="geo-glass p-10 relative overflow-hidden text-center"
+    <div className="w-full">
+      <div className="geo-glass p-7 relative overflow-hidden text-center"
         style={{ borderColor: 'rgba(255,88,18,0.12)' }}>
 
         {/* Scanning beam */}
@@ -127,6 +121,6 @@ export default function GeoLoadingState() {
           ))}
         </div>
       </div>
-    </motion.div>
+    </div>
   );
 }

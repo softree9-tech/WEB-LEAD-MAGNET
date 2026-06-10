@@ -66,44 +66,6 @@ export default function GeoLanding() {
 
   const isProcessing = loading || validating;
 
-  // Render NEXT PAGE (Results Screen) inline on /geo
-  if (results) {
-    return (
-      <div className="geo-page animate-fade-in">
-        <GeoNavbar />
-
-        {/* ── RESULTS HEADER ────────────────────────────────────── */}
-        <div className="pt-24 pb-4 px-6">
-          <div className="max-w-7xl mx-auto flex items-center justify-between">
-            <motion.button
-              initial={{ opacity: 0, x: -10 }}
-              animate={{ opacity: 1, x: 0 }}
-              onClick={() => setResults(null)}
-              className="flex items-center gap-2 text-text-secondary text-sm hover:text-[#0a0a1a] transition-colors duration-300 bg-transparent border-none cursor-pointer font-medium"
-            >
-              <ArrowLeft size={16} />
-              New GEO Audit
-            </motion.button>
-
-            <motion.div
-              initial={{ opacity: 0, x: 10 }}
-              animate={{ opacity: 1, x: 0 }}
-              className="flex items-center gap-2 px-3 py-1.5 rounded-full border border-green-500/20 bg-green-500/5"
-            >
-              <span className="w-1.5 h-1.5 rounded-full bg-green-400 animate-pulse" />
-              <span className="text-green-400 text-xs font-medium">Analysis Complete</span>
-            </motion.div>
-          </div>
-        </div>
-
-        {/* ── RESULTS DASHBOARD ─────────────────────────────────── */}
-        <GeoResultsDashboard data={results} />
-
-        <GeoFooter />
-      </div>
-    );
-  }
-
   return (
     <div className="geo-page">
       <GeoNavbar />
@@ -116,9 +78,18 @@ export default function GeoLanding() {
         <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_top,rgba(255,107,0,0.03),transparent_60%)]" />
 
         <div className="max-w-7xl mx-auto w-full relative z-10">
-          <div className="geo-hero-grid grid grid-cols-1 lg:grid-cols-2 gap-16 items-center">
-            {/* LEFT SIDE */}
-            <div>
+          <AnimatePresence mode="wait">
+            {!results ? (
+              <motion.div
+                key="hero-content"
+                initial={{ opacity: 0, scale: 0.98 }}
+                animate={{ opacity: 1, scale: 1 }}
+                exit={{ opacity: 0, scale: 0.98 }}
+                transition={{ duration: 0.4 }}
+                className="geo-hero-grid grid grid-cols-1 lg:grid-cols-2 gap-16 items-center"
+              >
+                {/* LEFT SIDE */}
+                <div>
               <motion.div
                 initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.5 }}
                 className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full border border-orange-500/20 bg-orange-500/5 mb-7"
@@ -158,30 +129,81 @@ export default function GeoLanding() {
                 )}
               </AnimatePresence>
 
-              {/* Form Card */}
-              <GeoHeroForm onSubmit={handleFormSubmit} loading={isProcessing} />
+              {/* Form or Loader Inline Switch */}
+              <AnimatePresence mode="wait">
+                {!isProcessing ? (
+                  <motion.div
+                    key="form"
+                    initial={{ opacity: 0, scale: 0.98 }}
+                    animate={{ opacity: 1, scale: 1 }}
+                    exit={{ opacity: 0, scale: 0.98 }}
+                    transition={{ duration: 0.4 }}
+                  >
+                    <GeoHeroForm onSubmit={handleFormSubmit} loading={isProcessing} />
+                  </motion.div>
+                ) : (
+                  <motion.div
+                    key="loader"
+                    initial={{ opacity: 0, scale: 0.98 }}
+                    animate={{ opacity: 1, scale: 1 }}
+                    exit={{ opacity: 0, scale: 0.98 }}
+                    transition={{ duration: 0.4 }}
+                  >
+                    <GeoLoadingState />
+                  </motion.div>
+                )}
+              </AnimatePresence>
             </div>
 
             {/* RIGHT SIDE - Dashboard Preview */}
             <div className="hidden lg:block">
               <GeoDashboardPreview />
             </div>
-          </div>
+          </motion.div>
+            ) : (
+              <motion.div
+                key="results-content"
+                initial={{ opacity: 0, scale: 0.98, y: 10 }}
+                animate={{ opacity: 1, scale: 1, y: 0 }}
+                transition={{ duration: 0.5 }}
+              >
+                {/* ── RESULTS HEADER ────────────────────────────────────── */}
+                <div className="pb-6">
+                  <div className="flex items-center justify-between mb-2">
+                    <button
+                      onClick={() => setResults(null)}
+                      className="flex items-center gap-2 text-text-secondary text-sm hover:text-[#0a0a1a] transition-colors duration-300 bg-transparent border-none cursor-pointer font-medium"
+                    >
+                      <ArrowLeft size={16} />
+                      New GEO Audit
+                    </button>
+
+                    <div className="flex items-center gap-2 px-3 py-1.5 rounded-full border border-green-500/20 bg-green-500/5">
+                      <span className="w-1.5 h-1.5 rounded-full bg-green-400 animate-pulse" />
+                      <span className="text-green-400 text-xs font-medium">Analysis Complete</span>
+                    </div>
+                  </div>
+                </div>
+
+                {/* ── RESULTS DASHBOARD ─────────────────────────────────── */}
+                <GeoResultsDashboard data={results} />
+              </motion.div>
+            )}
+          </AnimatePresence>
         </div>
       </section>
 
-      {/* ── LOADING STATE (overlays hero during processing) ──── */}
-      <AnimatePresence>
-        {isProcessing && <GeoLoadingState />}
-      </AnimatePresence>
-
       {/* ── LANDING PAGE SECTIONS ─────────────────────────────── */}
-      <GeoReportSection />
-      <GeoHowItWorks />
-      <GeoFeaturesGrid />
-      <GeoWhyMatters />
-      <GeoCTA onScrollToHero={scrollToHero} />
-      <GeoFAQ />
+      {!results && (
+        <>
+          <GeoReportSection />
+          <GeoHowItWorks />
+          <GeoFeaturesGrid />
+          <GeoWhyMatters />
+          <GeoCTA onScrollToHero={scrollToHero} />
+          <GeoFAQ />
+        </>
+      )}
       <GeoFooter />
     </div>
   );

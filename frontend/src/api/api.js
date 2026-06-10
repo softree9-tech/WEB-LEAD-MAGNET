@@ -73,7 +73,7 @@ export const processCSV = async (file) => {
 
 export const emailReport = async (emailData) => {
   try {
-    const response = await axios.post(`${API_BASE_URL}/email_report`, emailData, {
+    const response = await axios.post(`${API_ROOT}/email-report`, emailData, {
       timeout: 30000
     });
     return response.data;

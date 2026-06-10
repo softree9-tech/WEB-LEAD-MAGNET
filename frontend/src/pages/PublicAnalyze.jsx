@@ -4,28 +4,28 @@ import LeadCaptureForm from '../components/LeadCaptureForm';
 import LeadResults, { exportToExcel } from '../components/LeadResults';
 import { processSingleLead, validateWebsite, emailReport } from '../api/api';
 import Logo from '../components/Logo';
-import { 
-  Sparkles, 
-  ArrowLeft, 
-  ShieldCheck, 
-  Cpu, 
-  Zap, 
-  BarChart2, 
-  TrendingUp, 
-  Lock, 
-  Clock, 
-  FileText, 
-  AlertTriangle, 
-  LayoutGrid, 
-  Code, 
-  Download, 
-  Award, 
-  Users, 
-  Globe, 
-  Smartphone, 
-  MousePointerClick, 
-  Layout, 
-  Check, 
+import {
+  Sparkles,
+  ArrowLeft,
+  ShieldCheck,
+  Cpu,
+  Zap,
+  BarChart2,
+  TrendingUp,
+  Lock,
+  Clock,
+  FileText,
+  AlertTriangle,
+  LayoutGrid,
+  Code,
+  Download,
+  Award,
+  Users,
+  Globe,
+  Smartphone,
+  MousePointerClick,
+  Layout,
+  Check,
   Search,
   RefreshCw,
   Mail,
@@ -100,7 +100,7 @@ export default function PublicAnalyze() {
     return () => {
       clearInterval(interval);
       if (emailWidgetIdRef.current !== null) {
-        try { window.grecaptcha.reset(emailWidgetIdRef.current); } catch (_) {}
+        try { window.grecaptcha.reset(emailWidgetIdRef.current); } catch (_) { }
         emailWidgetIdRef.current = null;
       }
     };
@@ -110,9 +110,10 @@ export default function PublicAnalyze() {
     setEmailing(true);
     try {
       const payload = {
+        name: lastFormData?.fullName || result.name || 'Client',
         email: lastFormData?.email || result.email || 'unknown@example.com',
-        result: result,
-        recaptcha_token: captchaToken
+        website: lastFormData?.website || result.website || '',
+        report_data: result
       };
       await emailReport(payload);
       setEmailDelivered(true);
@@ -210,29 +211,29 @@ export default function PublicAnalyze() {
               <Link to="/" className="portal-logo-container" style={{ textDecoration: 'none' }}>
                 <Logo size={28} />
               </Link>
-            <button 
-              onClick={handleReset}
-              style={{
-                display: 'flex',
-                alignItems: 'center',
-                gap: '6px',
-                cursor: 'pointer',
-                background: '#fff',
-                color: '#FF6B00',
-                border: '1px solid rgba(255, 107, 0, 0.3)',
-                padding: '0.5rem 1rem',
-                borderRadius: '6px',
-                fontSize: '0.75rem',
-                fontWeight: 700,
-                textTransform: 'uppercase',
-                transition: 'all 0.2s'
-              }}
-              onMouseOver={(e) => e.currentTarget.style.background = '#FFF0E6'}
-              onMouseOut={(e) => e.currentTarget.style.background = '#fff'}
-            >
-              <ArrowLeft size={14} />
-              New Analysis
-            </button>
+              <button
+                onClick={handleReset}
+                style={{
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: '6px',
+                  cursor: 'pointer',
+                  background: '#fff',
+                  color: '#FF6B00',
+                  border: '1px solid rgba(255, 107, 0, 0.3)',
+                  padding: '0.5rem 1rem',
+                  borderRadius: '6px',
+                  fontSize: '0.75rem',
+                  fontWeight: 700,
+                  textTransform: 'uppercase',
+                  transition: 'all 0.2s'
+                }}
+                onMouseOver={(e) => e.currentTarget.style.background = '#FFF0E6'}
+                onMouseOut={(e) => e.currentTarget.style.background = '#fff'}
+              >
+                <ArrowLeft size={14} />
+                New Analysis
+              </button>
             </div>
           </div>
 
@@ -282,9 +283,9 @@ export default function PublicAnalyze() {
                 </div>
               </div>
 
-              <button 
-                onClick={() => setStarted(true)} 
-                className="btn-premium-cta" 
+              <button
+                onClick={() => setStarted(true)}
+                className="btn-premium-cta"
                 style={{ width: '100%', fontSize: '1.1rem' }}
               >
                 <Sparkles size={18} className="btn-premium-cta-icon" />
@@ -303,36 +304,36 @@ export default function PublicAnalyze() {
             <Link to="/" className="portal-logo-container" style={{ textDecoration: 'none' }}>
               <Logo size={28} />
             </Link>
-          <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
-            <button 
-              onClick={handleReset} 
-              style={{
-                display: 'flex',
-                alignItems: 'center',
-                gap: '6px',
-                cursor: 'pointer',
-                background: '#fff',
-                color: '#FF6B00',
-                border: '1px solid rgba(255, 107, 0, 0.3)',
-                padding: '0.5rem 1rem',
-                borderRadius: '6px',
-                fontSize: '0.75rem',
-                fontWeight: 700,
-                textTransform: 'uppercase',
-                transition: 'all 0.2s'
-              }}
-              onMouseOver={(e) => e.currentTarget.style.background = '#FFF0E6'}
-              onMouseOut={(e) => e.currentTarget.style.background = '#fff'}
-            >
-              <ArrowLeft size={14} />
-              New Analysis
-            </button>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
+              <button
+                onClick={handleReset}
+                style={{
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: '6px',
+                  cursor: 'pointer',
+                  background: '#fff',
+                  color: '#FF6B00',
+                  border: '1px solid rgba(255, 107, 0, 0.3)',
+                  padding: '0.5rem 1rem',
+                  borderRadius: '6px',
+                  fontSize: '0.75rem',
+                  fontWeight: 700,
+                  textTransform: 'uppercase',
+                  transition: 'all 0.2s'
+                }}
+                onMouseOver={(e) => e.currentTarget.style.background = '#FFF0E6'}
+                onMouseOut={(e) => e.currentTarget.style.background = '#fff'}
+              >
+                <ArrowLeft size={14} />
+                New Analysis
+              </button>
             </div>
           </div>
         </div>
 
         <div className="portal-container" style={{ padding: '75px 2rem 4rem', maxWidth: '1400px' }}>
-          
+
           {/* ── EXECUTIVE HERO ──────────────────────────── */}
           <div className="executive-hero premium-animate premium-animate-d1">
             <div className="executive-hero-inner">
@@ -417,7 +418,7 @@ export default function PublicAnalyze() {
               }} disabled={isRecalculating}>
                 <RefreshCw size={14} className={isRecalculating ? "spinning" : ""} /> {isRecalculating ? "Recalculating..." : "Recalculate"}
               </button>
-              <button 
+              <button
                 className={`action-btn primary ${emailing ? 'spinning-parent' : ''} ${emailDelivered ? 'success-btn' : ''}`}
                 onClick={() => {
                   if (emailDelivered || emailing) return;
@@ -436,10 +437,10 @@ export default function PublicAnalyze() {
               </button>
             </div>
           </div>
-          
+
           {emailToast && (
             <div style={{
-              position: 'fixed', bottom: '2rem', right: '2rem', 
+              position: 'fixed', bottom: '2rem', right: '2rem',
               background: '#10b981', color: 'white', padding: '1rem 1.5rem',
               borderRadius: '8px', boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.1)',
               display: 'flex', alignItems: 'center', gap: '0.75rem', zIndex: 9999,
@@ -463,7 +464,7 @@ export default function PublicAnalyze() {
                 <h3 style={{ fontSize: '1.2rem', fontWeight: 700, margin: 0, color: '#0f172a' }}>Security Verification</h3>
                 <p style={{ margin: 0, color: '#64748b', fontSize: '0.9rem' }}>Please verify to receive your PDF report.</p>
                 <div ref={emailRecaptchaRef}></div>
-                <button 
+                <button
                   onClick={() => setShowEmailCaptcha(false)}
                   style={{
                     marginTop: '1rem', background: 'transparent', border: 'none',
@@ -563,7 +564,7 @@ export default function PublicAnalyze() {
               <h3 style={{ fontSize: '1.25rem', fontWeight: 700, marginBottom: '0.75rem', color: '#fff', lineHeight: 1.4 }}>
                 Generating Your AI Performance Intelligence Report
               </h3>
-              
+
               {/* Custom progress bar */}
               <div style={{ width: '100%', height: '6px', background: 'rgba(255, 255, 255, 0.05)', borderRadius: '3px', overflow: 'hidden', marginBottom: '1.25rem' }}>
                 <div style={{
@@ -680,11 +681,11 @@ export default function PublicAnalyze() {
       </nav>
 
       <div className="portal-main-content">
-        
+
         {/* SECTION 1: HERO SECTION */}
         <section className="portal-section">
           <div className="portal-container hero-split-grid">
-            
+
             {/* Left side = headline + benefits */}
             <div className="hero-left-col animate-fade-in">
               <div className="orange-badge">
@@ -692,15 +693,15 @@ export default function PublicAnalyze() {
                 AI Growth Intelligence
               </div>
               <h1 className="hero-title">
-                AI-Powered Website Intelligence for <span className="highlight-orange">Scalable Growth</span>
+                Analyze Your Website <span className="highlight-orange">Discover Growth Opportunities</span>
               </h1>
               <p className="hero-subtitle">
-                Built for modern growth teams and business leaders, our AI-powered audit platform delivers strategic website intelligence designed to improve conversions, strengthen digital trust, and accelerate inbound revenue performance.
+                Get a comprehensive AI-powered audit of your webpage. Our platform analyzes content quality, SEO performance, user experience, trust signals, and conversion readiness to uncover issues that may be limiting visibility, lead generation, and revenue growth.
               </p>
 
               {/* Benefit Icons below */}
               <div className="hero-benefits-grid">
-                
+
                 {/* Benefit 1 */}
                 <div className="hero-benefit-item">
                   <div className="benefit-icon-wrapper">
@@ -716,7 +717,7 @@ export default function PublicAnalyze() {
                     <Zap size={20} />
                   </div>
                   <h4 className="benefit-title">Instant Results</h4>
-                  <p className="benefit-desc">Get your audit report in under 60 seconds</p>
+                  <p className="benefit-desc">Get your report within minutes</p>
                 </div>
 
                 {/* Benefit 3 */}
@@ -742,7 +743,7 @@ export default function PublicAnalyze() {
         {/* SECTION 2: SAMPLE AUDIT REPORT */}
         <section className="portal-section sample-report-section">
           <div className="portal-container">
-            
+
             <div className="section-header">
               <h2 className="section-title">See a Sample Audit Report</h2>
               <p className="section-subtitle">Here’s a preview of the insights you’ll receive after analyzing your page.</p>
@@ -750,7 +751,7 @@ export default function PublicAnalyze() {
 
             {/* Dashboard Mockup Frame */}
             <div className="mock-dashboard-frame">
-              
+
               {/* Sidebar */}
               <aside className="mock-sidebar">
                 <div>
@@ -795,10 +796,10 @@ export default function PublicAnalyze() {
 
               {/* Main Panel Content */}
               <main className="mock-main-content">
-                
+
                 {/* Top Row Grid */}
                 <div className="mock-cards-grid-3">
-                  
+
                   {/* Card 1: Conversion Score */}
                   <div className="mock-report-card">
                     <div className="mock-report-card-title-row">
@@ -882,7 +883,7 @@ export default function PublicAnalyze() {
 
                 {/* Bottom Row Grid */}
                 <div className="mock-cards-grid-3">
-                  
+
                   {/* Card 4: Key Opportunity Areas */}
                   <div className="mock-report-card">
                     <div className="mock-report-card-title-row">
@@ -973,14 +974,14 @@ export default function PublicAnalyze() {
         {/* SECTION 3: WHAT WE ANALYZE */}
         <section className="portal-section">
           <div className="portal-container">
-            
+
             <div className="section-header" style={{ marginLeft: 'auto', marginRight: 'auto' }}>
               <h2 className="section-title">What We Analyze</h2>
               <p className="section-subtitle">Our multi-agent system audits your digital footprint across six strategic conversion layers.</p>
             </div>
 
             <div className="analyze-cards-grid">
-              
+
               {/* Card 1 */}
               <div className="analyze-premium-card">
                 <div className="analyze-card-header">
@@ -1055,13 +1056,13 @@ export default function PublicAnalyze() {
         {/* SECTION 4: TRUST / ENTERPRISE SECTION */}
         <section className="portal-section trust-badges-section">
           <div className="portal-container">
-            
+
             <div className="section-header" style={{ marginLeft: 'auto', marginRight: 'auto', marginBottom: '3.5rem' }}>
               <h2 className="section-title">Why Growth Teams Trust Softree Technology</h2>
             </div>
 
             <div className="trust-badges-flex">
-              
+
               {/* Badge 1 */}
               <div className="trust-badge-card">
                 <div className="trust-icon-wrapper">

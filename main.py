@@ -27,6 +27,8 @@ from fastapi.middleware.cors import CORSMiddleware
 from langchain_openai import ChatOpenAI
 from core.models import BattleCardResult
 from core.security import is_safe_url, validate_website
+from core.report_generator import generate_pdf_report
+from core.mailer import send_report_email
 
 # ─── Parallel Processing Config ─────────────────────────────────────────────
 # Max leads to process simultaneously. Keep low to avoid RAM/rate-limit issues.
@@ -625,47 +627,48 @@ async def process_csv(file: UploadFile = File(...)):
         raise HTTPException(status_code=500, detail="Internal server error during CSV processing")
 
 class EmailReportRequest(BaseModel):
+    name: str = ""
     email: str
-    result: Dict[str, Any]
-    recaptcha_token: str
+    website: str = ""
+    report_data: Dict[str, Any]
 
-@app.post("/api/process/email_report")
+@app.post("/api/email-report")
 async def email_report(req: EmailReportRequest):
-    # Verify recaptcha (mocked for this logic as bypassed if 'admin_bypass')
-    if req.recaptcha_token != "admin_bypass" and len(req.recaptcha_token) < 10:
-        raise HTTPException(status_code=400, detail="Invalid Captcha")
-
     if not req.email:
         raise HTTPException(status_code=400, detail="Email is required")
 
     print(f"--- Generating PDF report for {req.email} ---")
     
     try:
-        from fpdf import FPDF
-        import tempfile
-        import os
-
-        pdf = FPDF()
-        pdf.add_page()
-        pdf.set_font("Arial", size=16)
-        pdf.cell(200, 10, txt="Executive Intelligence Report", ln=1, align="C")
+        pdf_bytes = generate_pdf_report(req.report_data)
+        website_clean = req.website.replace("https://", "").replace("http://", "").replace("www.", "").split("/")[0]
+        if not website_clean:
+            website_clean = "Domain"
+        filename = f"Softree_AI_Audit_Report_{website_clean}.pdf"
         
-        pdf.set_font("Arial", size=12)
-        website = req.result.get("website", "Unknown Domain")
-        pdf.cell(200, 10, txt=f"Website: {website}", ln=1, align="L")
+        body_html = f"""
+        <html>
+        <head></head>
+        <body>
+            <h2 style="color: #FF6B35;">Your AI Website Intelligence Report is Ready</h2>
+            <p>Hi {req.name or 'there'},</p>
+            <p>Thank you for using the Softree AI Intelligence Engine.</p>
+            <p>Please find attached your comprehensive audit report for <strong>{req.website}</strong>.</p>
+            <br>
+            <p>Best regards,</p>
+            <p><strong>Softree Technology Team</strong></p>
+        </body>
+        </html>
+        """
         
-        pdf.cell(200, 10, txt=f"SEO Score: {req.result.get('seo_score', 0)}", ln=1, align="L")
-        pdf.cell(200, 10, txt=f"AEO Score: {req.result.get('aeo_score', 0)}", ln=1, align="L")
-        pdf.cell(200, 10, txt=f"Summary: {str(req.result.get('executive_summary', 'N/A'))[:100]}...", ln=1, align="L")
-
-        # In a real app we'd attach this to an email.
-        # Here we just generate the file and mock the sending.
-        pdf_output = pdf.output()
-        print(f"--- PDF Generated (size: {len(pdf_output)} bytes) ---")
-
-        # Simulate network email sending delay
-        await asyncio.sleep(2)
-        print(f"--- Email successfully sent to {req.email} server-side ---")
+        await send_report_email(
+            to_email=req.email,
+            subject=f"Softree AI Audit Report: {website_clean}",
+            body_html=body_html,
+            pdf_bytes=pdf_bytes,
+            pdf_filename=filename
+        )
+        print(f"--- Email successfully sent to {req.email} via Graph API ---")
         
     except Exception as e:
         print(f"--- Error generating/sending email: {e} ---")

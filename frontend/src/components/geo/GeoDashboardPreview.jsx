@@ -85,12 +85,27 @@ export default function GeoDashboardPreview() {
           </div>
         </div>
 
-        {/* Floating analytics mini chart */}
-        <div className="flex justify-end mb-6 relative z-10">
+        {/* Middle Insight Row */}
+        <div className="flex flex-row items-center justify-between gap-4 mb-6 relative z-10">
+          {/* Recommendation Card */}
           <motion.div
-            animate={{ y: [0, -6, 0] }}
+            animate={{ y: [0, -4, 0] }}
+            transition={{ duration: 4, repeat: Infinity, ease: 'easeInOut' }}
+            className="geo-glass px-3 py-2.5 rounded-xl shadow-sm flex-1"
+            style={{ borderColor: 'rgba(255,88,18,0.12)' }}
+          >
+            <div className="flex items-center gap-1.5 mb-1">
+              <span className="w-1.5 h-1.5 rounded-full bg-orange-500 animate-pulse" />
+              <p className="text-orange-500 font-bold text-[10px] uppercase tracking-wider m-0">Recommendation</p>
+            </div>
+            <p className="text-text-secondary text-[11px] leading-tight m-0">Add FAQ schema to improve AI citations by 40%</p>
+          </motion.div>
+
+          {/* Floating analytics mini chart */}
+          <motion.div
+            animate={{ y: [0, -4, 0] }}
             transition={{ duration: 4, repeat: Infinity, ease: 'easeInOut', delay: 1 }}
-            className="geo-glass px-3 py-2 rounded-xl shadow-lg"
+            className="geo-glass px-3 py-2 rounded-xl shadow-sm flex-shrink-0"
             style={{ borderColor: 'rgba(255,88,18,0.12)' }}
           >
             <p className="text-text-muted text-[10px] font-semibold mb-1">Weekly Trend</p>
@@ -122,16 +137,7 @@ export default function GeoDashboardPreview() {
           ))}
         </div>
 
-        {/* Floating recommendation card */}
-        <motion.div
-          animate={{ y: [0, -6, 0] }}
-          transition={{ duration: 4, repeat: Infinity, ease: 'easeInOut' }}
-          className="absolute -right-4 top-16 geo-glass px-3 py-2 rounded-xl shadow-lg"
-          style={{ borderColor: 'rgba(255,88,18,0.12)', fontSize: '11px', maxWidth: '160px' }}
-        >
-          <p className="text-orange-500 font-bold text-[10px] uppercase tracking-wider mb-0.5">Recommendation</p>
-          <p className="text-text-secondary text-[10px] leading-tight">Add FAQ schema to improve AI citations by 40%</p>
-        </motion.div>
+
 
       </div>
     </motion.div>
