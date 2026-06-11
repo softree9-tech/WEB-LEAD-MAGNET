@@ -3,6 +3,21 @@ from urllib.parse import urlparse
 import ipaddress
 import requests
 import re
+from functools import lru_cache
+
+@lru_cache(maxsize=1024)
+def _resolve_hostname(hostname: str) -> list:
+    """
+    Resolves a hostname to a list of IP addresses (IPv4 and IPv6).
+    Cached to optimize repeated SSRF checks for the same domain.
+    """
+    try:
+        # Resolve all available addresses for the hostname
+        addr_info = socket.getaddrinfo(hostname, None)
+        # Extract unique IP addresses
+        return list(set(info[4][0] for info in addr_info))
+    except Exception:
+        return []
 
 # ─── Parked / Dead Domain Detection Patterns ────────────────────────────────
 _PARKED_PATTERNS = [
@@ -57,14 +72,20 @@ def is_safe_url(url: str) -> bool:
         if hostname.lower() in ('localhost', '127.0.0.1', '0.0.0.0', '::1'):
             return False
 
-        # Resolve hostname to IP
-        # This provides protection against standard SSRF.
-        # DNS rebinding protection would require pinning the IP for the subsequent request.
-        ip_addr = socket.gethostbyname(hostname)
-        ip = ipaddress.ip_address(ip_addr)
-
-        if ip.is_private or ip.is_loopback or ip.is_reserved or ip.is_multicast or ip.is_link_local:
+        # Resolve hostname to all associated IPs (IPv4 and IPv6)
+        # This provides protection against standard SSRF and dual-stack bypasses.
+        ips = _resolve_hostname(hostname)
+        if not ips:
             return False
+
+        for ip_addr in ips:
+            # Handle IPv4-mapped IPv6 addresses (e.g. ::ffff:127.0.0.1)
+            if ip_addr.startswith("::ffff:"):
+                ip_addr = ip_addr[7:]
+
+            ip = ipaddress.ip_address(ip_addr)
+            if ip.is_private or ip.is_loopback or ip.is_reserved or ip.is_multicast or ip.is_link_local:
+                return False
 
         return True
     except Exception:
@@ -123,10 +144,18 @@ def validate_website(url: str) -> dict:
 
     # ── Step 2: DNS resolution ──────────────────────────────────────────────
     try:
-        ip_addr = socket.gethostbyname(hostname)
-        ip = ipaddress.ip_address(ip_addr)
-        if ip.is_private or ip.is_loopback or ip.is_reserved or ip.is_multicast or ip.is_link_local:
+        ips = _resolve_hostname(hostname)
+        if not ips:
             return {"valid": False, "error": "Invalid domain — unable to locate website.", "url": url}
+
+        for ip_addr in ips:
+            # Handle IPv4-mapped IPv6 addresses
+            if ip_addr.startswith("::ffff:"):
+                ip_addr = ip_addr[7:]
+
+            ip = ipaddress.ip_address(ip_addr)
+            if ip.is_private or ip.is_loopback or ip.is_reserved or ip.is_multicast or ip.is_link_local:
+                return {"valid": False, "error": "Invalid domain — unable to locate website.", "url": url}
     except Exception:
         # DNS resolution completely fails, or hostname cannot be resolved
         return {"valid": False, "error": "Invalid domain — unable to locate website.", "url": url}

@@ -1,0 +1,3 @@
+## 2025-05-15 - [Optimized Website Analysis Pipeline]
+**Learning:** Reusing the BeautifulSoup object across multiple analysis functions (broken links, conversion elements, SEO tags) and implementing connection pooling for batch link checks significantly reduces both CPU overhead and network latency. Additionally, caching DNS resolutions at the security layer prevents redundant network lookups for the same domain during a single analysis cycle.
+**Action:** Always pass pre-parsed DOM objects to helper functions and use persistent HTTP sessions (requests.Session) when performing multi-threaded outgoing requests.
