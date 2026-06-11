@@ -3,9 +3,8 @@ import { motion } from 'framer-motion';
 import {
   Eye, Brain, Target, Code, Award, Sparkles, Shield, Search,
   Globe, Lightbulb, TrendingUp, AlertTriangle, Check, ArrowUpRight,
-  Download
+  Download, Mail, Loader2
 } from 'lucide-react';
-import { exportGeoExcel } from './geoExport';
 
 const fadeUp = {
   hidden: { opacity: 0, y: 30 },
@@ -157,14 +156,59 @@ function PlatformCard({ name, score, color, delay = 0 }) {
 /* ════════════════════════════════════════════════════════════════ */
 /* ── MAIN COMPONENT ────────────────────────────────────────────── */
 /* ════════════════════════════════════════════════════════════════ */
-export default function GeoResultsDashboard({ data }) {
+export default function GeoResultsDashboard({ data, userEmail, userName }) {
   const s = computeGeoScores(data);
 
   const impactColors = { High: '#FF6B00', Medium: '#FF8A1E', Low: '#64748B' };
   const difficultyColors = { Easy: '#10B981', Medium: '#F59E0B', Hard: '#EF4444' };
+  const [emailing, setEmailing] = React.useState(false);
+  const [emailDelivered, setEmailDelivered] = React.useState(false);
+  const [emailToast, setEmailToast] = React.useState(null);
+
+  const handleEmailReport = async () => {
+    if (emailing || emailDelivered) return;
+    setEmailing(true);
+    try {
+      const payload = {
+        name: userName || data.raw_name || 'Client',
+        email: userEmail || data.raw_email || data.email || (data._apollo_fields && data._apollo_fields.Email) || 'unknown@example.com',
+        website: s.domain,
+        report_data: data
+      };
+
+      const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:8000';
+      const response = await fetch(`${API_BASE_URL}/api/geo/email-report`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload)
+      });
+      if (!response.ok) throw new Error('Failed to email PDF');
+      
+      setEmailDelivered(true);
+      setEmailToast('Executive report has been delivered to your business email.');
+      setTimeout(() => setEmailToast(null), 5000);
+    } catch (err) {
+      console.error('Email Report Error:', err);
+      alert('Failed to email the report. Please try again.');
+    } finally {
+      setEmailing(false);
+    }
+  };
 
   return (
-    <div className="max-w-7xl mx-auto px-6 pb-24 pt-8 space-y-16">
+    <div className="max-w-7xl mx-auto px-6 pb-24 pt-8 space-y-16 relative">
+      {emailToast && (
+        <div style={{
+          position: 'fixed', bottom: '2rem', right: '2rem',
+          background: '#10b981', color: 'white', padding: '1rem 1.5rem',
+          borderRadius: '8px', boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.1)',
+          display: 'flex', alignItems: 'center', gap: '0.75rem', zIndex: 9999,
+          animation: 'fade-in 0.3s ease-out'
+        }}>
+          <Check size={18} />
+          <span style={{ fontWeight: 600 }}>{emailToast}</span>
+        </div>
+      )}
 
       {/* ── 1. GEO SCORE HERO ──────────────────────────────────── */}
       <motion.section initial="hidden" whileInView="visible" viewport={{ once: true }} className="relative">
@@ -212,17 +256,21 @@ export default function GeoResultsDashboard({ data }) {
               </motion.div>
             </div>
 
-            {/* Download button */}
-            <motion.div variants={fadeUp} custom={5} className="flex-shrink-0">
+            {/* Action buttons */}
+            <motion.div variants={fadeUp} custom={5} className="flex-shrink-0 flex flex-col gap-3">
               <button
-                onClick={() => {
-                  const filename = `geo_report_${s.domain.replace(/[/.]/g, '_')}.xlsx`;
-                  exportGeoExcel(data, filename);
-                }}
-                className="geo-cta-btn px-6 py-3 text-sm flex items-center gap-2"
+                onClick={handleEmailReport}
+                disabled={emailing || emailDelivered}
+                className={`geo-cta-btn px-6 py-3 text-sm flex items-center justify-center gap-2 ${emailing ? 'spinning-parent' : ''} ${emailDelivered ? 'bg-green-500 hover:bg-green-600 border-green-500 text-white' : ''}`}
+                style={emailDelivered ? { background: '#10b981', borderColor: '#10b981', color: '#fff' } : {}}
               >
-                <Download size={16} />
-                Download Report
+                {emailing ? (
+                  <><Loader2 size={16} className="spinning" /> Delivering PDF...</>
+                ) : emailDelivered ? (
+                  <><Check size={16} /> Delivered Successfully</>
+                ) : (
+                  <><Mail size={16} /> Email Full Report</>
+                )}
               </button>
             </motion.div>
           </div>

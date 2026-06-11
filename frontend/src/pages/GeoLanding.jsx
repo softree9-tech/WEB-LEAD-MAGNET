@@ -16,6 +16,8 @@ export default function GeoLanding() {
   const [validating, setValidating] = useState(false);
   const [error, setError] = useState(null);
   const [results, setResults] = useState(null);
+  const [formEmail, setFormEmail] = useState('');
+  const [formName, setFormName] = useState('');
 
   const scrollToHero = () => {
     document.getElementById('hero')?.scrollIntoView({ behavior: 'smooth' });
@@ -41,13 +43,15 @@ export default function GeoLanding() {
     setValidating(false);
 
     // Step 2: Run full AI analysis
+    setFormEmail(formData.email);
+    setFormName(formData.name);
     setLoading(true);
     try {
       const payload = {
-        name: 'GEO Audit',
+        name: formData.name || 'GEO Audit',
         email: formData.email,
         website: formData.website,
-        recaptcha_token: 'admin_bypass'
+        recaptcha_token: formData.recaptchaToken
       };
       const data = await processSingleLead(payload);
       const processed = data.output_row || data;
@@ -186,7 +190,7 @@ export default function GeoLanding() {
                 </div>
 
                 {/* ── RESULTS DASHBOARD ─────────────────────────────────── */}
-                <GeoResultsDashboard data={results} />
+                <GeoResultsDashboard data={results} userEmail={formEmail} userName={formName} />
               </motion.div>
             )}
           </AnimatePresence>

@@ -1,6 +1,7 @@
 import os
 import sys
 import asyncio
+import io
 
 # CRITICAL: This must happen before ANY other imports that might start a loop
 if sys.platform == 'win32':
@@ -16,7 +17,7 @@ def _patched_reviver_init(self, *args, **kwargs):
 Reviver.__init__ = _patched_reviver_init
 
 import pandas as pd
-from fastapi import FastAPI, UploadFile, File, HTTPException
+from fastapi import FastAPI, UploadFile, File, HTTPException, Body
 from fastapi.responses import JSONResponse, StreamingResponse
 import json
 from pydantic import BaseModel
@@ -28,6 +29,7 @@ from langchain_openai import ChatOpenAI
 from core.models import BattleCardResult
 from core.security import is_safe_url, validate_website
 from core.report_generator import generate_pdf_report
+from core.geo_report_generator import generate_geo_pdf_report, compute_geo_scores
 from core.mailer import send_report_email
 
 # ─── Parallel Processing Config ─────────────────────────────────────────────
@@ -648,17 +650,115 @@ async def email_report(req: EmailReportRequest):
             website_clean = "Domain"
         filename = f"Softree_AI_Audit_Report_{website_clean}.pdf"
         
+        # Extract variables for email personalization
+        report = req.report_data
+        seo_score = report.get('seo_score', 0)
+        
+        # Calculate UX Score (matching PDF logic)
+        consistencyVal = 90 if report.get('design') == 'Modern' else 60
+        flowVal = 80 if report.get('message') == 'Clear' else 50
+        mobileVal = 80 if report.get('seo_mobile') else 30
+        engagementVal = 90 if report.get('cta') == 'Strong' else 40
+        ux_score = round((consistencyVal + flowVal + mobileVal + engagementVal) / 4)
+        
+        # Calculate Trust Score (based on security/trust signals)
+        trust_points = 0
+        ha = report.get('has_analytics', {})
+        if ha.get('google_analytics'): trust_points += 20
+        if ha.get('facebook_pixel'): trust_points += 10
+        if report.get('has_lead_capture'): trust_points += 20
+        if report.get('has_newsletter'): trust_points += 10
+        if report.get('seo_ssl'): trust_points += 25
+        if report.get('seo_title'): trust_points += 15
+        trust_score = trust_points
+
+        # Top 3 findings
+        findings = []
+        if report.get('revenue_leak_severity') in ['High', 'Critical']:
+            findings.append(f"Critical revenue leak detected: Estimated loss of ${report.get('revenue_leak_amount', 0):,}/mo.")
+        if seo_score < 70:
+            findings.append(f"Search visibility gaps are limiting your organic traffic (SEO Score: {seo_score}/100).")
+        if ux_score < 75:
+            findings.append(f"Mobile UX and conversion friction are causing visitor drop-offs.")
+        if report.get('mobile_conversion_risk') in ['High', 'Critical']:
+            findings.append("High mobile conversion risk is preventing active leads from engaging.")
+        if not report.get('seo_ssl'):
+            findings.append("Missing SSL certificate is severely impacting user trust and search rankings.")
+            
+        # Ensure we have exactly 3 (fallback to generic if needed)
+        if len(findings) < 3:
+            findings.append("Strategic opportunities exist to improve your digital authority.")
+        if len(findings) < 3:
+            findings.append("Competitor gap analysis reveals areas for immediate market capture.")
+        if len(findings) < 3:
+            findings.append("Technical optimizations can significantly enhance your baseline performance.")
+            
+        top_findings_html = "".join([f"<li style='margin-bottom: 8px;'>{f}</li>" for f in findings[:3]])
+        
         body_html = f"""
+        <!DOCTYPE html>
         <html>
-        <head></head>
-        <body>
-            <h2 style="color: #FF6B35;">Your AI Website Intelligence Report is Ready</h2>
-            <p>Hi {req.name or 'there'},</p>
-            <p>Thank you for using the Softree AI Intelligence Engine.</p>
-            <p>Please find attached your comprehensive audit report for <strong>{req.website}</strong>.</p>
-            <br>
-            <p>Best regards,</p>
-            <p><strong>Softree Technology Team</strong></p>
+        <head>
+            <meta charset="utf-8">
+            <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        </head>
+        <body style="font-family: Arial, sans-serif; line-height: 1.6; color: #1E293B; margin: 0; padding: 0; background-color: #F8FAFC;">
+            <div style="max-width: 600px; margin: 0 auto; background-color: #ffffff; border: 1px solid #E2E8F0; border-radius: 8px; overflow: hidden; margin-top: 20px; margin-bottom: 20px;">
+                <div style="background-color: #1E293B; padding: 25px 30px; border-bottom: 4px solid #FF6B35;">
+                    <h2 style="color: #ffffff; margin: 0; font-size: 24px; font-weight: bold;">Softree<span style="color: #FF6B35;">Technology</span></h2>
+                </div>
+                
+                <div style="padding: 30px;">
+                    <h3 style="color: #FF6B35; margin-top: 0; font-size: 20px;">Executive Website Audit Complete</h3>
+                    <p style="font-size: 16px;">Hi {req.name or 'there'},</p>
+                    
+                    <p style="font-size: 16px;">We have completed the comprehensive AI-driven analysis of <strong>{req.website}</strong>. Our diagnostic engine evaluated your site's performance, conversion readiness, and competitive positioning.</p>
+                    
+                    <div style="background-color: #F8FAFC; border: 1px solid #E2E8F0; border-radius: 6px; padding: 20px; margin: 25px 0;">
+                        <h4 style="margin-top: 0; color: #1E293B; font-size: 16px; text-transform: uppercase; letter-spacing: 0.5px;">Core Performance Metrics</h4>
+                        <table width="100%" cellpadding="0" cellspacing="0" style="margin-top: 15px;">
+                            <tr>
+                                <td width="33%" align="center" style="border-right: 1px solid #E2E8F0;">
+                                    <div style="font-size: 24px; font-weight: bold; color: #1E293B;">{seo_score}</div>
+                                    <div style="font-size: 12px; color: #64748B; text-transform: uppercase;">SEO Score</div>
+                                </td>
+                                <td width="33%" align="center" style="border-right: 1px solid #E2E8F0;">
+                                    <div style="font-size: 24px; font-weight: bold; color: #1E293B;">{ux_score}</div>
+                                    <div style="font-size: 12px; color: #64748B; text-transform: uppercase;">UX Score</div>
+                                </td>
+                                <td width="33%" align="center">
+                                    <div style="font-size: 24px; font-weight: bold; color: #1E293B;">{trust_score}</div>
+                                    <div style="font-size: 12px; color: #64748B; text-transform: uppercase;">Trust Score</div>
+                                </td>
+                            </tr>
+                        </table>
+                    </div>
+                    
+                    <h4 style="color: #1E293B; font-size: 16px;">Top 3 Strategic Findings:</h4>
+                    <ul style="padding-left: 20px; color: #475569;">
+                        {top_findings_html}
+                    </ul>
+                    
+                    <p style="font-size: 16px; margin-top: 25px;">
+                        <strong>Why this matters:</strong> These underlying issues act as invisible friction points—directly impacting your organic search visibility, restricting high-quality lead generation, and preventing optimal user experiences from converting into tangible revenue.
+                    </p>
+                    
+                    <p style="font-size: 16px;">
+                        A detailed, executive-ready PDF report is attached to this email. It contains a granular breakdown of our findings, competitor benchmarking, and a prioritized action plan.
+                    </p>
+                    
+                    <p style="font-size: 16px;">I recommend reviewing the attached document with your technical team or leadership to discuss the strategic opportunities identified.</p>
+                    
+                    <br>
+                    <p style="font-size: 16px; margin-bottom: 5px;">Best regards,</p>
+                    <p style="font-size: 16px; margin-top: 0; margin-bottom: 25px;">
+                        <strong style="color: #1E293B;">Softree Technology Team</strong><br>
+                        <span style="color: #64748B; font-size: 14px;">Digital Intelligence & Engineering</span><br>
+                        <a href="https://www.softreetechnology.com" style="color: #FF6B35; text-decoration: none; font-size: 14px;">www.softreetechnology.com</a><br>
+                        <a href="mailto:contact@softreetechnology.com" style="color: #FF6B35; text-decoration: none; font-size: 14px;">contact@softreetechnology.com</a>
+                    </p>
+                </div>
+            </div>
         </body>
         </html>
         """
@@ -674,6 +774,154 @@ async def email_report(req: EmailReportRequest):
         
     except Exception as e:
         print(f"--- Error generating/sending email: {e} ---")
+        raise HTTPException(status_code=500, detail="Failed to send email.")
+
+    return {"status": "success", "message": "Executive report has been delivered to your business email."}
+
+@app.post("/api/geo/pdf-report")
+async def geo_pdf_report(req: dict = Body(...)):
+    # Endpoint to just generate and return the GEO PDF bytes
+    print(f"--- Generating GEO PDF report ---")
+    try:
+        pdf_bytes = generate_geo_pdf_report(req)
+        website_clean = req.get("website", "Domain").replace("https://", "").replace("http://", "").replace("www.", "").split("/")[0]
+        filename = f"Softree_GEO_Report_{website_clean}.pdf"
+        
+        return StreamingResponse(
+            io.BytesIO(pdf_bytes),
+            media_type="application/pdf",
+            headers={"Content-Disposition": f"attachment; filename={filename}"}
+        )
+    except Exception as e:
+        print(f"--- Error generating GEO PDF: {e} ---")
+        raise HTTPException(status_code=500, detail="Failed to generate GEO PDF report.")
+
+@app.post("/api/geo/email-report")
+async def geo_email_report(req: EmailReportRequest):
+    if not req.email:
+        raise HTTPException(status_code=400, detail="Email is required")
+
+    print(f"--- Generating GEO PDF report for {req.email} ---")
+    
+    try:
+        pdf_bytes = generate_geo_pdf_report(req.report_data)
+        website_clean = req.website.replace("https://", "").replace("http://", "").replace("www.", "").split("/")[0]
+        if not website_clean:
+            website_clean = "Domain"
+        filename = f"Softree_GEO_Report_{website_clean}.pdf"
+        
+        # Calculate GEO scores and metrics for email personalization
+        s = compute_geo_scores(req.report_data)
+        ai_score = s.get('aiVisibility', 0)
+        
+        # Determine highest visibility platform
+        platforms = {
+            'ChatGPT': s.get('chatgpt', 0),
+            'Gemini': s.get('gemini', 0),
+            'Claude': s.get('claude', 0),
+            'Perplexity': s.get('perplexity', 0)
+        }
+        highest_platform = max(platforms, key=platforms.get)
+        highest_score = platforms[highest_platform]
+        
+        # Top recommendation
+        recs = s.get('recommendations', [])
+        top_rec = recs[0]['title'] if recs else "Optimize entity structure for AI indexing"
+        
+        # Insights
+        insights = []
+        if ai_score < 50:
+            insights.append("Your AI visibility is currently limiting your discoverability in next-generation search engines.")
+        else:
+            insights.append(f"Your AI visibility indicates a foundation, but there are clear optimization opportunities.")
+            
+        if s.get('schemaScore', 0) < 60:
+            insights.append("Structured data gaps are preventing AI engines from confidently citing your brand.")
+        else:
+            insights.append("While basic schema is present, advanced entity linking can further strengthen your AI citations.")
+            
+        if platforms['ChatGPT'] < 70 or platforms['Gemini'] < 70:
+            insights.append(f"Targeted optimizations are required to improve brand extraction and sentiment within {highest_platform} and other leading LLMs.")
+
+        insights_html = "".join([f"<li style='margin-bottom: 10px; color: #475569;'>{i}</li>" for i in insights])
+
+        body_html = f"""
+        <!DOCTYPE html>
+        <html>
+        <head>
+            <meta charset="utf-8">
+            <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        </head>
+        <body style="font-family: Arial, sans-serif; line-height: 1.6; color: #1E293B; margin: 0; padding: 0; background-color: #F8FAFC;">
+            <div style="max-width: 600px; margin: 0 auto; background-color: #ffffff; border: 1px solid #E2E8F0; border-radius: 8px; overflow: hidden; margin-top: 20px; margin-bottom: 20px;">
+                <div style="background-color: #1E293B; padding: 25px 30px; border-bottom: 4px solid #FF6B35;">
+                    <h2 style="color: #ffffff; margin: 0; font-size: 24px; font-weight: bold;">Softree<span style="color: #FF6B35;">Technology</span></h2>
+                </div>
+                
+                <div style="padding: 30px;">
+                    <h3 style="color: #FF6B35; margin-top: 0; font-size: 20px;">Executive GEO Intelligence Report</h3>
+                    <p style="font-size: 16px;">Hi {req.name or 'there'},</p>
+                    
+                    <p style="font-size: 16px;">We have completed the Generative Engine Optimization (GEO) analysis of <strong>{req.website}</strong>.</p>
+                    
+                    <p style="font-size: 16px;">GEO is the next evolution of search visibility. It determines how your brand is understood, extracted, and cited by AI engines like ChatGPT, Gemini, Claude, and Perplexity. A strong GEO foundation ensures that when potential clients query these platforms, your business is actively recommended as an authoritative solution.</p>
+                    
+                    <div style="background-color: #F8FAFC; border: 1px solid #E2E8F0; border-radius: 6px; padding: 20px; margin: 25px 0;">
+                        <h4 style="margin-top: 0; color: #1E293B; font-size: 16px; text-transform: uppercase; letter-spacing: 0.5px;">Core AI Metrics</h4>
+                        <table width="100%" cellpadding="0" cellspacing="0" style="margin-top: 15px;">
+                            <tr>
+                                <td width="50%" align="center" style="border-right: 1px solid #E2E8F0;">
+                                    <div style="font-size: 24px; font-weight: bold; color: #1E293B;">{ai_score}/100</div>
+                                    <div style="font-size: 12px; color: #64748B; text-transform: uppercase;">Overall AI Visibility</div>
+                                </td>
+                                <td width="50%" align="center">
+                                    <div style="font-size: 18px; font-weight: bold; color: #1E293B;">{highest_platform}</div>
+                                    <div style="font-size: 12px; color: #64748B; text-transform: uppercase;">Highest Visibility Platform</div>
+                                </td>
+                            </tr>
+                        </table>
+                    </div>
+                    
+                    <h4 style="color: #1E293B; font-size: 16px;">Key Strategic Insights:</h4>
+                    <ul style="padding-left: 20px; margin-bottom: 25px;">
+                        {insights_html}
+                    </ul>
+                    
+                    <p style="font-size: 16px; background-color: #FFF7ED; padding: 15px; border-left: 4px solid #FF6B35; border-radius: 4px; color: #9A3412;">
+                        <strong>Top Recommendation:</strong> {top_rec}
+                    </p>
+                    
+                    <p style="font-size: 16px; margin-top: 25px;">
+                        A detailed, executive-ready GEO Intelligence PDF report is attached to this email. It contains a granular breakdown of your platform-specific visibility, entity recognition, and a prioritized action plan to improve your AI citations.
+                    </p>
+                    
+                    <p style="font-size: 16px;">I recommend reviewing the attached document with your technical or marketing leadership to discuss these strategic opportunities.</p>
+                    
+                    <br>
+                    <p style="font-size: 16px; margin-bottom: 5px;">Best regards,</p>
+                    <p style="font-size: 16px; margin-top: 0; margin-bottom: 25px;">
+                        <strong style="color: #1E293B;">Softree Technology Team</strong><br>
+                        <span style="color: #64748B; font-size: 14px;">Digital Intelligence & Engineering</span><br>
+                        <a href="https://www.softreetechnology.com" style="color: #FF6B35; text-decoration: none; font-size: 14px;">www.softreetechnology.com</a><br>
+                        <a href="mailto:contact@softreetechnology.com" style="color: #FF6B35; text-decoration: none; font-size: 14px;">contact@softreetechnology.com</a>
+                    </p>
+                </div>
+            </div>
+        </body>
+        </html>
+        """
+        
+        await send_report_email(
+            to_email=req.email,
+            subject=f"Softree GEO Intelligence Report: {website_clean}",
+            body_html=body_html,
+            pdf_bytes=pdf_bytes,
+            pdf_filename=filename
+        )
+        print(f"--- GEO Email successfully sent to {req.email} via Graph API ---")
+        
+    except Exception as e:
+        print(f"--- Error generating/sending GEO email: {e} ---")
         raise HTTPException(status_code=500, detail="Failed to send email.")
 
     return {"status": "success", "message": "Executive report has been delivered to your business email."}
