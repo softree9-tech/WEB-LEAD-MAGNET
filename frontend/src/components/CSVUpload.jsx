@@ -155,7 +155,7 @@ export default function CSVUpload({ onResult }) {
       )}
 
       {error && (
-        <div style={{
+        <div role="alert" style={{
           display: 'flex',
           alignItems: 'center',
           gap: '6px',
