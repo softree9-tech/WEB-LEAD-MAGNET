@@ -93,6 +93,8 @@ def get_leads(date_filter='All Time', search_term=None):
         lead = dict(row)
         # Avoid loading full json_data into the list view to save memory
         lead['json_data'] = None 
+        if lead.get('created_at'):
+            lead['created_at'] = lead['created_at'].replace(' ', 'T') + 'Z'
         leads.append(lead)
         
     conn.close()
@@ -105,4 +107,9 @@ def get_lead_by_id(lead_id):
     cursor.execute('SELECT * FROM leads WHERE id = ?', (lead_id,))
     row = cursor.fetchone()
     conn.close()
-    return dict(row) if row else None
+    if row:
+        lead = dict(row)
+        if lead.get('created_at'):
+            lead['created_at'] = lead['created_at'].replace(' ', 'T') + 'Z'
+        return lead
+    return None
