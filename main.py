@@ -755,7 +755,7 @@ async def email_report(req: EmailReportRequest):
                         <strong style="color: #1E293B;">Softree Technology Team</strong><br>
                         <span style="color: #64748B; font-size: 14px;">Digital Intelligence & Engineering</span><br>
                         <a href="https://www.softreetechnology.com" style="color: #FF6B35; text-decoration: none; font-size: 14px;">www.softreetechnology.com</a><br>
-                        <a href="mailto:contact@softreetechnology.com" style="color: #FF6B35; text-decoration: none; font-size: 14px;">contact@softreetechnology.com</a>
+                        <a href="mailto:sales@softreetechnology.com" style="color: #FF6B35; text-decoration: none; font-size: 14px;">contact@softreetechnology.com</a>
                     </p>
                 </div>
             </div>
@@ -903,7 +903,7 @@ async def geo_email_report(req: EmailReportRequest):
                         <strong style="color: #1E293B;">Softree Technology Team</strong><br>
                         <span style="color: #64748B; font-size: 14px;">Digital Intelligence & Engineering</span><br>
                         <a href="https://www.softreetechnology.com" style="color: #FF6B35; text-decoration: none; font-size: 14px;">www.softreetechnology.com</a><br>
-                        <a href="mailto:contact@softreetechnology.com" style="color: #FF6B35; text-decoration: none; font-size: 14px;">contact@softreetechnology.com</a>
+                        <a href="mailto:sales@softreetechnology.com" style="color: #FF6B35; text-decoration: none; font-size: 14px;">contact@softreetechnology.com</a>
                     </p>
                 </div>
             </div>
