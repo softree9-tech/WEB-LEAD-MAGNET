@@ -4,6 +4,9 @@ import LeadCaptureForm from '../components/LeadCaptureForm';
 import LeadResults, { exportToExcel } from '../components/LeadResults';
 import { processSingleLead, validateWebsite, emailReport } from '../api/api';
 import Logo from '../components/Logo';
+import Navigation from '../components/Navigation';
+import StickyFooter from '../components/StickyFooter';
+import LightContactSection from '../components/LightContactSection';
 import {
   Sparkles,
   ArrowLeft,
@@ -207,36 +210,7 @@ export default function PublicAnalyze() {
     if (!started) {
       return (
         <div className="public-portal-theme">
-          <div className="portal-navbar" style={{ borderBottom: '1px solid rgba(10,10,26,0.08)' }}>
-            <div className="mx-auto w-full max-w-7xl flex items-center justify-between" style={{ padding: '0 1rem' }}>
-              <Link to="/" className="portal-logo-container" style={{ textDecoration: 'none' }}>
-                <Logo size={28} />
-              </Link>
-              <button
-                onClick={handleReset}
-                style={{
-                  display: 'flex',
-                  alignItems: 'center',
-                  gap: '6px',
-                  cursor: 'pointer',
-                  background: '#fff',
-                  color: '#FF6B00',
-                  border: '1px solid rgba(255, 107, 0, 0.3)',
-                  padding: '0.5rem 1rem',
-                  borderRadius: '6px',
-                  fontSize: '0.75rem',
-                  fontWeight: 700,
-                  textTransform: 'uppercase',
-                  transition: 'all 0.2s'
-                }}
-                onMouseOver={(e) => e.currentTarget.style.background = '#FFF0E6'}
-                onMouseOut={(e) => e.currentTarget.style.background = '#fff'}
-              >
-                <ArrowLeft size={14} />
-                New Analysis
-              </button>
-            </div>
-          </div>
+          <Navigation />
 
           <div className="portal-main-content" style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', minHeight: '80vh', textAlign: 'center', padding: '2rem' }}>
             <div className="form-card-glass analysis-gate-card animate-fade-in">
@@ -502,13 +476,7 @@ export default function PublicAnalyze() {
   if (loading) {
     return (
       <div className="public-portal-theme">
-        <div className="portal-navbar" style={{ borderBottom: '1px solid rgba(10,10,26,0.08)' }}>
-          <div className="mx-auto w-full max-w-7xl flex items-center justify-between" style={{ padding: '0 1rem' }}>
-            <Link to="/" className="portal-logo-container" style={{ textDecoration: 'none' }}>
-              <Logo size={28} />
-            </Link>
-          </div>
-        </div>
+        <Navigation />
 
         <div className="portal-main-content" style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', minHeight: '80vh', textAlign: 'center', padding: '2rem' }}>
           <div className="form-card-glass animate-fade-in" style={{
@@ -607,15 +575,7 @@ export default function PublicAnalyze() {
   if (validating) {
     return (
       <div className="public-portal-theme">
-        <div className="portal-navbar">
-          <Link to="/" className="portal-logo-container">
-            <Logo />
-          </Link>
-          <div className="portal-nav-badge" style={{ cursor: 'default' }}>
-            <ShieldCheck size={14} style={{ color: 'var(--accent-orange)' }} />
-            Lead Engine Portal
-          </div>
-        </div>
+        <Navigation />
 
         <div className="portal-main-content" style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', minHeight: '80vh', textAlign: 'center', padding: '2rem' }}>
           <div className="form-card-glass animate-fade-in" style={{
@@ -669,17 +629,7 @@ export default function PublicAnalyze() {
   return (
     <div className="public-portal-theme">
       {/* NAVBAR */}
-      <nav className="portal-navbar" style={{ borderBottom: '1px solid rgba(10,10,26,0.08)' }}>
-        <div className="mx-auto w-full max-w-7xl flex items-center justify-between" style={{ padding: '0 1rem' }}>
-          <Link to="/" className="portal-logo-container" style={{ textDecoration: 'none' }}>
-            <Logo size={28} />
-          </Link>
-          <div className="portal-nav-badge" style={{ cursor: 'default' }}>
-            <ShieldCheck size={14} style={{ marginRight: '6px' }} />
-            Lead Engine Portal
-          </div>
-        </div>
-      </nav>
+      <Navigation />
 
       <div className="portal-main-content">
 
@@ -1120,18 +1070,8 @@ export default function PublicAnalyze() {
       </div>
 
       {/* FOOTER */}
-      <footer className="portal-footer">
-        <div>
-          © 2025 Softree Technology. All rights reserved.
-        </div>
-        <div className="portal-footer-links">
-          <a href="#" className="portal-footer-link" onClick={e => e.preventDefault()}>Privacy Policy</a>
-          <span style={{ color: 'rgba(255,255,255,0.1)' }}>|</span>
-          <a href="#" className="portal-footer-link" onClick={e => e.preventDefault()}>Terms of Service</a>
-          <span style={{ color: 'rgba(255,255,255,0.1)' }}>|</span>
-          <a href="#" className="portal-footer-link" onClick={e => e.preventDefault()}>Contact Us</a>
-        </div>
-      </footer>
+      <LightContactSection />
+      <StickyFooter />
 
     </div>
   );

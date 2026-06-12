@@ -14,23 +14,19 @@ export default function Logo({ size = 32, className = "" }) {
         }}
       />
       <div style={{ display: 'flex', flexDirection: 'column', justifyContent: 'center', lineHeight: 1 }}>
-        <strong style={{ 
-          fontSize: '1.25rem', 
-          fontWeight: 900, 
-          letterSpacing: '-0.5px', 
-          marginBottom: '2px',
-          background: 'linear-gradient(90deg, #FF6B00, #0a0a1a)',
-          WebkitBackgroundClip: 'text',
-          WebkitTextFillColor: 'transparent',
+        <strong style={{
+          fontSize: '1.1rem',
+          fontWeight: 900,
+          letterSpacing: '0.5px',
+          marginBottom: '1px',
+          color: '#000000',
           display: 'inline-block'
         }}>SOFTREE</strong>
-        <span style={{ 
-          fontSize: '0.65rem', 
-          fontWeight: 700, 
-          letterSpacing: '1px',
-          background: 'linear-gradient(90deg, #FF6B00, #0a0a1a)',
-          WebkitBackgroundClip: 'text',
-          WebkitTextFillColor: 'transparent',
+        <span style={{
+          fontSize: '0.9rem',
+          fontWeight: 1000,
+          letterSpacing: '0.5px',
+          color: '#000000',
           display: 'inline-block'
         }}>TECHNOLOGY</span>
       </div>

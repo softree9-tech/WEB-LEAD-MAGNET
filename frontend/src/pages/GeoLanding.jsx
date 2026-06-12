@@ -2,13 +2,15 @@ import React, { useState, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Sparkles, AlertTriangle, ArrowLeft } from 'lucide-react';
 import { validateWebsite, processSingleLead } from '../api/api';
-import GeoNavbar from '../components/geo/GeoNavbar';
+import Navigation from '../components/Navigation';
 import GeoDashboardPreview from '../components/geo/GeoDashboardPreview';
 import GeoHeroForm from '../components/geo/GeoHeroForm';
 import GeoLoadingState from '../components/geo/GeoLoadingState';
 import GeoResultsDashboard from '../components/geo/GeoResultsDashboard';
 import { GeoReportSection, GeoHowItWorks, GeoFeaturesGrid, GeoWhyMatters } from '../components/geo/GeoSections';
-import { GeoFAQ, GeoCTA, GeoFooter } from '../components/geo/GeoFooterSections';
+import { GeoFAQ, GeoCTA } from '../components/geo/GeoFooterSections';
+import StickyFooter from '../components/StickyFooter';
+import LightContactSection from '../components/LightContactSection';
 import '../geo.css';
 
 export default function GeoLanding() {
@@ -73,7 +75,7 @@ export default function GeoLanding() {
 
   return (
     <div className="geo-page">
-      <GeoNavbar />
+      <Navigation />
 
       {/* ── HERO SECTION ──────────────────────────────────────── */}
       <section id="hero" className="relative min-h-screen flex items-center pt-24 pb-16 px-6 overflow-hidden">
@@ -209,7 +211,8 @@ export default function GeoLanding() {
           <GeoFAQ />
         </>
       )}
-      <GeoFooter />
+      <LightContactSection />
+      <StickyFooter />
     </div>
   );
 }
