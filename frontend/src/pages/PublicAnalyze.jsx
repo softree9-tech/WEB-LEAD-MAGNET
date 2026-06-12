@@ -162,7 +162,8 @@ export default function PublicAnalyze() {
         name: formData.fullName,
         email: formData.email,
         website: formData.website,
-        recaptcha_token: formData.recaptchaToken
+        recaptcha_token: formData.recaptchaToken,
+        source: 'Public Lead Magnet'
       };
 
       const data = await processSingleLead(payload);

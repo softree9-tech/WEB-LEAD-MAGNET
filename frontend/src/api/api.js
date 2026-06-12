@@ -110,3 +110,25 @@ export const emailGeoReport = async (emailData) => {
     throw error;
   }
 };
+
+export const fetchLeads = async (dateFilter = 'All Time', search = '') => {
+  try {
+    const response = await axios.get(`${API_ROOT}/leads`, {
+      params: { date_filter: dateFilter, search: search }
+    });
+    return response.data;
+  } catch (error) {
+    console.error("Error fetching leads:", error);
+    throw error;
+  }
+};
+
+export const fetchLeadDetails = async (id) => {
+  try {
+    const response = await axios.get(`${API_ROOT}/leads/${id}`);
+    return response.data;
+  } catch (error) {
+    console.error("Error fetching lead details:", error);
+    throw error;
+  }
+};

@@ -5,10 +5,12 @@ import CSVUpload from './components/CSVUpload';
 import LeadResults from './components/LeadResults';
 import PublicAnalyze from './pages/PublicAnalyze';
 import GeoLanding from './pages/GeoLanding';
+import LeadManagement from './components/LeadManagement';
 import './App.css';
 
 function Dashboard() {
   const [results, setResults] = useState([]);
+  const [activeTab, setActiveTab] = useState('leads'); // 'leads' or 'manual'
 
   const handleSingleResult = (newResult) => {
     // Check if newResult has the output_row or is directly the result
@@ -26,19 +28,48 @@ function Dashboard() {
 
   return (
     <div className="app-container">
-      <header className="header animate-fade-in">
+      <header className="header animate-fade-in" style={{ paddingBottom: '0' }}>
         <h1>Softree Lead Engine</h1>
         <p>AI-Powered Multi-Agent Lead Enrichment & Scoring</p>
+        
+        <div style={{ display: 'flex', gap: '1rem', justifyContent: 'center', marginTop: '2rem' }}>
+          <button 
+            onClick={() => setActiveTab('leads')}
+            style={{
+              padding: '10px 20px', background: activeTab === 'leads' ? '#1e293b' : 'transparent',
+              color: activeTab === 'leads' ? 'white' : '#64748b', border: 'none', borderRadius: '8px',
+              fontWeight: 600, cursor: 'pointer', transition: 'all 0.2s'
+            }}
+          >
+            Lead Management
+          </button>
+          <button 
+            onClick={() => setActiveTab('manual')}
+            style={{
+              padding: '10px 20px', background: activeTab === 'manual' ? '#1e293b' : 'transparent',
+              color: activeTab === 'manual' ? 'white' : '#64748b', border: 'none', borderRadius: '8px',
+              fontWeight: 600, cursor: 'pointer', transition: 'all 0.2s'
+            }}
+          >
+            Manual Testing & Batch
+          </button>
+        </div>
       </header>
  
-      <div className="top-controls animate-fade-in" style={{ animationDelay: '0.1s' }}>
-        <SingleLeadForm onResult={handleSingleResult} />
-        <CSVUpload onResult={handleBatchResults} />
-      </div>
- 
-      <div className="results-container animate-fade-in" style={{ animationDelay: '0.2s' }}>
-        <LeadResults leads={results} />
-      </div>
+      {activeTab === 'leads' ? (
+        <LeadManagement />
+      ) : (
+        <>
+          <div className="top-controls animate-fade-in" style={{ animationDelay: '0.1s' }}>
+            <SingleLeadForm onResult={handleSingleResult} />
+            <CSVUpload onResult={handleBatchResults} />
+          </div>
+     
+          <div className="results-container animate-fade-in" style={{ animationDelay: '0.2s' }}>
+            <LeadResults leads={results} />
+          </div>
+        </>
+      )}
     </div>
   );
 }

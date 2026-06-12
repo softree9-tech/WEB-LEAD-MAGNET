@@ -51,7 +51,8 @@ export default function GeoLanding() {
         name: formData.name || 'GEO Audit',
         email: formData.email,
         website: formData.website,
-        recaptcha_token: formData.recaptchaToken
+        recaptcha_token: formData.recaptchaToken,
+        source: 'GEO Analyzer'
       };
       const data = await processSingleLead(payload);
       const processed = data.output_row || data;

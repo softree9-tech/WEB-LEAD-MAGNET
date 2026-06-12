@@ -23,7 +23,9 @@ import json
 from pydantic import BaseModel
 from typing import List, Optional, Dict, Any
 from dotenv import load_dotenv
+from fastapi import BackgroundTasks
 from graph import graph_app
+from core.db import init_db, save_lead, get_leads, get_lead_by_id
 from fastapi.middleware.cors import CORSMiddleware
 from langchain_openai import ChatOpenAI
 from core.models import BattleCardResult
@@ -39,6 +41,9 @@ _semaphore = asyncio.Semaphore(MAX_CONCURRENT_LEADS)
 
 # Load environment variables (e.g., GEMINI_API_KEY)
 load_dotenv()
+
+# Initialize database
+init_db()
 
 app = FastAPI(
     title="LangGraph Lead Processing API",
@@ -103,6 +108,7 @@ class LeadInput(BaseModel):
     recaptcha_token: str = None
     company: str = None
     role: str = None
+    source: str = None
 
 class LeadList(BaseModel):
     leads: List[LeadInput]
@@ -126,8 +132,62 @@ def validate_website_endpoint(lead: LeadInput):
     }
 
 
+def _save_lead_background(lead: LeadInput, result: dict):
+    from datetime import datetime
+    import os
+    import json
+    from core.report_generator import generate_pdf_report
+    from core.geo_report_generator import generate_geo_pdf_report, compute_geo_scores
+    
+    source = lead.source or "Public Lead Magnet"
+    domain = result.get("website", "domain").replace("https://", "").replace("http://", "").replace("www.", "").split("/")[0]
+    timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
+    
+    pdf_bytes = None
+    pdf_filename = None
+    try:
+        if source == 'GEO Analyzer':
+            pdf_bytes = generate_geo_pdf_report(result)
+            pdf_filename = f"GEO_{domain}_{timestamp}.pdf"
+        else:
+            pdf_bytes = generate_pdf_report(result)
+            pdf_filename = f"Audit_{domain}_{timestamp}.pdf"
+            
+        pdf_dir = os.path.join(os.path.dirname(__file__), 'data', 'pdfs')
+        os.makedirs(pdf_dir, exist_ok=True)
+        pdf_path = os.path.join(pdf_dir, pdf_filename)
+        
+        with open(pdf_path, 'wb') as f:
+            f.write(pdf_bytes)
+    except Exception as e:
+        print("Error generating PDF in background:", e)
+        pdf_filename = None
+
+    geo_score = 0
+    visibility_score = 0
+    if source == 'GEO Analyzer':
+        s = compute_geo_scores(result)
+        visibility_score = s.get('aiVisibility', 0)
+        geo_score = visibility_score
+    else:
+        seo_score = int(result.get('seo_score', 0))
+        visibility_score = seo_score
+        geo_score = seo_score
+        
+    save_lead(
+        name=lead.name,
+        email=lead.email,
+        website=lead.website,
+        source=source,
+        geo_score=geo_score,
+        visibility_score=visibility_score,
+        status="Complete",
+        pdf_path=pdf_filename,
+        json_data=json.dumps(result)
+    )
+
 @app.post("/api/process/single")
-def process_single_lead(lead: LeadInput):
+def process_single_lead(lead: LeadInput, background_tasks: BackgroundTasks):
     # Verify reCAPTCHA token (unless bypassed for admin dashboard tools)
     if lead.recaptcha_token != "admin_bypass":
         if not lead.recaptcha_token or not verify_recaptcha(lead.recaptcha_token):
@@ -183,6 +243,11 @@ def process_single_lead(lead: LeadInput):
             
         # Attach original contact fields for export enrichment (consistent with batch)
         result["_apollo_fields"] = apollo_fields
+        
+        # Trigger background save
+        if lead.name or lead.email:  # Only save if it looks like a real form submission
+            background_tasks.add_task(_save_lead_background, lead, result)
+            
         return result
     except Exception as e:
         print(f"❌ Error in process_single_lead: {e}")
@@ -709,13 +774,15 @@ async def email_report(req: EmailReportRequest):
                 </div>
                 
                 <div style="padding: 30px;">
-                    <h3 style="color: #FF6B35; margin-top: 0; font-size: 20px;">Executive Website Audit Complete</h3>
+                    <h3 style="color: #FF6B35; margin-top: 0; font-size: 20px;">Your Website Analysis Report is Ready</h3>
                     <p style="font-size: 16px;">Hi {req.name or 'there'},</p>
                     
-                    <p style="font-size: 16px;">We have completed the comprehensive AI-driven analysis of <strong>{req.website}</strong>. Our diagnostic engine evaluated your site's performance, conversion readiness, and competitive positioning.</p>
+                    <p style="font-size: 16px;">Your automated preliminary website assessment for <strong>{req.website}</strong> is complete.</p>
+                    
+                    <p style="font-size: 16px;"><strong>Purpose of this Report:</strong> This report is designed to provide an initial, high-level overview of your website's public-facing performance, conversion readiness, and search visibility to help identify potential areas for improvement.</p>
                     
                     <div style="background-color: #F8FAFC; border: 1px solid #E2E8F0; border-radius: 6px; padding: 20px; margin: 25px 0;">
-                        <h4 style="margin-top: 0; color: #1E293B; font-size: 16px; text-transform: uppercase; letter-spacing: 0.5px;">Core Performance Metrics</h4>
+                        <h4 style="margin-top: 0; color: #1E293B; font-size: 16px; text-transform: uppercase; letter-spacing: 0.5px;">Executive Summary (Automated Metrics)</h4>
                         <table width="100%" cellpadding="0" cellspacing="0" style="margin-top: 15px;">
                             <tr>
                                 <td width="33%" align="center" style="border-right: 1px solid #E2E8F0;">
@@ -734,28 +801,60 @@ async def email_report(req: EmailReportRequest):
                         </table>
                     </div>
                     
-                    <h4 style="color: #1E293B; font-size: 16px;">Top 3 Strategic Findings:</h4>
-                    <ul style="padding-left: 20px; color: #475569;">
+                    <h4 style="color: #1E293B; font-size: 16px; margin-bottom: 10px;">Top 3 Strategic Findings:</h4>
+                    <ul style="padding-left: 20px; color: #475569; margin-top: 0;">
                         {top_findings_html}
                     </ul>
                     
-                    <p style="font-size: 16px; margin-top: 25px;">
-                        <strong>Why this matters:</strong> These underlying issues act as invisible friction points—directly impacting your organic search visibility, restricting high-quality lead generation, and preventing optimal user experiences from converting into tangible revenue.
-                    </p>
+                    <table width="100%" cellpadding="0" cellspacing="0" style="margin: 25px 0;">
+                        <tr>
+                            <td width="50%" valign="top" style="padding-right: 10px;">
+                                <h4 style="color: #1E293B; font-size: 14px; margin-top: 0; margin-bottom: 10px; border-bottom: 2px solid #E2E8F0; padding-bottom: 5px;">What We Reviewed</h4>
+                                <ul style="padding-left: 15px; color: #64748B; font-size: 13px; margin-top: 0;">
+                                    <li>Publicly accessible website content</li>
+                                    <li>Page structure</li>
+                                    <li>Messaging and positioning</li>
+                                    <li>Basic SEO indicators</li>
+                                    <li>AI visibility signals</li>
+                                    <li>User experience observations</li>
+                                </ul>
+                            </td>
+                            <td width="50%" valign="top" style="padding-left: 10px;">
+                                <h4 style="color: #1E293B; font-size: 14px; margin-top: 0; margin-bottom: 10px; border-bottom: 2px solid #E2E8F0; padding-bottom: 5px;">What Was Not Included</h4>
+                                <ul style="padding-left: 15px; color: #64748B; font-size: 13px; margin-top: 0;">
+                                    <li>Internal systems</li>
+                                    <li>Source code review</li>
+                                    <li>Security penetration testing</li>
+                                    <li>Database analysis</li>
+                                    <li>Complete multi-page website audit</li>
+                                    <li>Infrastructure assessment</li>
+                                </ul>
+                            </td>
+                        </tr>
+                    </table>
+
+                    <div style="background-color: #FFF7ED; border-left: 4px solid #FF6B35; border-radius: 4px; padding: 15px; margin: 25px 0;">
+                        <p style="font-size: 13px; color: #9A3412; margin: 0;">
+                            <strong>IMPORTANT DISCLOSURE:</strong> This analysis is based on an automated scan of the publicly accessible website page(s) provided and is intended as an initial assessment only. It does not constitute a full audit of your entire website, internal systems, source code, security infrastructure, or all website pages.
+                        </p>
+                    </div>
                     
                     <p style="font-size: 16px;">
-                        A detailed, executive-ready PDF report is attached to this email. It contains a granular breakdown of our findings, competitor benchmarking, and a prioritized action plan.
+                        A detailed PDF report is attached to this email containing our preliminary findings.
                     </p>
                     
-                    <p style="font-size: 16px;">I recommend reviewing the attached document with your technical team or leadership to discuss the strategic opportunities identified.</p>
+                    <div style="text-align: center; margin: 30px 0;">
+                        <a href="https://www.softreetechnology.com/contact" style="background-color: #FF6B35; color: #ffffff; padding: 12px 24px; text-decoration: none; border-radius: 4px; font-weight: bold; display: inline-block;">Schedule a Strategy Call</a>
+                    </div>
                     
-                    <br>
-                    <p style="font-size: 16px; margin-bottom: 5px;">Best regards,</p>
-                    <p style="font-size: 16px; margin-top: 0; margin-bottom: 25px;">
+                    <hr style="border: 0; border-top: 1px solid #E2E8F0; margin: 30px 0;">
+                    
+                    <p style="font-size: 14px; margin-bottom: 5px;">Best regards,</p>
+                    <p style="font-size: 14px; margin-top: 0; margin-bottom: 0;">
                         <strong style="color: #1E293B;">Softree Technology Team</strong><br>
-                        <span style="color: #64748B; font-size: 14px;">Digital Intelligence & Engineering</span><br>
-                        <a href="https://www.softreetechnology.com" style="color: #FF6B35; text-decoration: none; font-size: 14px;">www.softreetechnology.com</a><br>
-                        <a href="mailto:sales@softreetechnology.com" style="color: #FF6B35; text-decoration: none; font-size: 14px;">contact@softreetechnology.com</a>
+                        <span style="color: #64748B;">Digital Intelligence & Engineering</span><br>
+                        <a href="https://www.softreetechnology.com" style="color: #FF6B35; text-decoration: none;">www.softreetechnology.com</a> | 
+                        <a href="mailto:sales@softreetechnology.com" style="color: #FF6B35; text-decoration: none;">sales@softreetechnology.com</a>
                     </p>
                 </div>
             </div>
@@ -765,7 +864,7 @@ async def email_report(req: EmailReportRequest):
         
         await send_report_email(
             to_email=req.email,
-            subject=f"Softree AI Audit Report: {website_clean}",
+            subject=f"Your Website Analysis Report: {website_clean}",
             body_html=body_html,
             pdf_bytes=pdf_bytes,
             pdf_filename=filename
@@ -859,15 +958,15 @@ async def geo_email_report(req: EmailReportRequest):
                 </div>
                 
                 <div style="padding: 30px;">
-                    <h3 style="color: #FF6B35; margin-top: 0; font-size: 20px;">Executive GEO Intelligence Report</h3>
+                    <h3 style="color: #FF6B35; margin-top: 0; font-size: 20px;">AI Visibility & Website Assessment Report</h3>
                     <p style="font-size: 16px;">Hi {req.name or 'there'},</p>
                     
-                    <p style="font-size: 16px;">We have completed the Generative Engine Optimization (GEO) analysis of <strong>{req.website}</strong>.</p>
+                    <p style="font-size: 16px;">Your automated preliminary Generative Engine Optimization (GEO) assessment for <strong>{req.website}</strong> is complete.</p>
                     
-                    <p style="font-size: 16px;">GEO is the next evolution of search visibility. It determines how your brand is understood, extracted, and cited by AI engines like ChatGPT, Gemini, Claude, and Perplexity. A strong GEO foundation ensures that when potential clients query these platforms, your business is actively recommended as an authoritative solution.</p>
+                    <p style="font-size: 16px;"><strong>Purpose of this Report:</strong> This report provides an initial, high-level overview of how your brand is currently understood, extracted, and cited by major AI engines (like ChatGPT and Gemini), highlighting potential areas for digital presence optimization.</p>
                     
                     <div style="background-color: #F8FAFC; border: 1px solid #E2E8F0; border-radius: 6px; padding: 20px; margin: 25px 0;">
-                        <h4 style="margin-top: 0; color: #1E293B; font-size: 16px; text-transform: uppercase; letter-spacing: 0.5px;">Core AI Metrics</h4>
+                        <h4 style="margin-top: 0; color: #1E293B; font-size: 16px; text-transform: uppercase; letter-spacing: 0.5px;">Executive Summary (Automated Metrics)</h4>
                         <table width="100%" cellpadding="0" cellspacing="0" style="margin-top: 15px;">
                             <tr>
                                 <td width="50%" align="center" style="border-right: 1px solid #E2E8F0;">
@@ -883,27 +982,63 @@ async def geo_email_report(req: EmailReportRequest):
                     </div>
                     
                     <h4 style="color: #1E293B; font-size: 16px;">Key Strategic Insights:</h4>
-                    <ul style="padding-left: 20px; margin-bottom: 25px;">
+                    <ul style="padding-left: 20px; margin-bottom: 25px; margin-top: 0;">
                         {insights_html}
                     </ul>
                     
-                    <p style="font-size: 16px; background-color: #FFF7ED; padding: 15px; border-left: 4px solid #FF6B35; border-radius: 4px; color: #9A3412;">
+                    <p style="font-size: 16px; background-color: #F8FAFC; padding: 15px; border-left: 4px solid #1E293B; border-radius: 4px; color: #1E293B;">
                         <strong>Top Recommendation:</strong> {top_rec}
                     </p>
                     
-                    <p style="font-size: 16px; margin-top: 25px;">
-                        A detailed, executive-ready GEO Intelligence PDF report is attached to this email. It contains a granular breakdown of your platform-specific visibility, entity recognition, and a prioritized action plan to improve your AI citations.
+                    <table width="100%" cellpadding="0" cellspacing="0" style="margin: 25px 0;">
+                        <tr>
+                            <td width="50%" valign="top" style="padding-right: 10px;">
+                                <h4 style="color: #1E293B; font-size: 14px; margin-top: 0; margin-bottom: 10px; border-bottom: 2px solid #E2E8F0; padding-bottom: 5px;">What We Reviewed</h4>
+                                <ul style="padding-left: 15px; color: #64748B; font-size: 13px; margin-top: 0;">
+                                    <li>Publicly accessible website content</li>
+                                    <li>Page structure</li>
+                                    <li>Messaging and positioning</li>
+                                    <li>Basic SEO indicators</li>
+                                    <li>AI visibility signals</li>
+                                    <li>User experience observations</li>
+                                </ul>
+                            </td>
+                            <td width="50%" valign="top" style="padding-left: 10px;">
+                                <h4 style="color: #1E293B; font-size: 14px; margin-top: 0; margin-bottom: 10px; border-bottom: 2px solid #E2E8F0; padding-bottom: 5px;">What Was Not Included</h4>
+                                <ul style="padding-left: 15px; color: #64748B; font-size: 13px; margin-top: 0;">
+                                    <li>Internal systems</li>
+                                    <li>Source code review</li>
+                                    <li>Security penetration testing</li>
+                                    <li>Database analysis</li>
+                                    <li>Complete multi-page website audit</li>
+                                    <li>Infrastructure assessment</li>
+                                </ul>
+                            </td>
+                        </tr>
+                    </table>
+
+                    <div style="background-color: #FFF7ED; border-left: 4px solid #FF6B35; border-radius: 4px; padding: 15px; margin: 25px 0;">
+                        <p style="font-size: 13px; color: #9A3412; margin: 0;">
+                            <strong>IMPORTANT DISCLOSURE:</strong> This analysis is based on an automated scan of the publicly accessible website page(s) provided and is intended as an initial assessment only. It does not constitute a full audit of your entire website, internal systems, source code, security infrastructure, or all website pages.
+                        </p>
+                    </div>
+                    
+                    <p style="font-size: 16px;">
+                        A detailed PDF report is attached to this email containing our preliminary findings.
                     </p>
                     
-                    <p style="font-size: 16px;">I recommend reviewing the attached document with your technical or marketing leadership to discuss these strategic opportunities.</p>
+                    <div style="text-align: center; margin: 30px 0;">
+                        <a href="https://www.softreetechnology.com/contact" style="background-color: #FF6B35; color: #ffffff; padding: 12px 24px; text-decoration: none; border-radius: 4px; font-weight: bold; display: inline-block;">Schedule a Strategy Call</a>
+                    </div>
                     
-                    <br>
-                    <p style="font-size: 16px; margin-bottom: 5px;">Best regards,</p>
-                    <p style="font-size: 16px; margin-top: 0; margin-bottom: 25px;">
+                    <hr style="border: 0; border-top: 1px solid #E2E8F0; margin: 30px 0;">
+                    
+                    <p style="font-size: 14px; margin-bottom: 5px;">Best regards,</p>
+                    <p style="font-size: 14px; margin-top: 0; margin-bottom: 0;">
                         <strong style="color: #1E293B;">Softree Technology Team</strong><br>
-                        <span style="color: #64748B; font-size: 14px;">Digital Intelligence & Engineering</span><br>
-                        <a href="https://www.softreetechnology.com" style="color: #FF6B35; text-decoration: none; font-size: 14px;">www.softreetechnology.com</a><br>
-                        <a href="mailto:sales@softreetechnology.com" style="color: #FF6B35; text-decoration: none; font-size: 14px;">contact@softreetechnology.com</a>
+                        <span style="color: #64748B;">Digital Intelligence & Engineering</span><br>
+                        <a href="https://www.softreetechnology.com" style="color: #FF6B35; text-decoration: none;">www.softreetechnology.com</a> | 
+                        <a href="mailto:sales@softreetechnology.com" style="color: #FF6B35; text-decoration: none;">sales@softreetechnology.com</a>
                     </p>
                 </div>
             </div>
@@ -913,7 +1048,7 @@ async def geo_email_report(req: EmailReportRequest):
         
         await send_report_email(
             to_email=req.email,
-            subject=f"Softree GEO Intelligence Report: {website_clean}",
+            subject=f"AI Visibility & Website Assessment: {website_clean}",
             body_html=body_html,
             pdf_bytes=pdf_bytes,
             pdf_filename=filename
@@ -925,5 +1060,49 @@ async def geo_email_report(req: EmailReportRequest):
         raise HTTPException(status_code=500, detail="Failed to send email.")
 
     return {"status": "success", "message": "Executive report has been delivered to your business email."}
+
+@app.get("/api/leads")
+def api_get_leads(date_filter: str = 'All Time', search: str = None):
+    try:
+        leads = get_leads(date_filter, search)
+        return {"leads": leads}
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+@app.get("/api/leads/{lead_id}")
+def api_get_lead_details(lead_id: int):
+    try:
+        lead = get_lead_by_id(lead_id)
+        if not lead:
+            raise HTTPException(status_code=404, detail="Lead not found")
+        # parse json
+        import json
+        if lead['json_data']:
+            lead['json_data'] = json.loads(lead['json_data'])
+        return lead
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+@app.get("/api/leads/download/{lead_id}")
+def api_download_lead_pdf(lead_id: int):
+    try:
+        lead = get_lead_by_id(lead_id)
+        if not lead or not lead.get('pdf_path'):
+            raise HTTPException(status_code=404, detail="PDF not found")
+            
+        import os
+        pdf_path = os.path.join(os.path.dirname(__file__), 'data', 'pdfs', lead['pdf_path'])
+        if not os.path.exists(pdf_path):
+            raise HTTPException(status_code=404, detail="PDF file missing on server")
+            
+        return StreamingResponse(
+            open(pdf_path, "rb"),
+            media_type="application/pdf",
+            headers={"Content-Disposition": f"attachment; filename={lead['pdf_path']}"}
+        )
+    except HTTPException:
+        raise
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
 
 # To run the app use: uvicorn main:app --reload
