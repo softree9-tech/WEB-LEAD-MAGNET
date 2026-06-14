@@ -389,7 +389,7 @@ export default function PublicAnalyze() {
             </div>
             <div className="exec-actions-right">
               <button className="action-btn" onClick={() => {
-                if (lastFormData) handleSubmit({ ...lastFormData, recaptchaToken: "admin_bypass" }, true);
+                if (lastFormData) handleSubmit({ ...lastFormData, recaptchaToken: import.meta.env.VITE_RECAPTCHA_BYPASS_TOKEN || "" }, true);
               }} disabled={isRecalculating}>
                 <RefreshCw size={14} className={isRecalculating ? "spinning" : ""} /> {isRecalculating ? "Recalculating..." : "Recalculate"}
               </button>
