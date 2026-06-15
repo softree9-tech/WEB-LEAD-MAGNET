@@ -33,12 +33,12 @@ const footerColumns = [
   {
     label: "Company",
     links: [
-      { title: "Home", href: "/" },
-      { title: "About Us", href: "/about-us" },
-      { title: "Case Studies", href: "/case-studies" },
-      { title: "Careers", href: "/careers" },
-      { title: "Contact", href: "/contact" },
-      { title: "Book a Call 🤝", href: "/book-meeting" },
+      { title: "Home", href: "https://www.softreetechnology.com" },
+      { title: "About Us", href: "https://www.softreetechnology.com/about-us" },
+      { title: "Case Studies", href: "https://www.softreetechnology.com/case-studies" },
+      { title: "Careers", href: "https://www.softreetechnology.com/careers" },
+      { title: "Contact", href: "https://www.softreetechnology.com/contact" },
+      { title: "Book a Call 🤝", href: "https://www.softreetechnology.com/book-meeting" },
     ],
   },
   {
@@ -53,10 +53,10 @@ const footerColumns = [
   {
     label: "Resources",
     links: [
-      { title: "Blog", href: "https://www.softreetechnology.com/blog", external: true },
-      { title: "Services", href: "/services" },
-      { title: "Privacy Policy", href: "/privacy-policy" },
-      { title: "Terms of Service", href: "/terms" },
+      { title: "Blog", href: "https://www.softreetechnology.com/blog" },
+      { title: "Services", href: "https://www.softreetechnology.com/services" },
+      { title: "Privacy Policy", href: "https://www.softreetechnology.com/privacy-policy" },
+      { title: "Terms of Service", href: "https://www.softreetechnology.com/terms" },
     ],
   },
 ];
@@ -199,18 +199,18 @@ export default function StickyFooter({ className, ...props }) {
           </div>
           {/* Metadata row below wordmark */}
           <div className="flex flex-wrap items-center gap-x-6 gap-y-1">
-            <Link
-              to="/privacy-policy"
-              className="text-[11px] font-semibold uppercase tracking-[0.14em] text-white/70 hover:text-white transition-colors"
+            <a
+              href="https://www.softreetechnology.com/privacy-policy"
+              className="text-[11px] font-semibold uppercase tracking-[0.14em] text-white/70 hover:text-white transition-colors no-underline"
             >
               Privacy Policy
-            </Link>
-            <Link
-              to="/terms"
-              className="text-[11px] font-semibold uppercase tracking-[0.14em] text-white/70 hover:text-white transition-colors"
+            </a>
+            <a
+              href="https://www.softreetechnology.com/terms"
+              className="text-[11px] font-semibold uppercase tracking-[0.14em] text-white/70 hover:text-white transition-colors no-underline"
             >
               Terms of Service
-            </Link>
+            </a>
             <p className="text-[11px] font-semibold uppercase tracking-[0.14em] text-white/70">
               © {new Date().getFullYear()} Softree Technology
             </p>
@@ -246,25 +246,25 @@ export default function StickyFooter({ className, ...props }) {
               <div style={{ display: 'none' }}><Logo size={32} /></div>
             </a>
             <div className="flex items-center gap-2.5">
-              <Link
-                to="/services"
-                className="flex h-9 items-center rounded-full border border-black/25 px-4 text-[12px] font-semibold text-black transition-all hover:border-black/60 hover:bg-black/5"
+              <a
+                href="https://www.softreetechnology.com/services"
+                className="flex h-9 items-center rounded-full border border-black/25 px-4 text-[12px] font-semibold text-black transition-all hover:border-black/60 hover:bg-black/5 no-underline"
               >
                 Our Services
-              </Link>
-              <Link
-                to="/book-meeting"
-                className="flex h-9 items-center rounded-full border border-black/25 px-4 text-[12px] font-semibold text-black transition-all hover:border-black/60 hover:bg-black/5"
+              </a>
+              <a
+                href="https://www.softreetechnology.com/book-meeting"
+                className="flex h-9 items-center rounded-full border border-black/25 px-4 text-[12px] font-semibold text-black transition-all hover:border-black/60 hover:bg-black/5 no-underline"
               >
                 Book a Call
-              </Link>
-              <Link
-                to="/contact"
-                className="flex h-9 items-center rounded-full px-5 text-[12px] font-bold text-white transition-all hover:opacity-90"
+              </a>
+              <a
+                href="https://www.softreetechnology.com/contact"
+                className="flex h-9 items-center rounded-full px-5 text-[12px] font-bold text-white transition-all hover:opacity-90 no-underline"
                 style={{ background: "linear-gradient(135deg, rgba(255,122,47,0.97) 0%, rgba(200,80,20,0.92) 100%)" }}
               >
                 Get in Touch
-              </Link>
+              </a>
             </div>
           </div>
 
@@ -275,7 +275,7 @@ export default function StickyFooter({ className, ...props }) {
                 <p className="mb-5 text-[12px] font-extrabold uppercase tracking-[0.18em] text-black">
                   {col.label}
                 </p>
-                <ul className="space-y-[10px]">
+                <ul className="space-y-[18px] list-none p-0 m-0">
                   {col.links.map((link) => (
                     <li key={link.title}>
                       {link.external ? (
@@ -283,15 +283,22 @@ export default function StickyFooter({ className, ...props }) {
                           href={link.href}
                           target="_blank"
                           rel="noopener noreferrer"
-                          className="inline-flex items-center text-[14px] font-medium text-black transition-colors hover:text-black/70"
+                          className="inline-flex items-center text-[16px] font-medium text-black transition-colors hover:text-black/70 no-underline"
                         >
                           {link.title}
                           <Arrow />
                         </a>
+                      ) : link.href.startsWith("http") ? (
+                        <a
+                          href={link.href}
+                          className="inline-flex items-center text-[16px] font-medium text-black transition-colors hover:text-black/70 no-underline"
+                        >
+                          {link.title}
+                        </a>
                       ) : (
                         <Link
                           to={link.href}
-                          className="inline-flex items-center text-[14px] font-medium text-black transition-colors hover:text-black/70"
+                          className="inline-flex items-center text-[16px] font-medium text-black transition-colors hover:text-black/70 no-underline"
                         >
                           {link.title}
                         </Link>

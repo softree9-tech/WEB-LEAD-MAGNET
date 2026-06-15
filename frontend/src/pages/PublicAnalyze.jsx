@@ -530,7 +530,7 @@ export default function PublicAnalyze() {
             </div>
 
             <div style={{ width: '100%' }}>
-              <h3 style={{ fontSize: '1.25rem', fontWeight: 700, marginBottom: '0.75rem', color: '#fff', lineHeight: 1.4 }}>
+              <h3 style={{ fontSize: '1.25rem', fontWeight: 700, marginBottom: '0.75rem', color: 'black', lineHeight: 1.4 }}>
                 Generating Your AI Performance Intelligence Report
               </h3>
 

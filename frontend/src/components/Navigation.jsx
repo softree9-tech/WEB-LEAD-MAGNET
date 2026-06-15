@@ -1,5 +1,4 @@
 import React, { useState, useEffect, useRef, useMemo } from "react";
-import { Link } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
 import Logo from "./Logo";
 import {
@@ -46,59 +45,111 @@ const colConfig = [
   { accent: "#FF7A2F", bg: "#FAEEDA", label: "Digital Workspace" },
 ];
 
+const SOFTREE_BASE = "https://www.softreetechnology.com";
+
 const menu = [
-  { label: "About", url: "/about-us", icon: Info },
+  { label: "About", url: `${SOFTREE_BASE}/about-us`, icon: Info },
   {
     label: "Services",
-    url: "/services",
+    url: `${SOFTREE_BASE}/services`,
     icon: Settings,
     mega: true,
     children: [
       {
-        title: "Business Applications Delivery Support",
-        description: "Scalable Power Platform solutions built for enterprise delivery.",
+        title: "BUSINESS APPLICATIONS",
+        description: "Power Platform at enterprise scale.",
         links: [
-          { label: "Power Apps", url: "/services/offshore-power-platform-development", icon: LayoutDashboard, description: "Low-code app development" },
-          { label: "Power Automate", url: "/services/offshore-power-platform-development", icon: Workflow, description: "Workflow automation" },
-          { label: "Dataverse", url: "/services/offshore-power-platform-development", icon: Server, description: "Unified data platform" },
-          { label: "MVP Development", url: "/services/mvp", icon: Rocket, description: "Build and launch your product" },
+          { label: "Power Apps", url: `${SOFTREE_BASE}/services/offshore-power-platform-development`, icon: LayoutDashboard, description: "Low-code delivery" },
+          { label: "Power Automate", url: `${SOFTREE_BASE}/services/offshore-power-platform-development`, icon: Workflow, description: "Workflow automation" },
+          { label: "Dataverse", url: `${SOFTREE_BASE}/services/offshore-power-platform-development`, icon: Server, description: "Unified data layer" },
+          { label: "MVP Development", url: `${SOFTREE_BASE}/services/mvp`, icon: Rocket, description: "Launch faster" },
         ],
       },
       {
-        title: "Data & Analytics Execution",
-        description: "Turn raw data into strategic intelligence at any scale.",
+        title: "DATA & ANALYTICS",
+        description: "Intelligence from raw data.",
         links: [
-          { label: "Power BI", url: "/services/offshore-data-analytics", icon: LineChart, description: "Business dashboards" },
-          { label: "Microsoft Fabric", url: "/services/offshore-microsoft-fabric", icon: Boxes, description: "Unified analytics platform" },
-          { label: "Databricks", url: "/services/offshore-data-analytics", icon: Cpu, description: "Big data & ML pipelines" },
-          { label: "Snowflake", url: "/services/offshore-data-analytics", icon: CloudSnow, description: "Cloud data warehousing" },
+          { label: "Power BI", url: `${SOFTREE_BASE}/services/offshore-data-analytics`, icon: LineChart, description: "Executive dashboards" },
+          { label: "Microsoft Fabric", url: `${SOFTREE_BASE}/services/offshore-microsoft-fabric`, icon: Boxes, description: "Unified analytics" },
+          { label: "Databricks", url: `${SOFTREE_BASE}/services/offshore-data-analytics`, icon: Cpu, description: "ML pipelines" },
+          { label: "Snowflake", url: `${SOFTREE_BASE}/services/offshore-data-analytics`, icon: CloudSnow, description: "Cloud warehouse" },
         ],
       },
       {
-        title: "AI & Intelligent Automation",
-        description: "Embed intelligence into every process and workflow.",
+        title: "AI & AUTOMATION",
+        description: "Intelligence in every workflow.",
         links: [
-          { label: "AI Powered Test Automation", url: "/services/ai-powered-test-automation", icon: BrainCircuit, description: "Enterprise AI platform" },
-          { label: "AI Agents", url: "/services/offshore-ai-development", icon: Bot, description: "Autonomous task execution" },
-          { label: "Generative AI", url: "/services/offshore-generative-ai-development", icon: WandSparkles, description: "Retrieval-augmented generation" },
+          { label: "AI Test Automation", url: `${SOFTREE_BASE}/services/ai-powered-test-automation`, icon: BrainCircuit, description: "Quality at speed" },
+          { label: "AI Agents", url: `${SOFTREE_BASE}/services/offshore-ai-development`, icon: Bot, description: "Autonomous tasks" },
+          { label: "Generative AI", url: `${SOFTREE_BASE}/services/offshore-generative-ai-development`, icon: WandSparkles, description: "RAG & copilots" },
         ],
       },
       {
-        title: "Digital Workspace & App Engineering",
-        description: "Modern digital experiences for connected, productive teams.",
+        title: "DIGITAL WORKSPACE",
+        description: "Modern apps for connected teams.",
         links: [
-          { label: "Legacy Modernization", url: "/services/legacy-application-modernization", icon: Sparkles, description: "Transform outdated systems with modern architecture." },
-          { label: "SharePoint Online", url: "/services/offshore-sharepoint-development", icon: Building2, description: "Intranet & collaboration" },
-          { label: "SPFx Development", url: "/services/offshore-spfx-development", icon: Code2, description: "Custom SharePoint Framework solutions" },
-          { label: "Web Applications", url: "/services/offshore-web-app-development", icon: Globe2, description: "Custom web portals & apps" },
-          { label: "Mobile Applications", url: "/services/offshore-mobile-app-development", icon: Smartphone, description: "Cross-platform mobile apps" },
+          { label: "Legacy Modernization", url: `${SOFTREE_BASE}/services/legacy-application-modernization`, icon: Sparkles, description: "Architecture refresh" },
+          { label: "SharePoint Online", url: `${SOFTREE_BASE}/services/offshore-sharepoint-development`, icon: Building2, description: "Intranets" },
+          { label: "SPFx Development", url: `${SOFTREE_BASE}/services/offshore-spfx-development`, icon: Code2, description: "Custom SPFx" },
+          { label: "Web Applications", url: `${SOFTREE_BASE}/services/offshore-web-app-development`, icon: Globe2, description: "Portals & apps" },
+          { label: "Mobile Applications", url: `${SOFTREE_BASE}/services/offshore-mobile-app-development`, icon: Smartphone, description: "iOS & Android" },
         ],
       },
     ],
   },
-  { label: "Case Studies", url: "/case-studies", icon: Layers, mega: true, children: [] },
-  { label: "Blog", url: "/blog", icon: BookOpen, mega: true, children: [] },
-  { label: "Careers", url: "/careers", icon: Briefcase },
+  {
+    label: "Case Studies",
+    url: `${SOFTREE_BASE}/case-studies`,
+    icon: Layers,
+    mega: true,
+    children: [
+      {
+        title: "MICROSOFT & DATA",
+        description: "Power Platform, SharePoint, and analytics delivery.",
+        links: [
+          { label: "Power Platform", url: `${SOFTREE_BASE}/case-studies`, icon: Layers, description: "Power Apps • Power Automate • Dataverse" },
+        ],
+      },
+      {
+        title: "AI & AUTOMATION",
+        description: "Intelligent systems with measurable outcomes.",
+        links: [
+          { label: "AI", url: `${SOFTREE_BASE}/case-studies`, icon: Layers, description: "Artificial Intelligence • Machine Learning" },
+        ],
+      },
+    ],
+  },
+  {
+    label: "Blog",
+    url: `${SOFTREE_BASE}/blog`,
+    icon: BookOpen,
+    mega: true,
+    children: [
+      {
+        title: "MICROSOFT 365",
+        description: "Latest in microsoft 365",
+        links: [
+          { label: "10 Best Power Platform Development Services", url: `${SOFTREE_BASE}/blog`, icon: FileText, description: "Modern businesses face increasing pressure to automate processes and create custom applications without heavy IT investment. Between citizen development initiat" },
+          { label: "10 Best SharePoint Development Services", url: `${SOFTREE_BASE}/blog`, icon: FileText, description: "Modern enterprises face increasing pressure to create collaborative digital workplaces that streamline operations and enhance productivity. Between managing doc" },
+        ],
+      },
+      {
+        title: "MOBILE DEVELOPMENT",
+        description: "Latest in mobile development",
+        links: [
+          { label: "10 Best Mobile App Development Services", url: `${SOFTREE_BASE}/blog`, icon: FileText, description: "Modern businesses face increasing pressure to deliver mobile applications that engage users and drive business value. Between platform fragmentation, performanc" },
+        ],
+      },
+      {
+        title: "WEB DEVELOPMENT",
+        description: "Latest in web development",
+        links: [
+          { label: "10 Best React Development Services", url: `${SOFTREE_BASE}/blog`, icon: FileText, description: "Modern businesses face increasing pressure to build fast, responsive web applications with exceptional user experiences. Between component complexity, state man" },
+        ],
+      },
+    ],
+  },
+  { label: "Careers", url: `${SOFTREE_BASE}/careers`, icon: Briefcase },
 ];
 
 function buildBlogChildren(blogCategories) {
@@ -110,7 +161,7 @@ function buildBlogChildren(blogCategories) {
       description: `Latest ${cat.title.toLowerCase()} articles`,
       links: cat.posts.map((post) => ({
         label: post.title,
-        url: `/blog/${post.slug.current}`,
+        url: `${SOFTREE_BASE}/blog/${post.slug.current}`,
         icon: FileText,
         description: post.excerpt || "",
       })),
@@ -127,7 +178,7 @@ function buildCaseStudyChildren(caseStudyCategories) {
       image: cat.image,
       links: cat.caseStudies.map((study) => ({
         label: study.title,
-        url: `/case-studies/${study.slug.current}`,
+        url: `${SOFTREE_BASE}/case-studies/${study.slug.current}`,
         icon: Layers,
         description: study.excerpt || study.client || "",
       })),
@@ -142,9 +193,9 @@ const GRID_COLS = {
 };
 
 const MEGA_FOOTER = {
-  Services: { label: "Explore all services", href: "/services" },
-  "Case Studies": { label: "View all case studies", href: "/case-studies" },
-  Blog: { label: "View all articles", href: "/blog" },
+  Services: { label: "Explore all services", href: `${SOFTREE_BASE}/services` },
+  "Case Studies": { label: "View all case studies", href: `${SOFTREE_BASE}/case-studies` },
+  Blog: { label: "View all articles", href: `${SOFTREE_BASE}/blog` },
 };
 
 export default function Navigation({ blogCategories = [], caseStudyCategories = [] }) {
@@ -218,13 +269,13 @@ export default function Navigation({ blogCategories = [], caseStudyCategories = 
           {dynamicMenu.map((item) => {
             if (!item.mega) {
               return (
-                <Link
+                <a
                   key={item.label}
-                  to={item.url || "#"}
+                  href={item.url || "#"}
                   className="group relative px-4 py-2 text-sm font-medium text-gray-600 rounded-lg transition-all duration-200 hover:text-gray-900 hover:bg-gray-100/50"
                 >
                   {item.label}
-                </Link>
+                </a>
               );
             }
 
@@ -237,8 +288,8 @@ export default function Navigation({ blogCategories = [], caseStudyCategories = 
                 onMouseEnter={() => openMenu(item.label)}
                 onMouseLeave={scheduleCloseMenu}
               >
-                <Link
-                  to={item.url || "#"}
+                <a
+                  href={item.url || "#"}
                   className="group relative inline-flex items-center gap-1.5 px-4 py-2 text-sm font-medium text-gray-600 rounded-lg transition-all duration-200 hover:text-orange-600 hover:bg-orange-50/50"
                 >
                   {item.label}
@@ -246,7 +297,7 @@ export default function Navigation({ blogCategories = [], caseStudyCategories = 
                     size={14}
                     className={`transition-transform duration-200 ${open === item.label ? "rotate-180 text-orange-600" : "text-gray-400 group-hover:text-orange-500"}`}
                   />
-                </Link>
+                </a>
 
                 {/* ── MEGA MENU ── */}
                 <AnimatePresence>
@@ -258,132 +309,72 @@ export default function Navigation({ blogCategories = [], caseStudyCategories = 
                       transition={{ duration: 0.12, ease: "easeOut" }}
                       onMouseEnter={() => openMenu(item.label)}
                       onMouseLeave={scheduleCloseMenu}
-                      className="fixed top-[84px] left-1/2 -translate-x-1/2 w-[1100px] max-w-[calc(100vw-2rem)] bg-white rounded-3xl border border-gray-100 shadow-[0_24px_80px_rgba(0,0,0,0.15),0_8px_24px_rgba(0,0,0,0.08)] overflow-hidden before:absolute before:-top-3 before:left-0 before:right-0 before:h-3 before:content-['']"
+                      className="fixed top-[84px] left-1/2 -translate-x-1/2 w-[1200px] max-w-[calc(100vw-2rem)] bg-white rounded-3xl border border-gray-100 shadow-[0_24px_80px_rgba(0,0,0,0.15),0_8px_24px_rgba(0,0,0,0.08)] overflow-hidden before:absolute before:-top-3 before:left-0 before:right-0 before:h-3 before:content-['']"
                     >
-                      {/* Header */}
-                      <div className="px-8 pt-5 pb-4 border-b border-gray-100">
-                        <Link
-                          to={item.url || "#"}
-                          className="group/drawer-title flex items-center gap-x-2"
-                        >
-                          <span className="text-xl font-semibold text-gray-900">
-                            {item.label}
-                          </span>
-                          <ArrowRight
-                            size={18}
-                            className="text-gray-400 transition-transform group-hover/drawer-title:translate-x-1"
-                          />
-                        </Link>
-                      </div>
-
-                      <div className={`grid gap-0 ${GRID_COLS[columnCount] ?? "grid-cols-4"}`}>
-                        {item.children?.map((group, idx) => {
-                          const cfg = colConfig[idx] ?? {
-                            accent: null,
-                            bg: null,
-                            label: group.title,
-                          };
-
-                          return (
-                            <div
-                              key={group.title}
-                              className={`px-5 py-5 ${idx < item.children.length - 1
-                                ? "border-r border-gray-100"
-                                : ""
-                                }`}
-                            >
-                              {/* Service Visual - Image at top */}
-                              <div className="relative h-[110px] overflow-hidden rounded-xl border border-gray-200 bg-gray-900 mb-4 group/image">
-                                <img
-                                  alt={cfg.label}
-                                  className="h-full w-full object-cover object-center opacity-95 transition-all duration-500 group-hover/image:scale-105"
-                                  src={group.image || dropdownImages[idx]}
-                                  onError={(e) => {
-                                    // Fallback: hide image and show gradient background
-                                    e.target.style.display = "none";
-                                    e.target.parentElement.style.background =
-                                      `linear-gradient(135deg, ${cfg.bg} 0%, ${cfg.accent}20 100%)`;
-                                  }}
-                                />
-                                <div className="absolute inset-x-0 bottom-0 h-14 bg-gradient-to-t from-black/60 via-black/20 to-transparent" />
-                                <span className="absolute bottom-2.5 left-3 rounded-full bg-white/95 px-3 py-1 text-[11px] font-semibold uppercase tracking-wider text-gray-900 shadow-sm">
-                                  {cfg.label}
-                                </span>
+                        <div className="flex">
+                          {/* Left Sidebar */}
+                          <div className="w-[280px] shrink-0 p-8 flex flex-col justify-between" style={{ background: item.label === "Case Studies" ? 'linear-gradient(135deg, #74a0c8 0%, #355877 100%)' : item.label === "Blog" ? 'linear-gradient(135deg, #a66cf0 0%, #683fb5 100%)' : 'linear-gradient(135deg, #e39668 0%, #b85e23 100%)' }}>
+                            <div className="relative z-10">
+                              <div className="inline-block px-3 py-1 rounded-full bg-white/20 text-white text-[11px] font-bold tracking-wider mb-6">
+                                ● {item.label === "Case Studies" ? "PROOF" : item.label === "Blog" ? "INSIGHTS" : "CAPABILITIES"}
                               </div>
+                              <h3 className="text-[28px] font-bold text-white mb-3">{item.label}</h3>
+                              <p className="text-white/80 text-[14px] leading-relaxed pr-2">
+                                {item.label === "Case Studies" ? "Customer stories organized by solution area." : item.label === "Blog" ? "Practical notes on platforms, AI, and software delivery." : "Microsoft, data, AI, and product engineering — one delivery standard."}
+                              </p>
+                            </div>
+                            <a href={item.url} className="relative z-10 text-white font-medium text-[14px] hover:text-white/80 flex items-center gap-1.5 transition-colors mt-8">
+                              {item.label === "Case Studies" ? "All case studies" : item.label === "Blog" ? "All articles" : "All services"} <ArrowRight size={16} className="-rotate-45" />
+                            </a>
+                          </div>
 
-                              {/* links */}
-                              <div className="flex flex-col gap-0.5">
-                                {group.links.map((link) => {
-                                  const Icon = link.icon;
+                          {/* Right Content */}
+                          <div className="flex-1 flex flex-col bg-white">
+                            <div className="flex-1 p-8 overflow-y-auto">
+                              <div className={`grid gap-6 ${GRID_COLS[columnCount] ?? "grid-cols-4"}`}>
+                                {item.children?.map((group, idx) => {
+                                  const bulletColor = idx % 2 === 0 ? "text-orange-500" : "text-blue-500";
                                   return (
-                                    <Link
-                                      key={link.label}
-                                      to={link.url}
-                                      className="group/link flex items-center gap-3 px-2 py-2 rounded-lg hover:bg-gray-50 transition-all duration-150"
-                                    >
-                                      <div className="w-9 h-9 rounded-lg flex items-center justify-center shrink-0 bg-gray-100 group-hover/link:bg-orange-500 transition-all duration-200">
-                                        {Icon && (
-                                          <Icon
-                                            size={17}
-                                            className="text-gray-600 group-hover/link:text-white transition-colors"
-                                          />
-                                        )}
+                                    <div key={group.title}>
+                                      <div className="mb-5">
+                                        <h4 className="text-[12px] font-bold tracking-widest text-gray-900 uppercase flex items-center gap-2 mb-1.5">
+                                          <span className={bulletColor}>●</span> {group.title}
+                                        </h4>
+                                        {group.description && <p className="text-[12px] text-gray-500 leading-snug">{group.description}</p>}
                                       </div>
-                                      <div className="flex-1 min-w-0">
-                                        <p className="text-[13px] font-medium text-gray-900 leading-snug">
-                                          {link.label}
-                                        </p>
-                                        {link.description && (
-                                          <p className="text-[11px] text-gray-500 mt-0.5 leading-snug">
-                                            {link.description}
-                                          </p>
-                                        )}
+                                      <div className="flex flex-col gap-4">
+                                        {group.links.map((link) => {
+                                          const Icon = link.icon;
+                                          return (
+                                            <a key={link.label} href={link.url} className="group/link flex gap-3 transition-colors">
+                                              <div className="shrink-0 mt-0.5 text-gray-400 group-hover/link:text-gray-900 transition-colors">
+                                                {Icon && <Icon size={16} strokeWidth={1.5} />}
+                                              </div>
+                                              <div>
+                                                <div className="text-[13px] font-semibold text-gray-900 leading-snug group-hover/link:text-orange-600 transition-colors">{link.label}</div>
+                                                {link.description && <div className="text-[12px] text-gray-500 mt-1 leading-relaxed">{link.description}</div>}
+                                              </div>
+                                            </a>
+                                          );
+                                        })}
                                       </div>
-                                    </Link>
+                                    </div>
                                   );
                                 })}
                               </div>
                             </div>
-                          );
-                        })}
-                      </div>
-
-                      {/* footer */}
-                      <div className="border-t border-gray-100 bg-gray-50/80 px-6 py-4 flex items-center justify-between">
-                        <p className="text-[13px] text-gray-500">
-                          Need guidance?{" "}
-                          <Link
-                            to="/book-meeting"
-                            className="text-gray-900 font-semibold hover:text-orange-600 transition-colors"
-                          >
-                            Book a discovery call →
-                          </Link>
-                        </p>
-                        <div className="flex items-center gap-6">
-                          {MEGA_FOOTER[item.label] && (
-                            <Link
-                              to={MEGA_FOOTER[item.label].href}
-                              className="text-[13px] font-medium text-gray-600 hover:text-gray-900 flex items-center gap-1.5 transition-colors group/f"
-                            >
-                              {MEGA_FOOTER[item.label].label}
-                              <ArrowRight
-                                size={14}
-                                className="group-hover/f:translate-x-0.5 transition-transform"
-                              />
-                            </Link>
-                          )}
-                          <Link
-                            to="/contact"
-                            className="text-[13px] font-medium text-gray-600 hover:text-gray-900 flex items-center gap-1.5 transition-colors group/f"
-                          >
-                            Get a quote
-                            <ArrowRight
-                              size={14}
-                              className="group-hover/f:translate-x-0.5 transition-transform"
-                            />
-                          </Link>
+                            
+                            {/* Footer for Right Side */}
+                            <div className="border-t border-gray-100 bg-white px-8 py-4 flex items-center justify-between">
+                              <p className="text-[13px] text-gray-600">
+                                Book a discovery call
+                              </p>
+                              <a href="https://www.softreetechnology.com/contact" className="text-[13px] text-gray-500 hover:text-gray-900 flex items-center gap-1.5 transition-colors group/f">
+                                Get a quote <ArrowRight size={14} className="group-hover/f:translate-x-0.5 transition-transform" />
+                              </a>
+                            </div>
+                          </div>
                         </div>
-                      </div>
                     </motion.div>
                   )}
                 </AnimatePresence>
@@ -394,21 +385,21 @@ export default function Navigation({ blogCategories = [], caseStudyCategories = 
 
         {/* ── CTA ── */}
         <div className="hidden lg:flex items-center gap-2">
-          <Link
-            to="/book-meeting"
+          <a
+            href="https://www.softreetechnology.com/book-meeting"
             className="inline-flex items-center justify-center px-6 py-2.5 text-[14px] font-semibold text-white transition-all duration-300 rounded-full hover:shadow-md hover:-translate-y-0.5 active:scale-95"
             style={{
               background: "linear-gradient(135deg, #FF7A2F 0%, #E85A1F 100%)",
             }}
           >
             Book a Call
-          </Link>
-          <Link
-            to="/contact"
+          </a>
+          <a
+            href="https://www.softreetechnology.com/contact"
             className="inline-flex items-center justify-center px-6 py-2.5 text-[14px] font-semibold text-gray-900 bg-white border border-gray-200 transition-all duration-300 rounded-full hover:bg-gray-50 hover:shadow-sm hover:-translate-y-0.5 active:scale-95"
           >
             Get Started
-          </Link>
+          </a>
         </div>
 
         {/* ── MOBILE TOGGLE ── */}
@@ -458,15 +449,15 @@ export default function Navigation({ blogCategories = [], caseStudyCategories = 
                         />
                       </button>
                     ) : (
-                      <Link
-                        to={item.url || "#"}
+                      <a
+                        href={item.url || "#"}
                         onClick={() => setMobileOpen(false)}
                         className="w-full flex items-center justify-between py-4 border-b border-gray-200 text-left"
                       >
                         <span className="text-lg font-semibold text-gray-900">
                           {item.label}
                         </span>
-                      </Link>
+                      </a>
                     )}
 
                     {item.mega && mobileDropdown === item.label && (
@@ -478,14 +469,14 @@ export default function Navigation({ blogCategories = [], caseStudyCategories = 
                             </h4>
                             <div className="flex flex-col gap-3 pl-2 border-l-2 border-gray-100">
                               {group.links.map((link) => (
-                                <Link
+                                <a
                                   key={link.label}
-                                  to={link.url}
+                                  href={link.url}
                                   onClick={() => setMobileOpen(false)}
                                   className="block py-1 text-sm font-medium text-gray-600 hover:text-black transition-colors"
                                 >
                                   {link.label}
-                                </Link>
+                                </a>
                               ))}
                             </div>
                           </div>
@@ -495,8 +486,8 @@ export default function Navigation({ blogCategories = [], caseStudyCategories = 
                   </div>
                 ))}
 
-                <Link
-                  to="/book-meeting"
+                <a
+                  href="https://www.softreetechnology.com/book-meeting"
                   onClick={() => setMobileOpen(false)}
                   style={{
                     background: "linear-gradient(135deg, #FF7A2F 0%, #E85A1F 100%)",
@@ -504,15 +495,15 @@ export default function Navigation({ blogCategories = [], caseStudyCategories = 
                   className="group mt-6 flex items-center justify-center gap-1.5 px-6 py-3.5 text-white rounded-full font-semibold hover:shadow-md transition"
                 >
                   Book a Call
-                </Link>
+                </a>
 
-                <Link
-                  to="/contact"
+                <a
+                  href="https://www.softreetechnology.com/contact"
                   onClick={() => setMobileOpen(false)}
                   className="group mt-2 flex items-center justify-center gap-1.5 px-6 py-3.5 border border-gray-200 text-gray-900 bg-white rounded-full font-semibold hover:bg-gray-50 transition"
                 >
                   Get Started
-                </Link>
+                </a>
               </div>
             </motion.div>
           )}

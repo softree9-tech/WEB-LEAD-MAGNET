@@ -234,7 +234,7 @@ export default function LightContactSection() {
                   </p>
                   <a
                     href="mailto:sales@softreetechnology.com"
-                    className="mt-2 block text-[14px] leading-6 text-white/58 transition-colors hover:text-[#ff5812]"
+                    className="mt-2 block text-[14px] leading-6 text-white/58 transition-colors hover:text-[#ff5812] no-underline"
                   >
                     sales@softreetechnology.com
                   </a>
@@ -304,7 +304,7 @@ export default function LightContactSection() {
                     <button
                       type="submit"
                       disabled={status === "submitting"}
-                      className="group inline-flex h-11 sm:h-12 w-full sm:w-fit sm:px-8 gap-3 items-center justify-center rounded-full bg-[#ff5812] px-6 text-[13px] font-semibold uppercase tracking-[0.16em] text-white transition duration-300 hover:bg-white hover:text-[#09090d] disabled:cursor-not-allowed disabled:opacity-65"
+                      className="group inline-flex h-11 sm:h-12 w-full sm:w-fit sm:px-8 gap-3 items-center justify-center rounded-full bg-[#ff5812] px-6 text-[13px] font-semibold uppercase tracking-[0.16em] text-white transition duration-300 hover:bg-white hover:text-[#09090d] disabled:cursor-not-allowed disabled:opacity-65 no-underline"
                     >
                       <span>{status === "submitting" ? "Please wait..." : "Start a Project"}</span>
                       <ArrowUpRight
@@ -314,7 +314,7 @@ export default function LightContactSection() {
                     </button>
                     <Link
                       to="/book-meeting"
-                      className="group inline-flex h-11 sm:h-12 w-full sm:w-fit sm:px-8 gap-3 items-center justify-center rounded-full border border-white/20 hover:border-[#ff5812] px-6 text-[13px] font-semibold uppercase tracking-[0.16em] text-white transition duration-300 hover:bg-[#ff5812]"
+                      className="group inline-flex h-11 sm:h-12 w-full sm:w-fit sm:px-8 gap-3 items-center justify-center rounded-full border border-white/20 hover:border-[#ff5812] px-6 text-[13px] font-semibold uppercase tracking-[0.16em] text-white transition duration-300 hover:bg-[#ff5812] no-underline"
                     >
                       <span>Book a Call</span>
                       <ArrowUpRight
