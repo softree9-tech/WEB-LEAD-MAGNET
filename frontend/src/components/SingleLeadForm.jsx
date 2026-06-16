@@ -136,7 +136,7 @@ export default function SingleLeadForm({ onResult }) {
       </form>
 
       {error && (
-        <div style={{ 
+        <div role="alert" style={{
           display: 'flex', 
           alignItems: 'flex-start', 
           gap: '8px', 
