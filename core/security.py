@@ -1,5 +1,5 @@
 import socket
-from urllib.parse import urlparse
+from urllib.parse import urlparse, urljoin
 import ipaddress
 import requests
 import re
@@ -36,7 +36,7 @@ _PARKED_REGEX = re.compile("|".join(_PARKED_PATTERNS), re.IGNORECASE)
 def is_safe_url(url: str) -> bool:
     """
     Validates that a URL is safe to request.
-    Prevents SSRF by checking for private, loopback, and reserved IP ranges.
+    Prevents SSRF by checking for private, loopback, and reserved IP ranges (IPv4 & IPv6).
     """
     if not url:
         return False
@@ -53,22 +53,59 @@ def is_safe_url(url: str) -> bool:
         if not hostname:
             return False
 
-        # Basic check for common local hostnames
-        if hostname.lower() in ('localhost', '127.0.0.1', '0.0.0.0', '::1'):
+        # Resolve hostname to all associated IP addresses (IPv4 and IPv6)
+        try:
+            addr_info = socket.getaddrinfo(hostname, None)
+        except socket.gaierror:
             return False
 
-        # Resolve hostname to IP
-        # This provides protection against standard SSRF.
-        # DNS rebinding protection would require pinning the IP for the subsequent request.
-        ip_addr = socket.gethostbyname(hostname)
-        ip = ipaddress.ip_address(ip_addr)
+        for family, _, _, _, sockaddr in addr_info:
+            ip_str = sockaddr[0]
+            ip = ipaddress.ip_address(ip_str)
 
-        if ip.is_private or ip.is_loopback or ip.is_reserved or ip.is_multicast or ip.is_link_local:
-            return False
+            # Normalize IPv4-mapped IPv6 addresses (e.g., ::ffff:127.0.0.1)
+            if isinstance(ip, ipaddress.IPv6Address) and ip.ipv4_mapped:
+                ip = ip.ipv4_mapped
+
+            if ip.is_private or ip.is_loopback or ip.is_reserved or ip.is_multicast or ip.is_link_local:
+                return False
 
         return True
     except Exception:
         return False
+
+
+def safe_request(method, url, **kwargs):
+    """
+    Wrapper for requests.request that prevents SSRF by validating all URLs in a redirect chain.
+    Respects 'allow_redirects' (defaults to True).
+    """
+    max_redirects = kwargs.pop('max_redirects', 5)
+    allow_redirects = kwargs.pop('allow_redirects', True)
+    # Handle redirects manually to validate each hop
+    kwargs['allow_redirects'] = False
+
+    current_url = url
+    for i in range(max_redirects + 1):
+        if not is_safe_url(current_url):
+            raise requests.exceptions.RequestException(f"SSRF Protection: Unsafe URL detected: {current_url}")
+
+        response = requests.request(method, current_url, **kwargs)
+
+        if response.is_redirect and allow_redirects:
+            next_url = response.headers.get('Location')
+            if not next_url:
+                return response
+
+            # Close intermediate redirect responses to prevent resource leaks
+            if kwargs.get('stream'):
+                response.close()
+
+            current_url = urljoin(current_url, next_url)
+        else:
+            return response
+
+    return response # Return the last response if max_redirects reached
 
 
 def normalize_url(url: str) -> str:
@@ -138,7 +175,8 @@ def validate_website(url: str) -> dict:
             "Accept": "text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8",
         }
         # Bypassing SSL errors in validation call as well to allow expired cert sites to proceed
-        response = requests.get(url, timeout=10, allow_redirects=True, headers=headers, stream=True, verify=False)
+        # Use safe_request to handle redirects securely
+        response = safe_request("GET", url, timeout=10, headers=headers, stream=True, verify=False)
 
         # Read a limited amount of body for parked-domain detection (first 50KB)
         body_chunk = ""
