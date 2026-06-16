@@ -23,7 +23,12 @@ def test_unsafe_urls():
         "http://0.0.0.0",
         "file:///etc/passwd",
         "ftp://example.com",
-        "http://[::1]"
+        "http://[::1]",
+        "http://[::ffff:127.0.0.1]",
+        "http://[::ffff:7f00:1]",
+        "http://[fe80::1]",
+        "http://2130706433", # 127.0.0.1 in decimal
+        "http://0x7f.0x0.0x0.0x1", # 127.0.0.1 in hex
     ]
     for url in unsafe_urls:
         assert is_safe_url(url) is False, f"URL should be unsafe: {url}"
