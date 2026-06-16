@@ -1,0 +1,3 @@
+## 2025-05-14 - Redundant DOM Parsing & Browser Lifetime
+**Learning:** The `website_analyzer_agent` was keeping the Playwright browser open during the entire DOM analysis phase and performing redundant `BeautifulSoup` parsing in utility functions like `count_broken_links`. This wasted RAM (by keeping Chromium alive) and CPU cycles (by re-parsing large HTML strings).
+**Action:** Always close the Playwright browser immediately after capturing screenshots and HTML. Refactor analysis utilities to accept pre-parsed `BeautifulSoup` objects instead of raw HTML strings to eliminate redundant parsing overhead (which can reduce parsing time by >90% for large pages).

@@ -431,8 +431,7 @@ def check_single_link(link: str) -> str:
         return ""
     return ""
 
-def count_broken_links(html: str, base_url: str) -> list:
-    soup = BeautifulSoup(html, "html.parser")
+def count_broken_links(soup: BeautifulSoup, base_url: str) -> list:
     raw_links = [a.get('href') for a in soup.find_all('a', href=True)]
     
     valid_links = set()
@@ -687,6 +686,8 @@ def website_analyzer_agent(state: AgentState) -> AgentState:
     has_newsletter = False
     image_alt_data = {"total": 0, "missing_alt": 0, "percent_missing": 0}
     has_dead_socials = False
+    broken_links = []
+    total_links = 0
     conversion_elements = {
         "cta_presence": False,
         "contact_form": False,
@@ -715,7 +716,7 @@ def website_analyzer_agent(state: AgentState) -> AgentState:
         aeo_future = executor.submit(verify_aeo_visibility, company_name, url)
         ssl_future = executor.submit(check_ssl_certificate, url)
 
-        # ─── PLAYWRIGHT BROWSER SCRAPE (may fail on Cloudflare sites) ─────────
+        # ─── PLAYWRIGHT BROWSER SCRAPE (Capture screenshots & HTML first) ────
         try:
             with sync_playwright() as p:
                 browser = p.chromium.launch(headless=True)
@@ -726,38 +727,6 @@ def website_analyzer_agent(state: AgentState) -> AgentState:
                 response = page.goto(url, wait_until="domcontentloaded", timeout=20000)
                 html = page.content()
                 headers = response.headers if response else {}
-                tech_stack = extract_tech_stack(html, headers)
-                last_modified = extract_last_modified(headers, html)
-                link_data = count_broken_links(html, url)
-                broken_links = link_data["broken_list"]
-                total_links = link_data["total"]
-                
-                analytics_data = check_analytics(html)
-                
-                soup = BeautifulSoup(html, "html.parser")
-                has_lead_capture = check_lead_capture(soup, html)
-                has_cta = check_cta_presence(soup, html)
-                has_newsletter = check_newsletter(soup)
-                image_alt_data = check_image_alt_tags(soup)
-                has_dead_socials = check_social_links(soup)
-                conversion_elements = check_conversion_elements(soup, html)
-                schema_data = check_schema_markup(soup)
-                
-                # Extract SEO Metrics before stripping code
-                seo_mobile = bool(soup.find("meta", attrs={"name": "viewport"}))
-                seo_meta_desc = bool(soup.find("meta", attrs={"name": "description"}))
-                seo_h1 = bool(soup.find("h1"))
-                seo_title = bool(soup.find("title"))
-                seo_canonical = bool(soup.find("link", attrs={"rel": "canonical"}))
-                seo_og = bool(soup.find("meta", attrs={"property": "og:title"}))
-                
-                # Check for duplicate meta tags
-                has_duplicate_meta = len(soup.find_all("title")) > 1 or len(soup.find_all("meta", attrs={"name": "description"})) > 1
-                
-                # Clean for LLM
-                for script in soup(["script", "style", "nav", "footer"]):
-                    script.extract()
-                text_content = soup.get_text(separator=' ', strip=True)
                 
                 # Full-page desktop screenshot
                 screenshot_bytes = page.screenshot(type="jpeg", quality=60, full_page=True)
@@ -856,8 +825,45 @@ def website_analyzer_agent(state: AgentState) -> AgentState:
                         "b64_image": b64_image_mobile
                     })
                 
+                # Close browser IMMEDIATELY to free up RAM/CPU before heavy analysis
                 browser.close()
-                text_content = f"--- RAW TEXT CONTENT ---\n{text_content}"
+
+            # --- HEAVY ANALYSIS (Runs after browser is closed) ---
+            soup = BeautifulSoup(html, "html.parser")
+            tech_stack = extract_tech_stack(html, headers)
+            last_modified = extract_last_modified(headers, html)
+
+            # Optimized: Passing BeautifulSoup object instead of raw HTML string
+            link_data = count_broken_links(soup, url)
+            broken_links = link_data["broken_list"]
+            total_links = link_data["total"]
+
+            analytics_data = check_analytics(html)
+
+            has_lead_capture = check_lead_capture(soup, html)
+            has_cta = check_cta_presence(soup, html)
+            has_newsletter = check_newsletter(soup)
+            image_alt_data = check_image_alt_tags(soup)
+            has_dead_socials = check_social_links(soup)
+            conversion_elements = check_conversion_elements(soup, html)
+            schema_data = check_schema_markup(soup)
+
+            # Extract SEO Metrics before stripping code
+            seo_mobile = bool(soup.find("meta", attrs={"name": "viewport"}))
+            seo_meta_desc = bool(soup.find("meta", attrs={"name": "description"}))
+            seo_h1 = bool(soup.find("h1"))
+            seo_title = bool(soup.find("title"))
+            seo_canonical = bool(soup.find("link", attrs={"rel": "canonical"}))
+            seo_og = bool(soup.find("meta", attrs={"property": "og:title"}))
+
+            # Check for duplicate meta tags
+            has_duplicate_meta = len(soup.find_all("title")) > 1 or len(soup.find_all("meta", attrs={"name": "description"})) > 1
+
+            # Clean for LLM
+            for script in soup(["script", "style", "nav", "footer"]):
+                script.extract()
+            text_content = f"--- RAW TEXT CONTENT ---\n{soup.get_text(separator=' ', strip=True)}"
+
         except Exception as e:
             print(f"Browser scrape failed for {url}: {e}")
             error_msg = str(e)
@@ -866,10 +872,13 @@ def website_analyzer_agent(state: AgentState) -> AgentState:
                 fallback_res = requests.get(url, timeout=10, headers={"User-Agent": "Mozilla/5.0"}, verify=False)
                 html = fallback_res.text
                 headers = dict(fallback_res.headers)
+
+                # Initialize soup once for all fallback checks
+                soup = BeautifulSoup(html, "html.parser")
                 tech_stack = extract_tech_stack(html, headers)
                 last_modified = extract_last_modified(headers, html)
                 analytics_data = check_analytics(html)
-                soup = BeautifulSoup(html, "html.parser")
+
                 has_lead_capture = check_lead_capture(soup, html)
                 has_cta = check_cta_presence(soup, html)
                 has_newsletter = check_newsletter(soup)
@@ -884,6 +893,12 @@ def website_analyzer_agent(state: AgentState) -> AgentState:
                 seo_canonical = bool(soup.find("link", attrs={"rel": "canonical"}))
                 seo_og = bool(soup.find("meta", attrs={"property": "og:title"}))
                 has_duplicate_meta = len(soup.find_all("title")) > 1 or len(soup.find_all("meta", attrs={"name": "description"})) > 1
+
+                # Optimized: passing BeautifulSoup instead of html
+                link_data = count_broken_links(soup, url)
+                broken_links = link_data["broken_list"]
+                total_links = link_data["total"]
+
                 for script in soup(["script", "style", "nav", "footer"]):
                     script.extract()
                 text_content = f"--- RAW TEXT CONTENT (HTTP fallback) ---\n{soup.get_text(separator=' ', strip=True)}"
