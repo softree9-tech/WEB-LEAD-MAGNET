@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import LeadCaptureForm from '../components/LeadCaptureForm';
-import LeadResults, { exportToExcel } from '../components/LeadResults';
+import LeadResults from '../components/LeadResults';
 import { processSingleLead, validateWebsite, emailReport } from '../api/api';
 import Logo from '../components/Logo';
 import Navigation from '../components/Navigation';
