@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
+import { AnimatePresence } from 'framer-motion';
 import '../LeadResults.css';
 import ViewportDashboard from './ViewportDashboard';
 import { ExternalLink, RefreshCw, Download, Monitor, Mail, Lock, FileCode, Check, X, Search, Activity, BarChart3, Settings, ChevronUp, LayoutDashboard, ShieldCheck, FileText, Bot, Target, Smartphone, Copy, TrendingDown, AlertTriangle, Sword, Trophy, Zap, Sparkles } from 'lucide-react';
@@ -381,15 +381,15 @@ function calculateMobileResponsivenessScore(lead) {
   const conversionRisk = (lead.mobile_conversion_risk || 'Moderate').toLowerCase();
   const hasViewport = !!lead.seo_mobile;
   const mobilePerf = parseInt(lead.mobile_performance || 0);
-  const lighthousePerf = parseInt(lead.lighthouse_performance || 0);
+  const _lighthousePerf = parseInt(lead.lighthouse_performance || 0);
   const loadTime = parseFloat(lead.load_time || 0);
   const hasCta = !!lead.has_cta;
-  const hasLeadCapture = !!lead.has_lead_capture;
-  const ctaVisibility = (lead.cta_visibility_rating || 'Moderate').toLowerCase();
-  const ctaPlacement = (lead.cta_placement_quality || 'Suboptimal').toLowerCase();
-  const designQuality = (lead.design || 'Outdated').toLowerCase();
+  const _hasLeadCapture = !!lead.has_lead_capture;
+  const _ctaVisibility = (lead.cta_visibility_rating || 'Moderate').toLowerCase();
+  const _ctaPlacement = (lead.cta_placement_quality || 'Suboptimal').toLowerCase();
+  const _designQuality = (lead.design || 'Outdated').toLowerCase();
   const ctaStrength = (lead.cta || 'Weak').toLowerCase();
-  const messageClarity = (lead.message || 'Confusing').toLowerCase();
+  const _messageClarity = (lead.message || 'Confusing').toLowerCase();
 
   let criticalSections = 0;
   let highRiskSections = 0;
@@ -502,7 +502,7 @@ function calculateMobileResponsivenessScore(lead) {
 
   const totalSections = sections.length || 1;
   const problematicSections = criticalSections + highRiskSections;
-  const problematicRatio = problematicSections / totalSections;
+  const _problematicRatio = problematicSections / totalSections;
 
   // ================================================================
   // CATEGORY 1: Breakpoint Config (20 points max)
@@ -972,6 +972,8 @@ function MobileWalkthrough({ lead }) {
 }
 
 export default function LeadResults({ leads, isPublic = false }) {
+  const [copiedIndex, setCopiedIndex] = useState(null);
+
   if (!leads || leads.length === 0) {
     return (
       <div className="glass-panel animate-fade-in" style={{ padding: '3rem 2rem', textAlign: 'center' }}>
@@ -2226,12 +2228,10 @@ Best,
                   </div>
                   <div className="header-actions">
                     <button className="action-btn" onClick={() => window.location.reload()}><RefreshCw size={14} /> Recalculate</button>
-                    {true && (
-                      <button className="action-btn primary" onClick={() => {
-                        const filename = `audit_report_${(lead.website || '').replace(/^https?:\/\//i, '').replace(/[/.]/g, '_')}.xlsx`;
-                        exportToExcel([lead], filename, isPublic);
-                      }}><Download size={14} /> {isPublic ? 'Download Audit Report' : 'Export to Excel'}</button>
-                    )}
+                    <button className="action-btn primary" onClick={() => {
+                      const filename = `audit_report_${(lead.website || '').replace(/^https?:\/\//i, '').replace(/[/.]/g, '_')}.xlsx`;
+                      exportToExcel([lead], filename, isPublic);
+                    }}><Download size={14} /> {isPublic ? 'Download Audit Report' : 'Export to Excel'}</button>
                   </div>
                 </div>
               )}
@@ -2300,12 +2300,24 @@ Best,
                     <h2 style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
                       <Mail color="var(--accent-color)" size={20} /> Personalized AI Outreach Email
                     </h2>
-                    <button className="action-btn" onClick={(e) => {
-                      navigator.clipboard.writeText(emailBody);
-                      e.currentTarget.innerHTML = '<span style="color:#10b981;display:flex;align-items:center;gap:0.5rem;"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="20 6 9 17 4 12"></polyline></svg> Copied!</span>';
-                      setTimeout(() => e.target.innerHTML = '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg> Copy to Clipboard', 2000);
-                    }}>
-                      <Copy size={14} /> Copy to Clipboard
+                    <button
+                      className="action-btn"
+                      onClick={() => {
+                        navigator.clipboard.writeText(emailBody);
+                        setCopiedIndex(index);
+                        setTimeout(() => setCopiedIndex(null), 2000);
+                      }}
+                      aria-live="polite"
+                    >
+                      {copiedIndex === index ? (
+                        <span style={{ color: '#10b981', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                          <Check size={14} /> Copied!
+                        </span>
+                      ) : (
+                        <>
+                          <Copy size={14} /> Copy to Clipboard
+                        </>
+                      )}
                     </button>
                   </div>
                   <div style={{ position: 'relative' }}>
