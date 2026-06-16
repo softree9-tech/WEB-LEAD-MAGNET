@@ -1,0 +1,3 @@
+## 2025-05-15 - [Resource Management & Connection Pooling]
+**Learning:** Headless browsers are memory-intensive. Keeping them open during non-browser tasks (like multi-threaded link checking) increases RAM pressure and can lead to OOM in batch processing. Reusing BeautifulSoup objects and implementing requests.Session connection pooling significantly reduces CPU and network overhead for link-checking tasks.
+**Action:** Close Playwright browser immediately after capturing artifacts. Pass pre-parsed BeautifulSoup objects to sub-analyzers. Use requests.Session with appropriate pool_maxsize for multi-threaded link verification.

@@ -3,6 +3,7 @@ import base64
 import time
 import re
 import requests
+from requests.adapters import HTTPAdapter
 import urllib3
 urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
 import concurrent.futures
@@ -19,6 +20,7 @@ import socket
 import ssl
 from datetime import datetime
 import json
+from typing import List, Optional, Dict, Any
 
 def check_ssl_certificate(url: str) -> dict:
     if not is_safe_url(url):
@@ -407,7 +409,7 @@ Be honest - if you don't have specific information about them, say so clearly.""
         aeo_result["aeo_raw_response"] = "AEO probe failed."
     return aeo_result
 
-def check_single_link(link: str) -> str:
+def check_single_link(link: str, session: requests.Session = None) -> str:
     if not is_safe_url(link):
         return ""
     try:
@@ -415,11 +417,15 @@ def check_single_link(link: str) -> str:
             "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36",
             "Accept": "text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,*/*;q=0.8"
         }
-        res = requests.head(link, timeout=10, allow_redirects=True, headers=headers, verify=False)
+
+        # Use provided session for connection pooling if available
+        req_func = session.head if session else requests.head
+        res = req_func(link, timeout=10, allow_redirects=True, headers=headers, verify=False)
         
         # If server blocks HEAD requests, fallback to a lightweight streamed GET
         if res.status_code in [403, 405, 401, 301, 302, 999]:
-            res = requests.get(link, timeout=10, allow_redirects=True, headers=headers, stream=True, verify=False)
+            get_func = session.get if session else requests.get
+            res = get_func(link, timeout=10, allow_redirects=True, headers=headers, stream=True, verify=False)
             res.raw.close()
             
         # Only explicitly flag pure dead pages to ensure 0 False Positives
@@ -431,8 +437,9 @@ def check_single_link(link: str) -> str:
         return ""
     return ""
 
-def count_broken_links(html: str, base_url: str) -> list:
-    soup = BeautifulSoup(html, "html.parser")
+def count_broken_links(html: str, base_url: str, soup: BeautifulSoup = None) -> Dict[str, Any]:
+    if not soup:
+        soup = BeautifulSoup(html, "html.parser")
     raw_links = [a.get('href') for a in soup.find_all('a', href=True)]
     
     valid_links = set()
@@ -450,10 +457,20 @@ def count_broken_links(html: str, base_url: str) -> list:
     links_to_test = list(valid_links)[:50]
     broken_list = []
     if links_to_test:
-        with concurrent.futures.ThreadPoolExecutor(max_workers=15) as executor:
-            results = executor.map(check_single_link, links_to_test)
-            for dead_link in results:
-                if dead_link: broken_list.append(dead_link)
+        # Use requests.Session for efficient connection pooling during batch link check
+        with requests.Session() as session:
+            adapter = HTTPAdapter(pool_connections=15, pool_maxsize=15)
+            session.mount('https://', adapter)
+            session.mount('http://', adapter)
+
+            with concurrent.futures.ThreadPoolExecutor(max_workers=15) as executor:
+                # Pass session to check_single_link to leverage connection pool
+                futures = [executor.submit(check_single_link, link, session) for link in links_to_test]
+                for future in concurrent.futures.as_completed(futures):
+                    dead_link = future.result()
+                    if dead_link:
+                        broken_list.append(dead_link)
+
     return {"broken_list": broken_list, "total": len(links_to_test)}
 
 def extract_tech_stack(html: str, headers: dict) -> str:
@@ -708,6 +725,8 @@ def website_analyzer_agent(state: AgentState) -> AgentState:
     
     if url:
         company_name = state.get('raw_company', '') or url
+        html = ""
+        headers = {}
 
         # ─── INDEPENDENT ASYNC I/O (runs regardless of browser success) ───────
         executor = concurrent.futures.ThreadPoolExecutor(max_workers=3)
@@ -726,38 +745,6 @@ def website_analyzer_agent(state: AgentState) -> AgentState:
                 response = page.goto(url, wait_until="domcontentloaded", timeout=20000)
                 html = page.content()
                 headers = response.headers if response else {}
-                tech_stack = extract_tech_stack(html, headers)
-                last_modified = extract_last_modified(headers, html)
-                link_data = count_broken_links(html, url)
-                broken_links = link_data["broken_list"]
-                total_links = link_data["total"]
-                
-                analytics_data = check_analytics(html)
-                
-                soup = BeautifulSoup(html, "html.parser")
-                has_lead_capture = check_lead_capture(soup, html)
-                has_cta = check_cta_presence(soup, html)
-                has_newsletter = check_newsletter(soup)
-                image_alt_data = check_image_alt_tags(soup)
-                has_dead_socials = check_social_links(soup)
-                conversion_elements = check_conversion_elements(soup, html)
-                schema_data = check_schema_markup(soup)
-                
-                # Extract SEO Metrics before stripping code
-                seo_mobile = bool(soup.find("meta", attrs={"name": "viewport"}))
-                seo_meta_desc = bool(soup.find("meta", attrs={"name": "description"}))
-                seo_h1 = bool(soup.find("h1"))
-                seo_title = bool(soup.find("title"))
-                seo_canonical = bool(soup.find("link", attrs={"rel": "canonical"}))
-                seo_og = bool(soup.find("meta", attrs={"property": "og:title"}))
-                
-                # Check for duplicate meta tags
-                has_duplicate_meta = len(soup.find_all("title")) > 1 or len(soup.find_all("meta", attrs={"name": "description"})) > 1
-                
-                # Clean for LLM
-                for script in soup(["script", "style", "nav", "footer"]):
-                    script.extract()
-                text_content = soup.get_text(separator=' ', strip=True)
                 
                 # Full-page desktop screenshot
                 screenshot_bytes = page.screenshot(type="jpeg", quality=60, full_page=True)
@@ -856,8 +843,8 @@ def website_analyzer_agent(state: AgentState) -> AgentState:
                         "b64_image": b64_image_mobile
                     })
                 
+                # CLOSE BROWSER EARLY to free RAM while analysis proceeds in Python
                 browser.close()
-                text_content = f"--- RAW TEXT CONTENT ---\n{text_content}"
         except Exception as e:
             print(f"Browser scrape failed for {url}: {e}")
             error_msg = str(e)
@@ -866,30 +853,52 @@ def website_analyzer_agent(state: AgentState) -> AgentState:
                 fallback_res = requests.get(url, timeout=10, headers={"User-Agent": "Mozilla/5.0"}, verify=False)
                 html = fallback_res.text
                 headers = dict(fallback_res.headers)
-                tech_stack = extract_tech_stack(html, headers)
-                last_modified = extract_last_modified(headers, html)
-                analytics_data = check_analytics(html)
-                soup = BeautifulSoup(html, "html.parser")
-                has_lead_capture = check_lead_capture(soup, html)
-                has_cta = check_cta_presence(soup, html)
-                has_newsletter = check_newsletter(soup)
-                image_alt_data = check_image_alt_tags(soup)
-                has_dead_socials = check_social_links(soup)
-                conversion_elements = check_conversion_elements(soup, html)
-                schema_data = check_schema_markup(soup)
-                seo_mobile = bool(soup.find("meta", attrs={"name": "viewport"}))
-                seo_meta_desc = bool(soup.find("meta", attrs={"name": "description"}))
-                seo_h1 = bool(soup.find("h1"))
-                seo_title = bool(soup.find("title"))
-                seo_canonical = bool(soup.find("link", attrs={"rel": "canonical"}))
-                seo_og = bool(soup.find("meta", attrs={"property": "og:title"}))
-                has_duplicate_meta = len(soup.find_all("title")) > 1 or len(soup.find_all("meta", attrs={"name": "description"})) > 1
-                for script in soup(["script", "style", "nav", "footer"]):
-                    script.extract()
-                text_content = f"--- RAW TEXT CONTENT (HTTP fallback) ---\n{soup.get_text(separator=' ', strip=True)}"
                 print(f"HTTP fallback scrape succeeded for {url}")
             except Exception as e2:
                 print(f"HTTP fallback also failed for {url}: {e2}")
+
+        # ─── PERFORM ANALYSIS (Shared path for Browser & HTTP Fallback) ───────
+        if html:
+            # 1. Parse BeautifulSoup ONCE and reuse across all checkers
+            soup = BeautifulSoup(html, "html.parser")
+
+            tech_stack = extract_tech_stack(html, headers)
+            last_modified = extract_last_modified(headers, html)
+            analytics_data = check_analytics(html)
+
+            # 2. Extract conversion elements once and reuse results
+            conversion_elements = check_conversion_elements(soup, html)
+            has_lead_capture = check_lead_capture(soup, html)
+            has_cta = conversion_elements.get("cta_presence", False)
+            has_newsletter = conversion_elements.get("newsletter_signup", False)
+
+            # 3. Perform other sub-checks using the shared soup object
+            image_alt_data = check_image_alt_tags(soup)
+            has_dead_socials = check_social_links(soup)
+            schema_data = check_schema_markup(soup)
+
+            # 4. Extract SEO Metrics (before soup elements are potentially removed)
+            seo_mobile = bool(soup.find("meta", attrs={"name": "viewport"}))
+            seo_meta_desc = bool(soup.find("meta", attrs={"name": "description"}))
+            seo_h1 = bool(soup.find("h1"))
+            seo_title = bool(soup.find("title"))
+            seo_canonical = bool(soup.find("link", attrs={"rel": "canonical"}))
+            seo_og = bool(soup.find("meta", attrs={"property": "og:title"}))
+            has_duplicate_meta = len(soup.find_all("title")) > 1 or len(soup.find_all("meta", attrs={"name": "description"})) > 1
+
+            # 5. Batch Link Analysis (with soup reuse)
+            link_data = count_broken_links(html, url, soup=soup)
+            broken_links = link_data["broken_list"]
+            total_links = link_data["total"]
+
+            # 6. Clean and extract text for LLM
+            # We clean the soup AFTER all analysis is done to avoid missing elements
+            for script in soup(["script", "style", "nav", "footer"]):
+                script.extract()
+            text_content = soup.get_text(separator=' ', strip=True)
+
+            prefix = "--- RAW TEXT CONTENT (HTTP fallback) ---" if not b64_image else "--- RAW TEXT CONTENT ---"
+            text_content = f"{prefix}\n{text_content}"
 
         # ─── COLLECT INDEPENDENT API RESULTS (with safety) ───────────────────
         try:
