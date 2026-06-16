@@ -88,85 +88,110 @@ export default function GeoLanding() {
           <AnimatePresence mode="wait">
             {!results ? (
               <motion.div
-                key="hero-content"
+                key="landing-content"
                 initial={{ opacity: 0, scale: 0.98 }}
                 animate={{ opacity: 1, scale: 1 }}
                 exit={{ opacity: 0, scale: 0.98 }}
                 transition={{ duration: 0.4 }}
-                className="geo-hero-grid grid grid-cols-1 lg:grid-cols-2 gap-16 items-center"
+                className="w-full flex flex-col items-center"
               >
-                {/* LEFT SIDE */}
-                <div>
-              <motion.div
-                initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.5 }}
-                className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full border border-orange-500/20 bg-orange-500/5 mb-7"
-              >
-                <Sparkles size={13} className="text-orange-400" />
-                <span className="text-orange-400 text-xs font-semibold uppercase tracking-widest">AI Visibility Assessment</span>
-              </motion.div>
-
-              <motion.h1
-                initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.6, delay: 0.1 }}
-                className="text-4xl md:text-5xl lg:text-[3.4rem] font-extrabold text-[#0a0a1a] leading-[1.12] mb-6 tracking-tight"
-              >
-                Can ChatGPT, Gemini &amp; Perplexity{' '}
-                <span className="geo-gradient-text">Understand Your Business?</span>
-              </motion.h1>
-
-              <motion.p
-                initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.6, delay: 0.2 }}
-                className="text-text-secondary text-base md:text-lg leading-relaxed mb-10 max-w-xl"
-              >
-                Get a free AI Visibility Assessment and discover how well your website is positioned for AI-powered search, citations, entity recognition, and generative engine discovery.
-              </motion.p>
-
-              {/* Error message */}
-              <AnimatePresence>
-                {error && (
-                  <motion.div
-                    initial={{ opacity: 0, y: -10 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -10 }}
-                    className="mb-6 p-4 rounded-xl border border-red-500/20 bg-red-500/5 flex items-start gap-3"
-                  >
-                    <AlertTriangle size={18} className="text-red-400 flex-shrink-0 mt-0.5" />
-                    <div>
-                      <p className="text-red-400 text-sm font-medium">Analysis Error</p>
-                      <p className="text-red-300/70 text-xs mt-1">{error}</p>
-                    </div>
-                  </motion.div>
-                )}
-              </AnimatePresence>
-
-              {/* Form or Loader Inline Switch */}
-              <AnimatePresence mode="wait">
                 {!isProcessing ? (
-                  <motion.div
-                    key="form"
-                    initial={{ opacity: 0, scale: 0.98 }}
-                    animate={{ opacity: 1, scale: 1 }}
-                    exit={{ opacity: 0, scale: 0.98 }}
-                    transition={{ duration: 0.4 }}
-                  >
-                    <GeoHeroForm onSubmit={handleFormSubmit} loading={isProcessing} />
-                  </motion.div>
+                  <>
+                    <div className="geo-hero-grid grid grid-cols-1 lg:grid-cols-2 gap-16 items-center w-full">
+                      {/* LEFT SIDE */}
+                      <div>
+                        <motion.div
+                          initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.5 }}
+                          className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full border border-orange-500/20 bg-orange-500/5 mb-7"
+                        >
+                      <Sparkles size={13} className="text-orange-400" />
+                      <span className="text-orange-400 text-xs font-semibold uppercase tracking-widest">AI Visibility Assessment</span>
+                    </motion.div>
+
+                    <motion.h1
+                      initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.6, delay: 0.1 }}
+                      className="text-4xl md:text-5xl lg:text-[3.4rem] font-extrabold text-[#0a0a1a] leading-[1.12] mb-6 tracking-tight"
+                    >
+                      Can ChatGPT, Gemini &amp; Perplexity{' '}
+                      <span className="geo-gradient-text">Understand Your Business?</span>
+                    </motion.h1>
+
+                    <motion.p
+                      initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.6, delay: 0.2 }}
+                      className="text-text-secondary text-base md:text-lg leading-relaxed mb-10 max-w-xl"
+                    >
+                      Get a free AI Visibility Assessment and discover how well your website is positioned for AI-powered search, citations, entity recognition, and generative engine discovery.
+                    </motion.p>
+
+                    {/* Error message */}
+                    <AnimatePresence>
+                      {error && (
+                        <motion.div
+                          initial={{ opacity: 0, y: -10 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -10 }}
+                          className="mb-6 p-4 rounded-xl border border-red-500/20 bg-red-500/5 flex items-start gap-3"
+                        >
+                          <AlertTriangle size={18} className="text-red-400 flex-shrink-0 mt-0.5" />
+                          <div>
+                            <p className="text-red-400 text-sm font-medium">Analysis Error</p>
+                            <p className="text-red-300/70 text-xs mt-1">{error}</p>
+                          </div>
+                        </motion.div>
+                      )}
+                    </AnimatePresence>
+                  </div>
+
+                  {/* RIGHT SIDE - Form */}
+                  <div>
+                    <motion.div
+                      key="form"
+                      initial={{ opacity: 0, scale: 0.98 }}
+                      animate={{ opacity: 1, scale: 1 }}
+                      exit={{ opacity: 0, scale: 0.98 }}
+                      transition={{ duration: 0.4 }}
+                    >
+                      <GeoHeroForm onSubmit={handleFormSubmit} loading={isProcessing} error={error} />
+                    </motion.div>
+                  </div>
+                </div>
+
+                {/* ROW 2 - Dashboard Preview */}
+                <motion.div
+                  initial={{ opacity: 0, y: 30 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ duration: 0.8, delay: 0.4 }}
+                  className="mt-24 w-full max-w-5xl mx-auto hidden lg:flex flex-col items-center"
+                >
+                  <div className="text-center mb-12">
+                    <h2 className="text-3xl md:text-4xl font-extrabold text-[#0a0a1a] mb-4 tracking-tight">
+                      See a Sample Audit Report
+                    </h2>
+                    <p className="text-text-secondary text-lg">
+                      Here’s a preview of the insights you’ll receive after analyzing your page.
+                    </p>
+                  </div>
+
+                  <div className="w-full">
+                    <GeoDashboardPreview />
+                  </div>
+
+                  <div className="mt-8 text-text-muted text-sm text-center">
+                    This is a sample report for demonstration only. Your actual report will be generated based on the page you submit.
+                  </div>
+                </motion.div>
+                  </>
                 ) : (
                   <motion.div
-                    key="loader"
+                    key="full-loader"
                     initial={{ opacity: 0, scale: 0.98 }}
                     animate={{ opacity: 1, scale: 1 }}
                     exit={{ opacity: 0, scale: 0.98 }}
                     transition={{ duration: 0.4 }}
+                    className="w-full flex flex-col items-center justify-center min-h-[60vh] py-12"
                   >
-                    <GeoLoadingState />
+                    <GeoLoadingState validating={validating} />
                   </motion.div>
                 )}
-              </AnimatePresence>
-            </div>
-
-            {/* RIGHT SIDE - Dashboard Preview */}
-            <div className="hidden lg:block">
-              <GeoDashboardPreview />
-            </div>
-          </motion.div>
+              </motion.div>
             ) : (
               <motion.div
                 key="results-content"

@@ -1,124 +1,160 @@
 import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Cpu, Search, Brain, Globe, Sparkles, Shield } from 'lucide-react';
+import { Cpu, Search, Brain, Globe, Sparkles, Shield, Zap, BarChart2, ShieldCheck } from 'lucide-react';
 
 const steps = [
-  { icon: Search, text: 'Analyzing AI visibility...' },
-  { icon: Cpu, text: 'Scanning structured data...' },
-  { icon: Brain, text: 'Evaluating entity recognition...' },
-  { icon: Globe, text: 'Checking AI discoverability...' },
-  { icon: Shield, text: 'Measuring citation readiness...' },
-  { icon: Sparkles, text: 'Generating GEO intelligence...' },
+  { icon: Search, text: 'Initializing GEO analysis engine...' },
+  { icon: Cpu, text: 'Crawling website structure...' },
+  { icon: Brain, text: 'Analyzing entity recognition...' },
+  { icon: Globe, text: 'Evaluating schema markup...' },
+  { icon: Shield, text: 'Measuring AI visibility...' },
+  { icon: Sparkles, text: 'Generating GEO report...' },
 ];
 
-export default function GeoLoadingState() {
+export default function GeoLoadingState({ validating }) {
   const [step, setStep] = useState(0);
 
   useEffect(() => {
+    if (validating) return;
     const interval = setInterval(() => {
       setStep(prev => (prev < steps.length - 1 ? prev + 1 : prev));
     }, 4000);
     return () => clearInterval(interval);
-  }, []);
+  }, [validating]);
 
-  const progress = ((step + 1) / steps.length) * 100;
-  const CurrentIcon = steps[step].icon;
-
-  return (
-    <div className="w-full">
-      <div className="geo-glass p-7 relative overflow-hidden text-center"
-        style={{ borderColor: 'rgba(255,88,18,0.12)' }}>
-
-        {/* Scanning beam */}
-        <div className="absolute top-0 left-0 w-full h-[3px] overflow-hidden">
-          <motion.div
-            animate={{ x: ['-100%', '100%'] }}
-            transition={{ duration: 2.5, repeat: Infinity, ease: 'easeInOut' }}
-            className="h-full w-1/2 bg-gradient-to-r from-transparent via-orange-500/60 to-transparent"
-          />
-        </div>
-
-        {/* Animated ring */}
-        <div className="relative w-28 h-28 mx-auto mb-8">
-          {/* Outer pulse */}
-          <motion.div
-            animate={{ scale: [1, 1.15, 1], opacity: [0.2, 0.4, 0.2] }}
-            transition={{ duration: 3, repeat: Infinity, ease: 'easeInOut' }}
-            className="absolute inset-0 rounded-full border-2 border-orange-500/30"
-          />
-          {/* Spinning ring */}
-          <svg className="absolute inset-0 w-full h-full" viewBox="0 0 112 112">
-            <circle cx="56" cy="56" r="50" fill="none" stroke="rgba(255,88,18,0.08)" strokeWidth="4" />
-            <motion.circle
-              cx="56" cy="56" r="50" fill="none" stroke="url(#loadGrad)" strokeWidth="4"
-              strokeDasharray="314" strokeDashoffset="220" strokeLinecap="round"
-              animate={{ rotate: 360 }}
-              transition={{ duration: 2, repeat: Infinity, ease: 'linear' }}
-              style={{ transformOrigin: 'center' }}
-            />
-            <defs>
-              <linearGradient id="loadGrad" x1="0%" y1="0%" x2="100%" y2="100%">
-                <stop offset="0%" stopColor="#FF6B00" />
-                <stop offset="100%" stopColor="#FF8A1E" />
-              </linearGradient>
-            </defs>
-          </svg>
-          {/* Center icon */}
-          <div className="absolute inset-0 flex items-center justify-center">
-            <AnimatePresence mode="wait">
-              <motion.div
-                key={step}
-                initial={{ opacity: 0, scale: 0.8 }}
-                animate={{ opacity: 1, scale: 1 }}
-                exit={{ opacity: 0, scale: 0.8 }}
-                transition={{ duration: 0.3 }}
-              >
-                <CurrentIcon size={32} className="text-orange-500" />
-              </motion.div>
-            </AnimatePresence>
+  if (validating) {
+    return (
+      <div className="form-card-glass animate-fade-in" style={{
+        padding: '3.5rem 2.5rem',
+        maxWidth: '480px',
+        width: '100%',
+        display: 'flex',
+        flexDirection: 'column',
+        alignItems: 'center',
+        gap: '2rem'
+      }}>
+        <div style={{ position: 'relative', width: '80px', height: '80px' }}>
+          <div className="spinning-loader" style={{
+            width: '80px',
+            height: '80px',
+            borderRadius: '50%',
+            position: 'absolute',
+            top: 0,
+            left: 0
+          }} />
+          <div style={{
+            width: '64px',
+            height: '64px',
+            borderRadius: '50%',
+            background: 'rgba(5, 5, 5, 0.95)',
+            position: 'absolute',
+            top: '8px',
+            left: '8px',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center'
+          }}>
+            <ShieldCheck size={28} className="animate-pulse" style={{ color: '#FF7A00' }} />
           </div>
         </div>
 
-        {/* Title */}
-        <h3 className="text-xl font-bold text-text-primary mb-2">
+        <div>
+          <h3 style={{ fontSize: '1.2rem', fontWeight: 700, color: 'black', marginBottom: '0.5rem', textAlign: 'center' }}>
+            Verifying Website Accessibility
+          </h3>
+          <p style={{ color: 'var(--text-gray)', fontSize: '0.875rem', lineHeight: 1.5, textAlign: 'center' }}>
+            Checking DNS resolution, server response, and domain availability...
+          </p>
+        </div>
+      </div>
+    );
+  }
+
+  return (
+    <div className="form-card-glass animate-fade-in" style={{
+      padding: '3.5rem 2.5rem',
+      maxWidth: '500px',
+      width: '100%',
+      display: 'flex',
+      flexDirection: 'column',
+      alignItems: 'center',
+      gap: '2.25rem',
+      position: 'relative',
+      overflow: 'hidden'
+    }}>
+      {/* Cinematic scanning beam */}
+      <div className="scanning-beam" style={{
+        position: 'absolute',
+        top: 0,
+        left: 0,
+        width: '100%',
+        height: '4px',
+        background: 'linear-gradient(90deg, transparent, var(--accent-orange), transparent)',
+        animation: 'scan 2.8s ease-in-out infinite',
+        opacity: 0.6
+      }} />
+
+      {/* Animated Scanning Circle */}
+      <div style={{ position: 'relative', width: '100px', height: '100px' }}>
+        <div className="spinning-loader" style={{
+          width: '100px',
+          height: '100px',
+          borderRadius: '50%',
+          position: 'absolute',
+          top: 0,
+          left: 0
+        }} />
+        <div style={{
+          width: '80px',
+          height: '80px',
+          borderRadius: '50%',
+          background: 'rgba(5, 5, 5, 0.95)',
+          position: 'absolute',
+          top: '10px',
+          left: '10px',
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          color: 'var(--accent-orange)'
+        }}>
+          <Brain size={32} className="animate-pulse" style={{ color: '#FF7A00' }} />
+        </div>
+      </div>
+
+      <div style={{ width: '100%' }}>
+        <h3 style={{ fontSize: '1.25rem', fontWeight: 700, marginBottom: '0.75rem', color: 'black', lineHeight: 1.4, textAlign: 'center' }}>
           Generating Your GEO Intelligence Report
         </h3>
 
-        {/* Progress bar */}
-        <div className="w-full h-1.5 rounded-full bg-black/[0.04] overflow-hidden mb-5 mt-6">
-          <motion.div
-            className="h-full rounded-full bg-gradient-to-r from-orange-500 to-orange-300"
-            animate={{ width: `${progress}%` }}
-            transition={{ duration: 0.6, ease: 'easeOut' }}
-          />
+        {/* Custom progress bar */}
+        <div style={{ width: '100%', height: '6px', background: 'rgba(0, 0, 0, 0.05)', borderRadius: '3px', overflow: 'hidden', marginBottom: '1.25rem' }}>
+          <div style={{
+            height: '100%',
+            width: `${((step + 1) / steps.length) * 100}%`,
+            background: 'linear-gradient(90deg, #FF9E43, #FF7A00)',
+            transition: 'width 0.5s ease',
+            borderRadius: '3px'
+          }} />
         </div>
 
-        {/* Current step message */}
-        <AnimatePresence mode="wait">
-          <motion.p
-            key={step}
-            initial={{ opacity: 0, y: 8 }}
-            animate={{ opacity: 1, y: 0 }}
-            exit={{ opacity: 0, y: -8 }}
-            transition={{ duration: 0.3 }}
-            className="text-text-secondary text-sm min-h-[2rem]"
-          >
-            {steps[step].text}
-          </motion.p>
-        </AnimatePresence>
+        <p style={{ color: 'var(--text-gray)', fontSize: '0.9rem', minHeight: '2.5rem', display: 'flex', alignItems: 'center', justifyContent: 'center', lineHeight: 1.5, textAlign: 'center' }}>
+          {steps[step].text}
+        </p>
+      </div>
 
-        {/* Bottom indicators */}
-        <div className="flex items-center justify-center gap-6 mt-8 pt-6 border-t border-border-glass">
-          {[
-            { icon: Brain, label: 'Entity Analysis' },
-            { icon: Search, label: 'Schema Audit' },
-            { icon: Shield, label: 'Trust Signals' },
-          ].map(({ icon: Icon, label }) => (
-            <div key={label} className="flex flex-col items-center gap-1.5 text-text-muted">
-              <Icon size={14} className="text-orange-500/50" />
-              <span className="text-[10px] font-medium">{label}</span>
-            </div>
-          ))}
+      {/* Micro-features showing analysis parameters */}
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '1rem', width: '100%', borderTop: '1px solid rgba(0, 0, 0, 0.06)', paddingTop: '1.5rem', fontSize: '0.75rem', color: 'var(--text-gray)' }}>
+        <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '6px' }}>
+          <Brain size={14} color="#FF7A00" />
+          <span>Entity Analysis</span>
+        </div>
+        <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '6px' }}>
+          <Search size={14} color="#FF7A00" />
+          <span>Schema Audit</span>
+        </div>
+        <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '6px' }}>
+          <ShieldCheck size={14} color="#FF7A00" />
+          <span>Trust Signals</span>
         </div>
       </div>
     </div>

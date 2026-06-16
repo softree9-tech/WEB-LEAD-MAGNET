@@ -32,7 +32,9 @@ import {
   Search,
   RefreshCw,
   Mail,
-  Loader2
+  Loader2,
+  ChevronLeft,
+  ChevronRight
 } from 'lucide-react';
 import '../PublicPortal.css';
 import '../PremiumReport.css';
@@ -54,6 +56,37 @@ export default function PublicAnalyze() {
   const [emailToast, setEmailToast] = useState(null);
   const emailRecaptchaRef = React.useRef(null);
   const emailWidgetIdRef = React.useRef(null);
+
+  // Carousel state
+  const [currentSlide, setCurrentSlide] = React.useState(0);
+  const [touchStart, setTouchStart] = React.useState(null);
+  const [touchEnd, setTouchEnd] = React.useState(null);
+  const [isCarouselHovered, setIsCarouselHovered] = React.useState(false);
+  const slideNames = ['Score & Report', 'Overview', 'Top Issues', 'Opportunities', 'Detailed Analysis', 'Recommendations', 'Technical Insights'];
+
+  const handleNextSlide = () => setCurrentSlide(prev => (prev + 1) % slideNames.length);
+  const handlePrevSlide = () => setCurrentSlide(prev => (prev - 1 + slideNames.length) % slideNames.length);
+
+  const minSwipeDistance = 50;
+  const onTouchStart = (e) => {
+    setTouchEnd(null);
+    setTouchStart(e.targetTouches[0].clientX);
+  };
+  const onTouchMove = (e) => setTouchEnd(e.targetTouches[0].clientX);
+  const onTouchEnd = () => {
+    if (!touchStart || !touchEnd) return;
+    const distance = touchStart - touchEnd;
+    if (distance > minSwipeDistance) handleNextSlide();
+    if (distance < -minSwipeDistance) handlePrevSlide();
+  };
+
+  React.useEffect(() => {
+    if (isCarouselHovered) return;
+    const interval = setInterval(() => {
+      setCurrentSlide(prev => (prev + 1) % slideNames.length);
+    }, 3000);
+    return () => clearInterval(interval);
+  }, [isCarouselHovered, slideNames.length]);
 
   // Simulated status updates for the premium agent analysis loader
   const loadingSteps = [
@@ -695,226 +728,135 @@ export default function PublicAnalyze() {
         <section className="portal-section sample-report-section">
           <div className="portal-container">
 
-            <div className="section-header">
+            <div className="section-header" style={{ textAlign: 'center', marginLeft: 'auto', marginRight: 'auto' }}>
               <h2 className="section-title">See a Sample Audit Report</h2>
               <p className="section-subtitle">Here’s a preview of the insights you’ll receive after analyzing your page.</p>
             </div>
 
-            {/* Dashboard Mockup Frame */}
-            <div className="mock-dashboard-frame">
-
-              {/* Sidebar */}
-              <aside className="mock-sidebar">
-                <div>
-                  <div className="mock-sidebar-brand">
+            {/* Dashboard Mockup Frame - Carousel Version */}
+            <div 
+              className="mock-dashboard-carousel" 
+              onMouseEnter={() => setIsCarouselHovered(true)}
+              onMouseLeave={() => setIsCarouselHovered(false)}
+              style={{ 
+                position: 'relative', 
+                width: '100%', 
+                overflow: 'hidden', 
+                background: '#FFFFFF', 
+                border: '1px solid rgba(10, 10, 26, 0.08)', 
+                borderRadius: '16px', 
+                boxShadow: '0 8px 32px -20px rgba(10, 10, 26, 0.14)',
+                paddingBottom: '3rem'
+              }}
+            >
+              {/* Carousel Header */}
+              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '1.5rem 2rem', borderBottom: '1px solid rgba(10,10,26,0.08)', background: '#F8F9FC' }}>
+                 <div className="mock-sidebar-brand" style={{ marginBottom: 0 }}>
                     <div className="mock-brand-title">SOFTREE</div>
                     <div className="mock-brand-sub">TECHNOLOGY</div>
-                  </div>
+                 </div>
+                 <div style={{ fontWeight: 700, color: 'var(--accent-orange)', fontSize: '0.9rem', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                   {slideNames[currentSlide]} <span style={{ color: 'var(--text-gray)', fontWeight: 600, fontSize: '0.8rem' }}>({currentSlide + 1}/{slideNames.length})</span>
+                 </div>
+              </div>
 
-                  <div className="mock-audit-meta">
-                    <div className="mock-meta-label">Audit Report</div>
-                    <div className="mock-meta-value" title="https://example.com/landing">https://example.com/landing</div>
-                  </div>
-
-                  <nav className="mock-sidebar-nav">
-                    <div className="mock-nav-item active">
-                      <LayoutGrid size={15} />
-                      <span>Overview</span>
-                    </div>
-                    <div className="mock-nav-item">
-                      <AlertTriangle size={15} />
-                      <span>Top Issues</span>
-                    </div>
-                    <div className="mock-nav-item">
-                      <TrendingUp size={15} />
-                      <span>Opportunities</span>
-                    </div>
-                    <div className="mock-nav-item">
-                      <FileText size={15} />
-                      <span>Detailed Analysis</span>
-                    </div>
-                    <div className="mock-nav-item">
-                      <Sparkles size={15} />
-                      <span>Recommendations</span>
-                    </div>
-                    <div className="mock-nav-item">
-                      <Code size={15} />
-                      <span>Technical Insights</span>
-                    </div>
-                  </nav>
-                </div>
-              </aside>
-
-              {/* Main Panel Content */}
-              <main className="mock-main-content">
-
-                {/* Top Row Grid */}
-                <div className="mock-cards-grid-3">
-
-                  {/* Card 1: Conversion Score */}
-                  <div className="mock-report-card">
-                    <div className="mock-report-card-title-row">
-                      <span className="mock-report-card-title">Conversion Score</span>
-                    </div>
-                    <div className="mock-score-content">
-                      <div className="mock-score-number-group">
-                        <div style={{ display: 'flex', alignItems: 'baseline' }}>
-                          <span className="mock-score-big">72</span>
-                          <span className="mock-score-total">/100</span>
-                        </div>
-                        <span className="mock-score-status">Good</span>
-                      </div>
-                      <div className="mock-score-ring">
-                        <svg className="mock-score-circle-svg">
-                          <circle cx="35" cy="35" r="28" fill="none" stroke="rgba(255, 122, 0, 0.08)" strokeWidth="5" />
-                          <circle cx="35" cy="35" r="28" fill="none" stroke="#FF7A00" strokeWidth="5" strokeDasharray="175.9" strokeDashoffset="49.25" strokeLinecap="round" />
-                        </svg>
-                      </div>
-                    </div>
-                  </div>
-
-                  {/* Card 2: Top Issues Found */}
-                  <div className="mock-report-card">
-                    <div className="mock-report-card-title-row">
-                      <span className="mock-report-card-title">Top Issues Found</span>
-                      <span className="mock-critical-badge">3 Critical</span>
-                    </div>
-                    <div className="mock-issues-list">
-                      <div className="mock-issue-item">
-                        <AlertTriangle size={12} />
-                        <span>Missing customer testimonials</span>
-                      </div>
-                      <div className="mock-issue-item">
-                        <AlertTriangle size={12} />
-                        <span>Weak CTA placement</span>
-                      </div>
-                      <div className="mock-issue-item">
-                        <AlertTriangle size={12} />
-                        <span>Form has too many fields</span>
-                      </div>
-                    </div>
-                    <div className="mock-card-action-link">
-                      <span>View all issues</span>
-                      <span>→</span>
-                    </div>
-                  </div>
-
-                  {/* Card 3: Estimated Impact */}
-                  <div className="mock-report-card">
-                    <div className="mock-report-card-title-row">
-                      <span className="mock-report-card-title">Estimated Impact</span>
-                    </div>
-                    <div>
-                      <div className="mock-impact-value">+28%</div>
-                      <div className="mock-impact-sub">Potential conversion improvement</div>
-                    </div>
-                    <div className="mock-impact-graph-container">
-                      <svg width="100%" height="100%" viewBox="0 0 240 50" preserveAspectRatio="none">
-                        <defs>
-                          <linearGradient id="chart-glow" x1="0" y1="0" x2="0" y2="1">
-                            <stop offset="0%" stopColor="#FF7A00" stopOpacity="0.25" />
-                            <stop offset="100%" stopColor="#FF7A00" stopOpacity="0.0" />
-                          </linearGradient>
-                        </defs>
-                        <path d="M10 40 L40 43 L70 32 L100 36 L130 18 L160 26 L190 22 L220 8 L220 50 L10 50 Z" fill="url(#chart-glow)" />
-                        <path d="M10 40 L40 43 L70 32 L100 36 L130 18 L160 26 L190 22 L220 8" fill="none" stroke="#FF7A00" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" />
-                        <circle cx="10" cy="40" r="3" fill="#FF7A00" stroke="#050505" strokeWidth="1" />
-                        <circle cx="40" cy="43" r="3" fill="#FF7A00" stroke="#050505" strokeWidth="1" />
-                        <circle cx="70" cy="32" r="3" fill="#FF7A00" stroke="#050505" strokeWidth="1" />
-                        <circle cx="100" cy="36" r="3" fill="#FF7A00" stroke="#050505" strokeWidth="1" />
-                        <circle cx="130" cy="18" r="3" fill="#FF7A00" stroke="#050505" strokeWidth="1" />
-                        <circle cx="160" cy="26" r="3" fill="#FF7A00" stroke="#050505" strokeWidth="1" />
-                        <circle cx="190" cy="22" r="3" fill="#FF7A00" stroke="#050505" strokeWidth="1" />
-                        <circle cx="220" cy="8" r="3" fill="#FF7A00" stroke="#050505" strokeWidth="1" />
-                      </svg>
-                    </div>
-                  </div>
-
+              {/* Carousel Track */}
+              <div 
+                style={{ 
+                  display: 'flex', 
+                  transition: 'transform 0.5s cubic-bezier(0.25, 1, 0.5, 1)', 
+                  transform: `translateX(-${currentSlide * 100}%)`,
+                  alignItems: 'stretch'
+                }}
+                onTouchStart={onTouchStart}
+                onTouchMove={onTouchMove}
+                onTouchEnd={onTouchEnd}
+              >
+                {/* Slide 1: Score & Report */}
+                <div style={{ minWidth: '100%', padding: '1.5rem', display: 'flex', justifyContent: 'center', alignItems: 'center' }}>
+                  <img src="/reports/sample-score-report.png" alt="Sample Score & Full Report Email" style={{ width: '100%', maxWidth: '960px', height: '550px', objectFit: 'contain', backgroundColor: '#fff', borderRadius: '10px', boxShadow: '0 4px 16px rgba(0,0,0,0.08)' }} />
                 </div>
 
-                {/* Bottom Row Grid */}
-                <div className="mock-cards-grid-3">
-
-                  {/* Card 4: Key Opportunity Areas */}
-                  <div className="mock-report-card">
-                    <div className="mock-report-card-title-row">
-                      <span className="mock-report-card-title">Key Opportunity Areas</span>
-                    </div>
-                    <div className="mock-check-list">
-                      <div className="mock-check-item">
-                        <Check size={13} />
-                        <span>Add social proof above the fold</span>
-                      </div>
-                      <div className="mock-check-item">
-                        <Check size={13} />
-                        <span>Improve CTA visibility and contrast</span>
-                      </div>
-                      <div className="mock-check-item">
-                        <Check size={13} />
-                        <span>Shorten and simplify the form</span>
-                      </div>
-                      <div className="mock-check-item">
-                        <Check size={13} />
-                        <span>Clarify value proposition in headline</span>
-                      </div>
-                    </div>
-                    <div className="mock-card-action-link">
-                      <span>View all opportunities</span>
-                      <span>→</span>
-                    </div>
-                  </div>
-
-                  {/* Card 5: AI Recommendations */}
-                  <div className="mock-report-card">
-                    <div className="mock-report-card-title-row">
-                      <span className="mock-report-card-title">AI Recommendations</span>
-                    </div>
-                    <div className="mock-check-list">
-                      <div className="mock-recommend-item">
-                        <Sparkles size={13} />
-                        <span>Add customer testimonials to build trust</span>
-                      </div>
-                      <div className="mock-recommend-item">
-                        <Sparkles size={13} />
-                        <span>Move primary CTA above the fold</span>
-                      </div>
-                      <div className="mock-recommend-item">
-                        <Sparkles size={13} />
-                        <span>Reduce form fields from 7 to 3</span>
-                      </div>
-                      <div className="mock-recommend-item">
-                        <Sparkles size={13} />
-                        <span>Add a sticky CTA for better conversions</span>
-                      </div>
-                    </div>
-                    <div className="mock-card-action-link">
-                      <span>View all recommendations</span>
-                      <span>→</span>
-                    </div>
-                  </div>
-
-                  {/* Card 6: Get Full Report Promo */}
-                  <div className="mock-report-card promo-card">
-                    <div className="mock-promo-icon-wrapper">
-                      <FileText size={28} />
-                    </div>
-                    <div className="mock-promo-title">Get the Full Report</div>
-                    <p className="mock-promo-text">
-                      Our detailed PDF report includes in-depth analysis, screenshots, and step-by-step recommendations.
-                    </p>
-                    <div className="mock-promo-btn">
-                      <Download size={14} />
-                      <span>Download Sample PDF</span>
-                    </div>
-                    <span className="mock-promo-footer">No email required</span>
-                  </div>
-
+                {/* Slide 2: Overview */}
+                <div style={{ minWidth: '100%', padding: '1.5rem', display: 'flex', justifyContent: 'center', alignItems: 'center' }}>
+                  <img src="/reports/sample-overview.png" alt="Overview - Executive Presence Intelligence" style={{ width: '100%', maxWidth: '960px', height: '550px', objectFit: 'contain', backgroundColor: '#fff', borderRadius: '10px', boxShadow: '0 4px 16px rgba(0,0,0,0.08)' }} />
                 </div>
 
-              </main>
+                {/* Slide 3: Top Issues */}
+                <div style={{ minWidth: '100%', padding: '1.5rem', display: 'flex', justifyContent: 'center', alignItems: 'center' }}>
+                  <img src="/reports/sample-top-issues.png" alt="Top Issues Found" style={{ width: '100%', maxWidth: '960px', height: '550px', objectFit: 'contain', backgroundColor: '#fff', borderRadius: '10px', boxShadow: '0 4px 16px rgba(0,0,0,0.08)' }} />
+                </div>
 
+                {/* Slide 4: Opportunities */}
+                <div style={{ minWidth: '100%', padding: '1.5rem', display: 'flex', justifyContent: 'center', alignItems: 'center' }}>
+                  <img src="/reports/sample-opportunities.png" alt="Key Opportunity Areas" style={{ width: '100%', maxWidth: '960px', height: '550px', objectFit: 'contain', backgroundColor: '#fff', borderRadius: '10px', boxShadow: '0 4px 16px rgba(0,0,0,0.08)' }} />
+                </div>
+
+                {/* Slide 5: Detailed Analysis */}
+                <div style={{ minWidth: '100%', padding: '1.5rem', display: 'flex', justifyContent: 'center', alignItems: 'center' }}>
+                  <img src="/reports/sample-analysis.png" alt="Detailed Analysis - Estimated Impact" style={{ width: '100%', maxWidth: '960px', height: '550px', objectFit: 'contain', backgroundColor: '#fff', borderRadius: '10px', boxShadow: '0 4px 16px rgba(0,0,0,0.08)' }} />
+                </div>
+
+                {/* Slide 6: Recommendations */}
+                <div style={{ minWidth: '100%', padding: '1.5rem', display: 'flex', justifyContent: 'center', alignItems: 'center' }}>
+                  <img src="/reports/sample-recommendations.png" alt="AI Recommendations" style={{ width: '100%', maxWidth: '960px', height: '550px', objectFit: 'contain', backgroundColor: '#fff', borderRadius: '10px', boxShadow: '0 4px 16px rgba(0,0,0,0.08)' }} />
+                </div>
+
+                {/* Slide 7: Technical Insights */}
+                <div style={{ minWidth: '100%', padding: '1.5rem', display: 'flex', justifyContent: 'center', alignItems: 'center' }}>
+                  <img src="/reports/sample-ai-visibility.png" alt="Technical Insights - AI Visibility" style={{ width: '100%', maxWidth: '960px', height: '550px', objectFit: 'contain', backgroundColor: '#fff', borderRadius: '10px', boxShadow: '0 4px 16px rgba(0,0,0,0.08)' }} />
+                </div>
+              </div>
+
+              {/* Navigation Arrows */}
+              <button 
+                onClick={handlePrevSlide} 
+                style={{ 
+                  position: 'absolute', top: '50%', left: '1.5rem', transform: 'translateY(-50%)', 
+                  background: 'white', border: '1px solid rgba(10,10,26,0.1)', borderRadius: '50%', 
+                  width: '44px', height: '44px', display: 'flex', alignItems: 'center', justifyContent: 'center', 
+                  cursor: 'pointer', zIndex: 10, boxShadow: '0 4px 12px rgba(0,0,0,0.05)', color: 'var(--accent-orange)'
+                }}
+                onMouseOver={(e) => e.currentTarget.style.background = '#f9fafb'}
+                onMouseOut={(e) => e.currentTarget.style.background = 'white'}
+              >
+                <ChevronLeft size={24} />
+              </button>
+              <button 
+                onClick={handleNextSlide} 
+                style={{ 
+                  position: 'absolute', top: '50%', right: '1.5rem', transform: 'translateY(-50%)', 
+                  background: 'white', border: '1px solid rgba(10,10,26,0.1)', borderRadius: '50%', 
+                  width: '44px', height: '44px', display: 'flex', alignItems: 'center', justifyContent: 'center', 
+                  cursor: 'pointer', zIndex: 10, boxShadow: '0 4px 12px rgba(0,0,0,0.05)', color: 'var(--accent-orange)'
+                }}
+                onMouseOver={(e) => e.currentTarget.style.background = '#f9fafb'}
+                onMouseOut={(e) => e.currentTarget.style.background = 'white'}
+              >
+                <ChevronRight size={24} />
+              </button>
+
+              {/* Pagination Dots */}
+              <div style={{ display: 'flex', justifyContent: 'center', gap: '10px', position: 'absolute', bottom: '1.5rem', width: '100%' }}>
+                {slideNames.map((_, idx) => (
+                  <button 
+                    key={idx} 
+                    onClick={() => setCurrentSlide(idx)} 
+                    style={{ 
+                      width: currentSlide === idx ? '24px' : '8px', 
+                      height: '8px', 
+                      borderRadius: '4px', 
+                      background: currentSlide === idx ? 'var(--accent-orange)' : 'rgba(10,10,26,0.15)', 
+                      border: 'none', 
+                      cursor: 'pointer', 
+                      transition: 'all 0.3s ease',
+                      padding: 0
+                    }} 
+                    aria-label={`Go to slide ${idx + 1}`}
+                  />
+                ))}
+              </div>
             </div>
-
             <div className="mock-disclaimer">
               This is a sample report for demonstration only. Your actual report will be generated based on the page you submit.
             </div>

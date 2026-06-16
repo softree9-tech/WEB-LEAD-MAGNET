@@ -1,16 +1,66 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { motion } from 'framer-motion';
-import { Globe, Mail, Clock, CreditCard, FileText, AlertTriangle, User } from 'lucide-react';
+import { User, Mail, Globe, Sparkles, Loader2, Clock, CreditCard, FileText, Lock, AlertCircle } from 'lucide-react';
 
-export default function GeoHeroForm({ onSubmit, loading }) {
+export default function GeoHeroForm({ onSubmit, loading, error }) {
   const [name, setName] = useState('');
   const [url, setUrl] = useState('');
   const [email, setEmail] = useState('');
-  const [errors, setErrors] = useState({});
-  const [domainWarning, setDomainWarning] = useState('');
+  
+  const [touched, setTouched] = useState({
+    name: false,
+    url: false,
+    email: false
+  });
+
+  const [isWebsiteManuallyEdited, setIsWebsiteManuallyEdited] = useState(false);
   const recaptchaRef = useRef(null);
   const widgetIdRef = useRef(null);
   const [recaptchaToken, setRecaptchaToken] = useState(null);
+  const [domainError, setDomainError] = useState(null);
+
+  // Domain validation helper
+  const extractRootDomain = (input) => {
+    try {
+      let hostname = input.trim().toLowerCase();
+      hostname = hostname.replace(/^https?:\/\//i, '');
+      hostname = hostname.split('/')[0].split('?')[0].split('#')[0];
+      hostname = hostname.split(':')[0];
+      hostname = hostname.replace(/^www\./, '');
+      const parts = hostname.split('.');
+      if (parts.length >= 2) {
+        return parts.slice(-2).join('.');
+      }
+      return hostname;
+    } catch {
+      return '';
+    }
+  };
+
+  const PUBLIC_PROVIDERS = [
+    'gmail.com', 'yahoo.com', 'hotmail.com', 'outlook.com', 'aol.com',
+    'zoho.com', 'mail.com', 'protonmail.com', 'icloud.com', 'yandex.com',
+    'live.com', 'msn.com', 'me.com', 'inbox.com', 'fastmail.com',
+    'tutanota.com', 'gmx.com', 'gmx.net'
+  ];
+
+  const validateDomainMatch = () => {
+    const emailStr = email.trim();
+    const websiteStr = url.trim();
+    if (!emailStr || !websiteStr || !emailStr.includes('@')) return null;
+
+    const emailDomain = emailStr.split('@')[1]?.toLowerCase() || '';
+    if (PUBLIC_PROVIDERS.includes(emailDomain)) {
+      return 'Please use your company business email address. Public email providers (Gmail, Yahoo, etc.) are not accepted.';
+    }
+
+    const emailRoot = extractRootDomain(emailDomain);
+    const websiteRoot = extractRootDomain(websiteStr);
+
+    if (emailRoot && websiteRoot && emailRoot !== websiteRoot) {
+      return 'Business email domain must match the submitted website domain.';
+    }
+    return null;
+  };
 
   useEffect(() => {
     const siteKey = import.meta.env.VITE_RECAPTCHA_SITE_KEY || '6LeIxAcTAAAAAJcZVRqyHh71UMIEGNQ_MXjiZKhI';
@@ -25,10 +75,7 @@ export default function GeoHeroForm({ onSubmit, loading }) {
       try {
         widgetIdRef.current = window.grecaptcha.render(recaptchaRef.current, {
           sitekey: siteKey,
-          callback: (token) => {
-            setRecaptchaToken(token);
-            setErrors(p => ({ ...p, recaptcha: '' }));
-          },
+          callback: (token) => setRecaptchaToken(token),
           'expired-callback': () => setRecaptchaToken(null),
           'error-callback': () => setRecaptchaToken(null)
         });
@@ -57,163 +104,204 @@ export default function GeoHeroForm({ onSubmit, loading }) {
     };
   }, []);
 
-  const validateName = (v) => {
-    if (!v) return 'Full Name is required';
-    return '';
-  };
+  // Automatically derive website from email domain if not manually edited
+  useEffect(() => {
+    if (isWebsiteManuallyEdited) return;
 
-  const validateUrl = (v) => {
-    if (!v) return 'Website URL is required';
-    const pattern = /^(https?:\/\/)?([\w-]+\.)+[\w-]{2,}(\/.*)?$/i;
-    if (!pattern.test(v)) return 'Please enter a valid website URL';
-    return '';
-  };
+    const emailStr = email.trim();
 
-  const validateEmail = (v) => {
-    if (!v) return 'Business email is required';
-    const pattern = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-    if (!pattern.test(v)) return 'Please enter a valid email';
-    return '';
-  };
-
-  const checkDomainMatch = (urlVal, emailVal) => {
-    try {
-      const urlDomain = urlVal.replace(/^https?:\/\/(www\.)?/, '').split('/')[0].toLowerCase();
-      const emailDomain = emailVal.split('@')[1]?.toLowerCase();
-      if (emailDomain && urlDomain && !urlDomain.includes(emailDomain) && !emailDomain.includes(urlDomain.split('.')[0])) {
-        setDomainWarning('Email domain does not match website domain');
-      } else {
-        setDomainWarning('');
+    if (emailStr && emailStr.includes('@')) {
+      const domain = emailStr.split('@')[1];
+      if (domain && !PUBLIC_PROVIDERS.includes(domain.toLowerCase())) {
+        setUrl(`https://${domain}`);
+        return;
       }
-    } catch { setDomainWarning(''); }
+    }
+
+    setUrl('');
+  }, [email, isWebsiteManuallyEdited]);
+
+  const handleWebsiteChange = (e) => {
+    setIsWebsiteManuallyEdited(true);
+    setUrl(e.target.value);
+    setDomainError(null);
+  };
+
+  const handleBlur = (field) => {
+    setTouched(prev => ({ ...prev, [field]: true }));
   };
 
   const handleSubmit = (e) => {
     e.preventDefault();
     if (loading) return;
-    const nameErr = validateName(name);
-    const urlErr = validateUrl(url);
-    const emailErr = validateEmail(email);
-    const recaptchaErr = !recaptchaToken ? 'Please verify that you are not a robot.' : '';
-    if (nameErr || urlErr || emailErr || recaptchaErr) {
-      setErrors({ name: nameErr, url: urlErr, email: emailErr, recaptcha: recaptchaErr });
+    
+    if (!name || !email || !url) return;
+
+    const domainValidationError = validateDomainMatch();
+    if (domainValidationError) {
+      setDomainError(domainValidationError);
       return;
     }
-    setErrors({});
+    setDomainError(null);
+
+    if (!recaptchaToken) {
+      alert("Please verify that you are not a robot.");
+      return;
+    }
+
     if (onSubmit) onSubmit({ name, website: url, email, recaptchaToken });
   };
 
   return (
-    <motion.div
-      initial={{ opacity: 0, y: 20 }}
-      animate={{ opacity: 1, y: 0 }}
-      transition={{ duration: 0.6, delay: 0.2 }}
-      className="geo-glass p-7 relative overflow-hidden"
-      style={{ borderColor: 'rgba(255,88,18,0.12)', animation: 'geo-border-glow 4s ease-in-out infinite' }}
-    >
-      {/* Ambient top glow */}
-      <div className="absolute top-0 left-1/2 -translate-x-1/2 w-48 h-1 bg-gradient-to-r from-transparent via-orange-500/30 to-transparent rounded-full" />
-
-      <form onSubmit={handleSubmit} className="space-y-5">
-        {/* Full Name Field */}
-        <div>
-          <label className="flex items-center gap-2 text-text-secondary text-sm font-medium mb-2">
-            <User size={14} className="text-orange-500" />
-            Full Name
-          </label>
-          <input
-            type="text"
-            value={name}
-            onChange={(e) => { setName(e.target.value); setErrors(p => ({ ...p, name: '' })); }}
-            placeholder="e.g. Sarah Jenkins"
-            disabled={loading}
-            className={`w-full px-4 py-3 rounded-xl bg-geo-bg-deep border text-text-primary text-sm outline-none transition-all duration-200 placeholder:text-text-muted focus:border-orange-500/40 focus:shadow-[0_0_0_3px_rgba(255,88,18,0.06)] disabled:opacity-50 ${errors.name ? 'border-red-500/50' : 'border-border-glass'}`}
-          />
-          {errors.name && <p className="text-red-500 text-xs mt-1.5 flex items-center gap-1"><AlertTriangle size={11} />{errors.name}</p>}
+    <div className="form-card-glass animate-fade-in">
+      <div className="form-header">
+        <div className="form-header-badge">
+          <Sparkles size={24} />
         </div>
+        <h2 className="form-title">
+          Generate Your GEO Audit
+        </h2>
+        <p className="form-description">
+          Designed for growth-focused businesses, this AI-powered audit delivers strategic insights into your website's visibility across ChatGPT, Gemini, and Perplexity.
+        </p>
+      </div>
 
-        {/* URL Field */}
-        <div>
-          <label className="flex items-center gap-2 text-text-secondary text-sm font-medium mb-2">
-            <Globe size={14} className="text-orange-500" />
-            Website URL
-          </label>
-          <input
-            type="text"
-            value={url}
-            onChange={(e) => { setUrl(e.target.value); setErrors(p => ({ ...p, url: '' })); checkDomainMatch(e.target.value, email); }}
-            placeholder="https://yourwebsite.com"
-            disabled={loading}
-            className={`w-full px-4 py-3 rounded-xl bg-geo-bg-deep border text-text-primary text-sm outline-none transition-all duration-200 placeholder:text-text-muted focus:border-orange-500/40 focus:shadow-[0_0_0_3px_rgba(255,88,18,0.06)] disabled:opacity-50 ${errors.url ? 'border-red-500/50' : 'border-border-glass'}`}
-          />
-          {errors.url && <p className="text-red-500 text-xs mt-1.5 flex items-center gap-1"><AlertTriangle size={11} />{errors.url}</p>}
-        </div>
+      <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: '1.25rem' }}>
+        <div className="form-inputs-group">
+          {/* Full Name Field */}
+          <div className="input-field-container">
+            <label className="input-label-text" htmlFor="name">Full Name</label>
+            <div className="input-with-icon">
+              <span className="input-icon-left">
+                <User size={18} />
+              </span>
+              <input
+                required
+                id="name"
+                name="name"
+                type="text"
+                value={name}
+                onChange={(e) => setName(e.target.value)}
+                onBlur={() => handleBlur('name')}
+                className="input-field-custom"
+                placeholder="e.g. Sarah Jenkins"
+                disabled={loading}
+              />
+            </div>
+          </div>
 
-        {/* Email Field */}
-        <div>
-          <label className="flex items-center gap-2 text-text-secondary text-sm font-medium mb-2">
-            <Mail size={14} className="text-orange-500" />
-            Business Email
-          </label>
-          <input
-            type="email"
-            value={email}
-            onChange={(e) => { setEmail(e.target.value); setErrors(p => ({ ...p, email: '' })); checkDomainMatch(url, e.target.value); }}
-            placeholder="you@company.com"
-            disabled={loading}
-            className={`w-full px-4 py-3 rounded-xl bg-geo-bg-deep border text-text-primary text-sm outline-none transition-all duration-200 placeholder:text-text-muted focus:border-orange-500/40 focus:shadow-[0_0_0_3px_rgba(255,88,18,0.06)] disabled:opacity-50 ${errors.email ? 'border-red-500/50' : 'border-border-glass'}`}
-          />
-          {errors.email && <p className="text-red-500 text-xs mt-1.5 flex items-center gap-1"><AlertTriangle size={11} />{errors.email}</p>}
-          {domainWarning && !errors.email && (
-            <p className="text-yellow-600 text-xs mt-1.5 flex items-center gap-1"><AlertTriangle size={11} />{domainWarning}</p>
-          )}
+          {/* Website URL Field */}
+          <div className="input-field-container">
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+              <label className="input-label-text" htmlFor="url">Website URL to Analyze</label>
+              {!isWebsiteManuallyEdited && email && (
+                <span className="auto-derived-indicator">
+                  Auto-derived
+                </span>
+              )}
+            </div>
+            <div className="input-with-icon">
+              <span className="input-icon-left">
+                <Globe size={18} />
+              </span>
+              <input
+                required
+                id="url"
+                name="url"
+                type="url"
+                value={url}
+                onChange={handleWebsiteChange}
+                onBlur={() => handleBlur('url')}
+                className="input-field-custom"
+                placeholder="https://yourwebsite.com/landing-page"
+                disabled={loading}
+              />
+            </div>
+          </div>
+
+          {/* Business Email Field */}
+          <div className="input-field-container">
+            <label className="input-label-text" htmlFor="email">Business Email</label>
+            <div className="input-with-icon">
+              <span className="input-icon-left">
+                <Mail size={18} />
+              </span>
+              <input
+                required
+                id="email"
+                name="email"
+                type="email"
+                value={email}
+                onChange={(e) => { setEmail(e.target.value); setDomainError(null); }}
+                onBlur={() => handleBlur('email')}
+                className="input-field-custom"
+                placeholder="name@company.com"
+                disabled={loading}
+              />
+            </div>
+          </div>
         </div>
 
         {/* reCAPTCHA widget container */}
-        <div className="flex justify-center my-2">
+        <div className="recaptcha-center">
           <div ref={recaptchaRef}></div>
         </div>
-        {errors.recaptcha && (
-          <p className="text-red-500 text-xs text-center flex justify-center items-center gap-1 mt-1">
-            <AlertTriangle size={11} />{errors.recaptcha}
-          </p>
+
+        {(error || domainError) && (
+          <div className="form-error-banner">
+            <div style={{ display: 'flex', alignItems: 'flex-start', gap: '8px' }}>
+              <AlertCircle size={16} style={{ flexShrink: 0, marginTop: '1px', color: '#ef4444' }} />
+              <div>
+                <div style={{ fontWeight: 700, marginBottom: '2px' }}>
+                  {domainError ? 'Domain Validation Failed' : 'Validation Error'}
+                </div>
+                <div style={{ opacity: 0.9 }}>{domainError || error}</div>
+              </div>
+            </div>
+          </div>
         )}
 
-        {/* CTA */}
-        <motion.button
-          type="submit"
-          whileHover={loading || !recaptchaToken ? {} : { scale: 1.02 }}
-          whileTap={loading || !recaptchaToken ? {} : { scale: 0.98 }}
+        {/* Inline Benefits Row */}
+        <div className="form-inline-benefits">
+          <div className="form-inline-benefit-item">
+            <Clock size={14} color="#FF7A00" />
+            <span>Under 60 seconds</span>
+          </div>
+          <div className="form-inline-benefit-item">
+            <CreditCard size={14} color="#FF7A00" />
+            <span>No credit card</span>
+          </div>
+          <div className="form-inline-benefit-item">
+            <FileText size={14} color="#FF7A00" />
+            <span>Detailed report</span>
+          </div>
+        </div>
+
+        {/* CTA Button */}
+        <button 
+          type="submit" 
+          className="btn-premium-cta" 
           disabled={loading || !recaptchaToken}
-          className="geo-cta-btn w-full py-3.5 text-base flex items-center justify-center gap-2 disabled:opacity-60 disabled:cursor-not-allowed"
         >
           {loading ? (
             <>
-              <span className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+              <Loader2 className="spinning" size={18} />
               Analyzing...
             </>
           ) : (
             <>
-              <span className="w-2 h-2 rounded-full bg-white/70 animate-pulse" />
+              <Sparkles size={18} className="btn-premium-cta-icon" />
               Generate Free GEO Audit
             </>
           )}
-        </motion.button>
+        </button>
 
-        {/* Trust Indicators */}
-        <div className="flex items-center justify-center gap-5 pt-2">
-          {[
-            { icon: Clock, text: 'Under 60 seconds' },
-            { icon: CreditCard, text: 'No credit card' },
-            { icon: FileText, text: 'Detailed report' },
-          ].map(({ icon: Icon, text }) => (
-            <div key={text} className="flex items-center gap-1.5 text-text-muted text-[11px]">
-              <Icon size={12} className="text-orange-500/50" />
-              {text}
-            </div>
-          ))}
+        {/* Privacy Note */}
+        <div className="form-privacy-text">
+          <Lock size={12} />
+          <span>We respect your privacy. No spam, ever.</span>
         </div>
       </form>
-    </motion.div>
+    </div>
   );
 }
