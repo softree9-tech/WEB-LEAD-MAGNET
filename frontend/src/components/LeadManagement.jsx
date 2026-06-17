@@ -11,6 +11,7 @@ export default function LeadManagement() {
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedLead, setSelectedLead] = useState(null);
   const [viewingReport, setViewingReport] = useState(false);
+  const [exportLoading, setExportLoading] = useState(false);
 
   const filters = ['Today', 'Yesterday', 'Last 7 Days', 'Last 30 Days', 'Last 90 Days', 'Last 1 Year', 'All Time'];
 
@@ -51,6 +52,45 @@ export default function LeadManagement() {
     window.open(`${baseUrl}/api/leads/download/${id}`, '_blank');
   };
 
+  const handleExport = async () => {
+    if (leads.length === 0) {
+      alert("No leads to export.");
+      return;
+    }
+    
+    const proceed = window.confirm(`Ready to export ${leads.length} leads. Continue?`);
+    if (!proceed) return;
+
+    setExportLoading(true);
+    try {
+      const baseUrl = import.meta.env.VITE_API_URL || import.meta.env.VITE_API_BASE_URL || "http://localhost:8000";
+      const params = new URLSearchParams({ date_filter: dateFilter });
+      if (searchTerm) {
+        params.append('search', searchTerm);
+      }
+      
+      const response = await fetch(`${baseUrl}/api/leads/export?${params.toString()}`);
+      if (!response.ok) {
+        throw new Error('Export failed');
+      }
+      
+      const blob = await response.blob();
+      const url = window.URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `Leads_Export_${new Date().toISOString().slice(0, 10)}.xlsx`;
+      document.body.appendChild(a);
+      a.click();
+      window.URL.revokeObjectURL(url);
+      document.body.removeChild(a);
+    } catch (err) {
+      console.error('Export error:', err);
+      alert('Failed to generate export.');
+    } finally {
+      setExportLoading(false);
+    }
+  };
+
   if (viewingReport && selectedLead) {
     return (
       <div className="lead-management-container">
@@ -86,40 +126,59 @@ export default function LeadManagement() {
         </div>
       </div>
 
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.5rem', flexWrap: 'wrap', gap: '1rem' }}>
-        <div style={{ display: 'flex', gap: '0.5rem', flexWrap: 'wrap' }}>
-          {filters.map(f => (
-            <button
-              key={f}
-              onClick={() => setDateFilter(f)}
-              style={{
-                padding: '6px 12px',
-                borderRadius: '20px',
-                border: `1px solid ${dateFilter === f ? '#FF6B00' : '#e2e8f0'}`,
-                background: dateFilter === f ? '#FFF0E6' : '#fff',
-                color: dateFilter === f ? '#FF6B00' : '#64748b',
-                cursor: 'pointer',
-                fontSize: '0.875rem',
-                fontWeight: 600
-              }}
-            >
-              {f}
-            </button>
-          ))}
-        </div>
+      <div style={{ display: 'flex', alignItems: 'center', marginBottom: '1.5rem', flexWrap: 'wrap', gap: '0.75rem' }}>
+        {filters.map(f => (
+          <button
+            key={f}
+            onClick={() => setDateFilter(f)}
+            style={{
+              padding: '6px 12px',
+              borderRadius: '20px',
+              border: `1px solid ${dateFilter === f ? '#FF6B00' : '#e2e8f0'}`,
+              background: dateFilter === f ? '#FFF0E6' : '#fff',
+              color: dateFilter === f ? '#FF6B00' : '#64748b',
+              cursor: 'pointer',
+              fontSize: '0.875rem',
+              fontWeight: 600
+            }}
+          >
+            {f}
+          </button>
+        ))}
         
-        <form onSubmit={handleSearch} style={{ display: 'flex', gap: '0.5rem' }}>
+        <form onSubmit={handleSearch} style={{ display: 'flex', gap: '0.5rem', alignItems: 'center' }}>
           <input 
             type="text" 
             placeholder="Search name, email, website..." 
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
-            style={{ padding: '8px 12px', borderRadius: '4px', border: '1px solid #e2e8f0', minWidth: '250px' }}
+            style={{ padding: '8px 12px', borderRadius: '4px', border: '1px solid #e2e8f0', minWidth: '220px' }}
           />
-          <button type="submit" style={{ padding: '8px 16px', background: '#1e293b', color: 'white', border: 'none', borderRadius: '4px', cursor: 'pointer' }}>
+          <button type="submit" style={{ padding: '8px 16px', background: '#1e293b', color: 'white', border: 'none', borderRadius: '4px', cursor: 'pointer', display: 'flex', alignItems: 'center' }}>
             <Search size={16} />
           </button>
         </form>
+
+        <button 
+          onClick={handleExport}
+          disabled={exportLoading || leads.length === 0}
+          style={{ 
+            padding: '8px 16px', 
+            background: '#FF6B00', 
+            color: 'white', 
+            border: 'none', 
+            borderRadius: '4px', 
+            cursor: (exportLoading || leads.length === 0) ? 'not-allowed' : 'pointer',
+            display: 'flex',
+            alignItems: 'center',
+            gap: '8px',
+            opacity: (exportLoading || leads.length === 0) ? 0.7 : 1,
+            fontWeight: 600,
+            marginLeft: 'auto'
+          }}
+        >
+          {exportLoading ? 'Exporting...' : '📥 Export Leads & Reports'}
+        </button>
       </div>
 
       <div style={{ overflowX: 'auto' }}>

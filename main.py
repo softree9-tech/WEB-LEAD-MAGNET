@@ -1061,6 +1061,74 @@ async def geo_email_report(req: EmailReportRequest):
 
     return {"status": "success", "message": "Executive report has been delivered to your business email."}
 
+from fastapi import Request
+from fastapi.responses import FileResponse
+
+@app.get("/api/leads/export")
+def api_export_leads(request: Request, date_filter: str = 'All Time', search: str = None):
+    try:
+        leads = get_leads(date_filter, search)
+        import pandas as pd
+        import io
+        import os
+        from datetime import datetime
+        
+        base_url = str(request.base_url).rstrip("/")
+        
+        excel_data = []
+        for lead in leads:
+            pdf_path = lead.get('pdf_path')
+            report_link = f'=HYPERLINK("{base_url}/api/reports/view/{pdf_path}", "Open Report")' if pdf_path else "Report Not Available"
+            
+            excel_data.append({
+                "Full Name": lead.get('name') or '',
+                "Business Email": lead.get('email') or '',
+                "Website URL": lead.get('website') or '',
+                "Source": lead.get('source') or '',
+                "Date Submitted": lead.get('created_at', '').replace('T', ' ').replace('Z', '') if lead.get('created_at') else '',
+                "Visibility Score": lead.get('visibility_score') or 0,
+                "Presence Score": lead.get('geo_score') or 0,
+                "Report Filename": pdf_path or '',
+                "Report Link": report_link
+            })
+            
+        df = pd.DataFrame(excel_data)
+        excel_buffer = io.BytesIO()
+        with pd.ExcelWriter(excel_buffer, engine='openpyxl') as writer:
+            df.to_excel(writer, index=False, sheet_name='Leads')
+        excel_buffer.seek(0)
+        
+        timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
+        filename = f"Leads_Export_{timestamp}.xlsx"
+        
+        return StreamingResponse(
+            excel_buffer,
+            media_type="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+            headers={"Content-Disposition": f"attachment; filename={filename}"}
+        )
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+@app.get("/api/reports/view/{filename}")
+def api_view_report(filename: str):
+    import os
+    pdf_path = os.path.join(os.path.dirname(__file__), 'data', 'pdfs', filename)
+    if not os.path.exists(pdf_path):
+        raise HTTPException(status_code=404, detail="Report Not Available")
+    return FileResponse(
+        pdf_path, 
+        media_type="application/pdf", 
+        headers={"Content-Disposition": f"inline; filename=\"{filename}\""}
+    )
+
+@app.get("/api/reports/download/{filename}")
+def api_download_report(filename: str):
+    import os
+    pdf_path = os.path.join(os.path.dirname(__file__), 'data', 'pdfs', filename)
+    if not os.path.exists(pdf_path):
+        raise HTTPException(status_code=404, detail="Report Not Available")
+    return FileResponse(pdf_path, media_type="application/pdf", filename=filename)
+
 @app.get("/api/leads")
 def api_get_leads(date_filter: str = 'All Time', search: str = None):
     try:

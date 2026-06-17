@@ -226,7 +226,7 @@ export default function GeoLanding() {
       </section>
 
       {/* ── LANDING PAGE SECTIONS ─────────────────────────────── */}
-      {!results && (
+      {!results && !isProcessing && (
         <>
           <GeoReportSection />
           <GeoHowItWorks />
@@ -236,8 +236,12 @@ export default function GeoLanding() {
           <GeoFAQ />
         </>
       )}
-      <LightContactSection />
-      <StickyFooter />
+      {!isProcessing && (
+        <>
+          <LightContactSection />
+          <StickyFooter />
+        </>
+      )}
     </div>
   );
 }
