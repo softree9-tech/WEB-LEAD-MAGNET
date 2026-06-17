@@ -7,7 +7,9 @@ import urllib3
 urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
 import concurrent.futures
 from urllib.parse import urljoin
+from functools import partial
 from bs4 import BeautifulSoup
+from requests.adapters import HTTPAdapter
 from playwright.sync_api import sync_playwright, TimeoutError as PlaywrightTimeoutError
 from core.llm import generate_response
 from langchain_openai import ChatOpenAI
@@ -407,7 +409,7 @@ Be honest - if you don't have specific information about them, say so clearly.""
         aeo_result["aeo_raw_response"] = "AEO probe failed."
     return aeo_result
 
-def check_single_link(link: str) -> str:
+def check_single_link(link: str, session: requests.Session = None) -> str:
     if not is_safe_url(link):
         return ""
     try:
@@ -415,11 +417,12 @@ def check_single_link(link: str) -> str:
             "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36",
             "Accept": "text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,*/*;q=0.8"
         }
-        res = requests.head(link, timeout=10, allow_redirects=True, headers=headers, verify=False)
+        client = session if session else requests
+        res = client.head(link, timeout=10, allow_redirects=True, headers=headers, verify=False)
         
         # If server blocks HEAD requests, fallback to a lightweight streamed GET
         if res.status_code in [403, 405, 401, 301, 302, 999]:
-            res = requests.get(link, timeout=10, allow_redirects=True, headers=headers, stream=True, verify=False)
+            res = client.get(link, timeout=10, allow_redirects=True, headers=headers, stream=True, verify=False)
             res.raw.close()
             
         # Only explicitly flag pure dead pages to ensure 0 False Positives
@@ -431,8 +434,7 @@ def check_single_link(link: str) -> str:
         return ""
     return ""
 
-def count_broken_links(html: str, base_url: str) -> list:
-    soup = BeautifulSoup(html, "html.parser")
+def count_broken_links(soup: BeautifulSoup, base_url: str) -> dict:
     raw_links = [a.get('href') for a in soup.find_all('a', href=True)]
     
     valid_links = set()
@@ -450,10 +452,16 @@ def count_broken_links(html: str, base_url: str) -> list:
     links_to_test = list(valid_links)[:50]
     broken_list = []
     if links_to_test:
-        with concurrent.futures.ThreadPoolExecutor(max_workers=15) as executor:
-            results = executor.map(check_single_link, links_to_test)
-            for dead_link in results:
-                if dead_link: broken_list.append(dead_link)
+        with requests.Session() as session:
+            adapter = HTTPAdapter(pool_connections=15, pool_maxsize=15)
+            session.mount('http://', adapter)
+            session.mount('https://', adapter)
+
+            with concurrent.futures.ThreadPoolExecutor(max_workers=15) as executor:
+                check_func = partial(check_single_link, session=session)
+                results = executor.map(check_func, links_to_test)
+                for dead_link in results:
+                    if dead_link: broken_list.append(dead_link)
     return {"broken_list": broken_list, "total": len(links_to_test)}
 
 def extract_tech_stack(html: str, headers: dict) -> str:
@@ -687,6 +695,8 @@ def website_analyzer_agent(state: AgentState) -> AgentState:
     has_newsletter = False
     image_alt_data = {"total": 0, "missing_alt": 0, "percent_missing": 0}
     has_dead_socials = False
+    broken_links = []
+    total_links = 0
     conversion_elements = {
         "cta_presence": False,
         "contact_form": False,
@@ -710,10 +720,11 @@ def website_analyzer_agent(state: AgentState) -> AgentState:
         company_name = state.get('raw_company', '') or url
 
         # ─── INDEPENDENT ASYNC I/O (runs regardless of browser success) ───────
-        executor = concurrent.futures.ThreadPoolExecutor(max_workers=3)
+        executor = concurrent.futures.ThreadPoolExecutor(max_workers=5)
         lighthouse_future = executor.submit(get_google_pagespeed, url)
         aeo_future = executor.submit(verify_aeo_visibility, company_name, url)
         ssl_future = executor.submit(check_ssl_certificate, url)
+        broken_links_future = None
 
         # ─── PLAYWRIGHT BROWSER SCRAPE (may fail on Cloudflare sites) ─────────
         try:
@@ -726,21 +737,22 @@ def website_analyzer_agent(state: AgentState) -> AgentState:
                 response = page.goto(url, wait_until="domcontentloaded", timeout=20000)
                 html = page.content()
                 headers = response.headers if response else {}
+
+                soup = BeautifulSoup(html, "html.parser")
+
                 tech_stack = extract_tech_stack(html, headers)
                 last_modified = extract_last_modified(headers, html)
-                link_data = count_broken_links(html, url)
-                broken_links = link_data["broken_list"]
-                total_links = link_data["total"]
+                
+                # Start broken link check in background while taking screenshots
+                broken_links_future = executor.submit(count_broken_links, soup, url)
                 
                 analytics_data = check_analytics(html)
-                
-                soup = BeautifulSoup(html, "html.parser")
-                has_lead_capture = check_lead_capture(soup, html)
-                has_cta = check_cta_presence(soup, html)
-                has_newsletter = check_newsletter(soup)
                 image_alt_data = check_image_alt_tags(soup)
                 has_dead_socials = check_social_links(soup)
                 conversion_elements = check_conversion_elements(soup, html)
+                has_lead_capture = check_lead_capture(soup, html)
+                has_cta = conversion_elements.get("cta_presence", False)
+                has_newsletter = conversion_elements.get("newsletter_signup", False)
                 schema_data = check_schema_markup(soup)
                 
                 # Extract SEO Metrics before stripping code
@@ -870,12 +882,12 @@ def website_analyzer_agent(state: AgentState) -> AgentState:
                 last_modified = extract_last_modified(headers, html)
                 analytics_data = check_analytics(html)
                 soup = BeautifulSoup(html, "html.parser")
-                has_lead_capture = check_lead_capture(soup, html)
-                has_cta = check_cta_presence(soup, html)
-                has_newsletter = check_newsletter(soup)
                 image_alt_data = check_image_alt_tags(soup)
                 has_dead_socials = check_social_links(soup)
                 conversion_elements = check_conversion_elements(soup, html)
+                has_lead_capture = check_lead_capture(soup, html)
+                has_cta = conversion_elements.get("cta_presence", False)
+                has_newsletter = conversion_elements.get("newsletter_signup", False)
                 schema_data = check_schema_markup(soup)
                 seo_mobile = bool(soup.find("meta", attrs={"name": "viewport"}))
                 seo_meta_desc = bool(soup.find("meta", attrs={"name": "description"}))
@@ -892,6 +904,14 @@ def website_analyzer_agent(state: AgentState) -> AgentState:
                 print(f"HTTP fallback also failed for {url}: {e2}")
 
         # ─── COLLECT INDEPENDENT API RESULTS (with safety) ───────────────────
+        if broken_links_future:
+            try:
+                link_data = broken_links_future.result(timeout=60)
+                broken_links = link_data["broken_list"]
+                total_links = link_data["total"]
+            except Exception as e:
+                print(f"Broken Links Future Error: {e}")
+
         try:
             pagespeed_data = lighthouse_future.result(timeout=70)
         except Exception as e:
