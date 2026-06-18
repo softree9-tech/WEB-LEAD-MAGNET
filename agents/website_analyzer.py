@@ -3,6 +3,7 @@ import base64
 import time
 import re
 import requests
+from requests.adapters import HTTPAdapter
 import urllib3
 urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
 import concurrent.futures
@@ -364,7 +365,7 @@ def verify_aeo_visibility(company_name: str, url: str) -> dict:
     aeo_result = {"aeo_recognized": False, "aeo_confidence": "low", "aeo_raw_response": ""}
     try:
         probe_llm = ChatOpenAI(
-            model="gpt-4.1-mini", 
+            model="gpt-4o-mini",
             temperature=0, 
             max_tokens=300,
             api_key=os.environ.get("OPENAI_API_KEY")
@@ -407,7 +408,8 @@ Be honest - if you don't have specific information about them, say so clearly.""
         aeo_result["aeo_raw_response"] = "AEO probe failed."
     return aeo_result
 
-def check_single_link(link: str) -> str:
+def check_single_link(link: str, session: requests.Session = None) -> str:
+    """Checks a single link for dead status, utilizing a session for connection pooling if provided."""
     if not is_safe_url(link):
         return ""
     try:
@@ -415,11 +417,14 @@ def check_single_link(link: str) -> str:
             "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36",
             "Accept": "text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,*/*;q=0.8"
         }
-        res = requests.head(link, timeout=10, allow_redirects=True, headers=headers, verify=False)
+
+        # Use provided session or requests directly
+        caller = session if session else requests
+        res = caller.head(link, timeout=10, allow_redirects=True, headers=headers, verify=False)
         
         # If server blocks HEAD requests, fallback to a lightweight streamed GET
         if res.status_code in [403, 405, 401, 301, 302, 999]:
-            res = requests.get(link, timeout=10, allow_redirects=True, headers=headers, stream=True, verify=False)
+            res = caller.get(link, timeout=10, allow_redirects=True, headers=headers, stream=True, verify=False)
             res.raw.close()
             
         # Only explicitly flag pure dead pages to ensure 0 False Positives
@@ -431,8 +436,10 @@ def check_single_link(link: str) -> str:
         return ""
     return ""
 
-def count_broken_links(html: str, base_url: str) -> list:
-    soup = BeautifulSoup(html, "html.parser")
+def count_broken_links(html: str, base_url: str, soup: BeautifulSoup = None) -> dict:
+    """Validates links using connection pooling for improved performance."""
+    if not soup:
+        soup = BeautifulSoup(html, "html.parser")
     raw_links = [a.get('href') for a in soup.find_all('a', href=True)]
     
     valid_links = set()
@@ -449,11 +456,21 @@ def count_broken_links(html: str, base_url: str) -> list:
             
     links_to_test = list(valid_links)[:50]
     broken_list = []
+
     if links_to_test:
-        with concurrent.futures.ThreadPoolExecutor(max_workers=15) as executor:
-            results = executor.map(check_single_link, links_to_test)
-            for dead_link in results:
-                if dead_link: broken_list.append(dead_link)
+        # BOLT OPTIMIZATION: Use requests.Session with an HTTPAdapter for connection pooling.
+        # This significantly reduces overhead for multiple requests to the same domains.
+        with requests.Session() as session:
+            adapter = HTTPAdapter(pool_connections=15, pool_maxsize=15)
+            session.mount("http://", adapter)
+            session.mount("https://", adapter)
+
+            with concurrent.futures.ThreadPoolExecutor(max_workers=15) as executor:
+                # Pass the session to each worker
+                results = executor.map(lambda l: check_single_link(l, session=session), links_to_test)
+                for dead_link in results:
+                    if dead_link: broken_list.append(dead_link)
+
     return {"broken_list": broken_list, "total": len(links_to_test)}
 
 def extract_tech_stack(html: str, headers: dict) -> str:
@@ -728,19 +745,24 @@ def website_analyzer_agent(state: AgentState) -> AgentState:
                 headers = response.headers if response else {}
                 tech_stack = extract_tech_stack(html, headers)
                 last_modified = extract_last_modified(headers, html)
-                link_data = count_broken_links(html, url)
+
+                # BOLT OPTIMIZATION: Parse soup ONCE and share it among all checkers.
+                soup = BeautifulSoup(html, "html.parser")
+
+                # BOLT OPTIMIZATION: Reuse soup to avoid redundant re-parsing in count_broken_links.
+                link_data = count_broken_links(html, url, soup=soup)
                 broken_links = link_data["broken_list"]
                 total_links = link_data["total"]
                 
                 analytics_data = check_analytics(html)
                 
-                soup = BeautifulSoup(html, "html.parser")
+                # BOLT OPTIMIZATION: Reuse check_conversion_elements results for has_cta/has_newsletter.
+                conversion_elements = check_conversion_elements(soup, html)
+                has_cta = conversion_elements.get("cta_presence", False)
+                has_newsletter = conversion_elements.get("newsletter_signup", False)
                 has_lead_capture = check_lead_capture(soup, html)
-                has_cta = check_cta_presence(soup, html)
-                has_newsletter = check_newsletter(soup)
                 image_alt_data = check_image_alt_tags(soup)
                 has_dead_socials = check_social_links(soup)
-                conversion_elements = check_conversion_elements(soup, html)
                 schema_data = check_schema_markup(soup)
                 
                 # Extract SEO Metrics before stripping code
@@ -870,12 +892,13 @@ def website_analyzer_agent(state: AgentState) -> AgentState:
                 last_modified = extract_last_modified(headers, html)
                 analytics_data = check_analytics(html)
                 soup = BeautifulSoup(html, "html.parser")
+
+                conversion_elements = check_conversion_elements(soup, html)
+                has_cta = conversion_elements.get("cta_presence", False)
+                has_newsletter = conversion_elements.get("newsletter_signup", False)
                 has_lead_capture = check_lead_capture(soup, html)
-                has_cta = check_cta_presence(soup, html)
-                has_newsletter = check_newsletter(soup)
                 image_alt_data = check_image_alt_tags(soup)
                 has_dead_socials = check_social_links(soup)
-                conversion_elements = check_conversion_elements(soup, html)
                 schema_data = check_schema_markup(soup)
                 seo_mobile = bool(soup.find("meta", attrs={"name": "viewport"}))
                 seo_meta_desc = bool(soup.find("meta", attrs={"name": "description"}))
@@ -928,7 +951,7 @@ def website_analyzer_agent(state: AgentState) -> AgentState:
 
 
     llm = ChatOpenAI(
-        model="gpt-4.1-mini", 
+        model="gpt-4o-mini",
         temperature=0,
         api_key=os.environ.get("OPENAI_API_KEY")
     )
