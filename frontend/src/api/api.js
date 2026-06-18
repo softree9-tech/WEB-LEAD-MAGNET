@@ -132,3 +132,15 @@ export const fetchLeadDetails = async (id) => {
     throw error;
   }
 };
+
+export const deleteBulkLeads = async (leadIds) => {
+  try {
+    const response = await axios.post(`${API_ROOT}/leads/bulk-delete`, {
+      lead_ids: leadIds
+    });
+    return response.data;
+  } catch (error) {
+    console.error("Error deleting bulk leads:", error);
+    throw error;
+  }
+};

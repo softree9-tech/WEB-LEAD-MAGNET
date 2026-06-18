@@ -25,7 +25,7 @@ from typing import List, Optional, Dict, Any
 from dotenv import load_dotenv
 from fastapi import BackgroundTasks
 from graph import graph_app
-from core.db import init_db, save_lead, get_leads, get_lead_by_id
+from core.db import init_db, save_lead, get_leads, get_lead_by_id, delete_leads
 from fastapi.middleware.cors import CORSMiddleware
 from langchain_openai import ChatOpenAI
 from core.models import BattleCardResult
@@ -1106,6 +1106,86 @@ def api_export_leads(request: Request, date_filter: str = 'All Time', search: st
             media_type="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
             headers={"Content-Disposition": f"attachment; filename={filename}"}
         )
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+class BulkExportRequest(BaseModel):
+    lead_ids: List[int]
+
+@app.post("/api/leads/export-bulk")
+def api_export_bulk_leads(request: Request, payload: BulkExportRequest):
+    try:
+        if not payload.lead_ids:
+            raise HTTPException(status_code=400, detail="No lead IDs provided")
+            
+        all_leads = get_leads('All Time')
+        # Filter leads by IDs
+        leads = [lead for lead in all_leads if lead['id'] in payload.lead_ids]
+        
+        import pandas as pd
+        import io
+        import os
+        from datetime import datetime
+        
+        base_url = str(request.base_url).rstrip("/")
+        
+        excel_data = []
+        for lead in leads:
+            pdf_path = lead.get('pdf_path')
+            report_link = f'=HYPERLINK("{base_url}/api/reports/view/{pdf_path}", "Open Report")' if pdf_path else "Report Not Available"
+            
+            excel_data.append({
+                "Full Name": lead.get('name') or '',
+                "Business Email": lead.get('email') or '',
+                "Website URL": lead.get('website') or '',
+                "Source": lead.get('source') or '',
+                "Date Submitted": lead.get('created_at', '').replace('T', ' ').replace('Z', '') if lead.get('created_at') else '',
+                "Visibility Score": lead.get('visibility_score') or 0,
+                "Presence Score": lead.get('geo_score') or 0,
+                "Report Filename": pdf_path or '',
+                "Report Link": report_link
+            })
+            
+        df = pd.DataFrame(excel_data)
+        excel_buffer = io.BytesIO()
+        with pd.ExcelWriter(excel_buffer, engine='openpyxl') as writer:
+            df.to_excel(writer, index=False, sheet_name='Leads')
+        excel_buffer.seek(0)
+        
+        timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
+        filename = f"Selected_Leads_Export_{timestamp}.xlsx"
+        
+        return StreamingResponse(
+            excel_buffer,
+            media_type="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+            headers={"Content-Disposition": f"attachment; filename={filename}"}
+        )
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+class BulkDeleteRequest(BaseModel):
+    lead_ids: List[int]
+
+@app.post("/api/leads/bulk-delete")
+def api_bulk_delete_leads(payload: BulkDeleteRequest):
+    try:
+        if not payload.lead_ids:
+            return {"deleted_count": 0}
+            
+        # Optional: Delete associated PDFs
+        import os
+        for lead_id in payload.lead_ids:
+            lead = get_lead_by_id(lead_id)
+            if lead and lead.get('pdf_path'):
+                pdf_path = os.path.join(os.path.dirname(__file__), 'data', 'pdfs', lead['pdf_path'])
+                if os.path.exists(pdf_path):
+                    try:
+                        os.remove(pdf_path)
+                    except Exception as e:
+                        print(f"Error removing PDF {pdf_path}: {e}")
+                        
+        deleted_count = delete_leads(payload.lead_ids)
+        return {"deleted_count": deleted_count, "message": f"Successfully deleted {deleted_count} leads"}
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
 

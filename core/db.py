@@ -113,3 +113,15 @@ def get_lead_by_id(lead_id):
             lead['created_at'] = lead['created_at'].replace(' ', 'T') + 'Z'
         return lead
     return None
+
+def delete_leads(lead_ids: list):
+    if not lead_ids:
+        return 0
+    conn = sqlite3.connect(DB_PATH)
+    cursor = conn.cursor()
+    placeholders = ','.join(['?'] * len(lead_ids))
+    cursor.execute(f'DELETE FROM leads WHERE id IN ({placeholders})', lead_ids)
+    deleted_count = cursor.rowcount
+    conn.commit()
+    conn.close()
+    return deleted_count

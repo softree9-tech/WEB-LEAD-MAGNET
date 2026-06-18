@@ -1,8 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import axios from 'axios';
-import { Download, Eye, Search, Filter, Calendar } from 'lucide-react';
+import { Download, Eye, Search, Filter, Calendar, Trash2, X, AlertCircle } from 'lucide-react';
 import LeadResults from './LeadResults';
-import { fetchLeads, fetchLeadDetails } from '../api/api';
+import { fetchLeads, fetchLeadDetails, deleteBulkLeads } from '../api/api';
 
 export default function LeadManagement() {
   const [leads, setLeads] = useState([]);
@@ -12,6 +12,12 @@ export default function LeadManagement() {
   const [selectedLead, setSelectedLead] = useState(null);
   const [viewingReport, setViewingReport] = useState(false);
   const [exportLoading, setExportLoading] = useState(false);
+  
+  // Bulk Management State
+  const [selectedLeadIds, setSelectedLeadIds] = useState([]);
+  const [deleteModalOpen, setDeleteModalOpen] = useState(false);
+  const [deleteConfirmationText, setDeleteConfirmationText] = useState('');
+  const [deletingBulk, setDeletingBulk] = useState(false);
 
   const filters = ['Today', 'Yesterday', 'Last 7 Days', 'Last 30 Days', 'Last 90 Days', 'Last 1 Year', 'All Time'];
 
@@ -30,6 +36,11 @@ export default function LeadManagement() {
       setLoading(false);
     }
   };
+
+  useEffect(() => {
+    // Clear selection when filters change
+    setSelectedLeadIds([]);
+  }, [dateFilter, searchTerm]);
 
   const handleSearch = (e) => {
     e.preventDefault();
@@ -91,6 +102,76 @@ export default function LeadManagement() {
     }
   };
 
+  const handleSelectAll = (e) => {
+    if (e.target.checked) {
+      setSelectedLeadIds(leads.map(l => l.id));
+    } else {
+      setSelectedLeadIds([]);
+    }
+  };
+
+  const handleSelectLead = (id) => {
+    if (selectedLeadIds.includes(id)) {
+      setSelectedLeadIds(selectedLeadIds.filter(lid => lid !== id));
+    } else {
+      setSelectedLeadIds([...selectedLeadIds, id]);
+    }
+  };
+
+  const handleBulkExport = async () => {
+    if (selectedLeadIds.length === 0) return;
+    
+    setExportLoading(true);
+    try {
+      const baseUrl = import.meta.env.VITE_API_URL || import.meta.env.VITE_API_BASE_URL || "http://localhost:8000";
+      
+      const response = await fetch(`${baseUrl}/api/leads/export-bulk`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ lead_ids: selectedLeadIds })
+      });
+      if (!response.ok) {
+        throw new Error('Export failed');
+      }
+      
+      const blob = await response.blob();
+      const url = window.URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `Selected_Leads_Export_${new Date().toISOString().slice(0, 10)}.xlsx`;
+      document.body.appendChild(a);
+      a.click();
+      window.URL.revokeObjectURL(url);
+      document.body.removeChild(a);
+    } catch (err) {
+      console.error('Export error:', err);
+      alert('Failed to generate export.');
+    } finally {
+      setExportLoading(false);
+    }
+  };
+
+  const executeBulkDelete = async () => {
+    if (selectedLeadIds.length === 0) return;
+    if (selectedLeadIds.length > 10 && deleteConfirmationText !== 'DELETE') {
+      return;
+    }
+
+    setDeletingBulk(true);
+    try {
+      const response = await deleteBulkLeads(selectedLeadIds);
+      alert(`Success: ${response.deleted_count} leads deleted.`);
+      setDeleteModalOpen(false);
+      setDeleteConfirmationText('');
+      setSelectedLeadIds([]);
+      loadLeads(); // Refresh list
+    } catch (error) {
+      alert('Failed to delete leads. Please try again.');
+    } finally {
+      setDeletingBulk(false);
+    }
+  };
+
   if (viewingReport && selectedLead) {
     return (
       <div className="lead-management-container">
@@ -146,7 +227,7 @@ export default function LeadManagement() {
           </button>
         ))}
         
-        <form onSubmit={handleSearch} style={{ display: 'flex', gap: '0.5rem', alignItems: 'center' }}>
+        <form onSubmit={handleSearch} style={{ display: 'flex', gap: '0.5rem', alignItems: 'center', marginLeft: 'auto' }}>
           <input 
             type="text" 
             placeholder="Search name, email, website..." 
@@ -158,33 +239,89 @@ export default function LeadManagement() {
             <Search size={16} />
           </button>
         </form>
+      </div>
 
-        <button 
-          onClick={handleExport}
-          disabled={exportLoading || leads.length === 0}
-          style={{ 
-            padding: '8px 16px', 
-            background: '#FF6B00', 
-            color: 'white', 
-            border: 'none', 
-            borderRadius: '4px', 
-            cursor: (exportLoading || leads.length === 0) ? 'not-allowed' : 'pointer',
-            display: 'flex',
-            alignItems: 'center',
-            gap: '8px',
-            opacity: (exportLoading || leads.length === 0) ? 0.7 : 1,
-            fontWeight: 600,
-            marginLeft: 'auto'
-          }}
-        >
-          {exportLoading ? 'Exporting...' : '📥 Export Leads & Reports'}
-        </button>
+      {/* Top Bulk Action Bar */}
+      <div style={{
+        display: 'inline-flex',
+        alignItems: 'center',
+        padding: '12px 16px',
+        background: selectedLeadIds.length > 0 ? '#eff6ff' : '#f8fafc',
+        border: `1px solid ${selectedLeadIds.length > 0 ? '#bfdbfe' : '#e2e8f0'}`,
+        borderRadius: '8px',
+        marginBottom: '1rem',
+        gap: '1.5rem',
+        transition: 'all 0.2s ease'
+      }}>
+        <span style={{ 
+          fontWeight: 600, 
+          color: selectedLeadIds.length > 0 ? '#1e40af' : '#64748b',
+          fontSize: '0.875rem' 
+        }}>
+          {selectedLeadIds.length} Selected
+        </span>
+        
+        <div style={{ display: 'flex', gap: '0.75rem' }}>
+          <button 
+            onClick={handleBulkExport}
+            disabled={selectedLeadIds.length === 0 || exportLoading}
+            style={{
+              padding: '6px 12px',
+              background: selectedLeadIds.length > 0 ? 'white' : 'transparent',
+              color: selectedLeadIds.length > 0 ? '#1e40af' : '#94a3b8',
+              border: `1px solid ${selectedLeadIds.length > 0 ? '#bfdbfe' : '#e2e8f0'}`,
+              borderRadius: '4px',
+              cursor: (selectedLeadIds.length === 0 || exportLoading) ? 'not-allowed' : 'pointer',
+              display: 'flex',
+              alignItems: 'center',
+              gap: '6px',
+              fontSize: '0.875rem',
+              fontWeight: 500,
+              opacity: (selectedLeadIds.length === 0 || exportLoading) ? 0.6 : 1,
+              transition: 'all 0.2s',
+              boxShadow: selectedLeadIds.length > 0 ? '0 1px 2px rgba(0,0,0,0.05)' : 'none'
+            }}
+          >
+            <Download size={16} /> {exportLoading ? 'Exporting...' : 'Export Selected'}
+          </button>
+          
+          <button 
+            onClick={() => setDeleteModalOpen(true)}
+            disabled={selectedLeadIds.length === 0}
+            style={{
+              padding: '6px 12px',
+              background: selectedLeadIds.length > 0 ? '#ef4444' : 'transparent',
+              color: selectedLeadIds.length > 0 ? 'white' : '#94a3b8',
+              border: `1px solid ${selectedLeadIds.length > 0 ? '#ef4444' : '#e2e8f0'}`,
+              borderRadius: '4px',
+              cursor: selectedLeadIds.length === 0 ? 'not-allowed' : 'pointer',
+              display: 'flex',
+              alignItems: 'center',
+              gap: '6px',
+              fontSize: '0.875rem',
+              fontWeight: 500,
+              opacity: selectedLeadIds.length === 0 ? 0.6 : 1,
+              transition: 'all 0.2s',
+              boxShadow: selectedLeadIds.length > 0 ? '0 1px 2px rgba(239,68,68,0.2)' : 'none'
+            }}
+          >
+            <Trash2 size={16} /> Delete Selected
+          </button>
+        </div>
       </div>
 
       <div style={{ overflowX: 'auto' }}>
         <table style={{ width: '100%', borderCollapse: 'collapse', textAlign: 'left' }}>
           <thead>
             <tr style={{ borderBottom: '2px solid #e2e8f0', color: '#64748b', fontSize: '0.875rem' }}>
+              <th style={{ padding: '12px 16px', width: '40px' }}>
+                <input 
+                  type="checkbox" 
+                  checked={selectedLeadIds.length === leads.length && leads.length > 0}
+                  onChange={handleSelectAll}
+                  style={{ cursor: 'pointer', width: '16px', height: '16px', accentColor: '#FF6B00' }}
+                />
+              </th>
               <th style={{ padding: '12px 16px' }}>Date</th>
               <th style={{ padding: '12px 16px' }}>Name / Email</th>
               <th style={{ padding: '12px 16px' }}>Website</th>
@@ -195,11 +332,19 @@ export default function LeadManagement() {
           </thead>
           <tbody>
             {loading ? (
-              <tr><td colSpan="6" style={{ textAlign: 'center', padding: '2rem' }}>Loading leads...</td></tr>
+              <tr><td colSpan="7" style={{ textAlign: 'center', padding: '2rem' }}>Loading leads...</td></tr>
             ) : leads.length === 0 ? (
-              <tr><td colSpan="6" style={{ textAlign: 'center', padding: '2rem', color: '#64748b' }}>No leads found for this period.</td></tr>
+              <tr><td colSpan="7" style={{ textAlign: 'center', padding: '2rem', color: '#64748b' }}>No leads found for this period.</td></tr>
             ) : leads.map(lead => (
-              <tr key={lead.id} style={{ borderBottom: '1px solid #e2e8f0', transition: 'background 0.2s' }}>
+              <tr key={lead.id} style={{ borderBottom: '1px solid #e2e8f0', transition: 'background 0.2s', background: selectedLeadIds.includes(lead.id) ? '#FFF0E6' : 'transparent' }}>
+                <td style={{ padding: '12px 16px' }}>
+                  <input 
+                    type="checkbox" 
+                    checked={selectedLeadIds.includes(lead.id)}
+                    onChange={() => handleSelectLead(lead.id)}
+                    style={{ cursor: 'pointer', width: '16px', height: '16px', accentColor: '#FF6B00' }}
+                  />
+                </td>
                 <td style={{ padding: '12px 16px', fontSize: '0.875rem', color: '#1e293b', fontWeight: 500 }}>
                   {new Date(lead.created_at).toLocaleDateString('en-IN', { timeZone: 'Asia/Kolkata' })}<br/>
                   <span style={{ color: '#64748b', fontSize: '0.75rem', fontWeight: 'normal' }}>{new Date(lead.created_at).toLocaleTimeString('en-IN', { timeZone: 'Asia/Kolkata' })}</span>
@@ -242,6 +387,76 @@ export default function LeadManagement() {
           </tbody>
         </table>
       </div>
+
+      {/* Delete Confirmation Modal */}
+      {deleteModalOpen && (
+        <div style={{
+          position: 'fixed', top: 0, left: 0, right: 0, bottom: 0,
+          background: 'rgba(0,0,0,0.5)',
+          display: 'flex', alignItems: 'center', justifyContent: 'center',
+          zIndex: 9999, backdropFilter: 'blur(4px)'
+        }}>
+          <div style={{
+            background: 'white', padding: '2rem', borderRadius: '12px',
+            maxWidth: '450px', width: '90%', boxShadow: '0 20px 25px -5px rgba(0, 0, 0, 0.1)'
+          }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.5rem' }}>
+              <h3 style={{ margin: 0, color: '#1e293b', fontSize: '1.25rem', display: 'flex', alignItems: 'center', gap: '10px' }}>
+                <AlertCircle color="#ef4444" /> Confirm Deletion
+              </h3>
+              <button onClick={() => setDeleteModalOpen(false)} style={{ background: 'transparent', border: 'none', cursor: 'pointer', color: '#64748b' }}>
+                <X size={20} />
+              </button>
+            </div>
+            
+            <p style={{ color: '#475569', lineHeight: '1.5', marginBottom: '1.5rem' }}>
+              You are about to permanently delete <strong>{selectedLeadIds.length}</strong> selected lead{selectedLeadIds.length > 1 ? 's' : ''} and their associated PDF reports. This action cannot be undone.
+            </p>
+
+            {selectedLeadIds.length > 10 && (
+              <div style={{ marginBottom: '1.5rem' }}>
+                <label style={{ display: 'block', fontSize: '0.875rem', fontWeight: 600, color: '#1e293b', marginBottom: '8px' }}>
+                  Please type <strong>DELETE</strong> to confirm:
+                </label>
+                <input 
+                  type="text" 
+                  value={deleteConfirmationText}
+                  onChange={(e) => setDeleteConfirmationText(e.target.value)}
+                  style={{ width: '100%', padding: '10px 14px', borderRadius: '6px', border: '1px solid #cbd5e1', fontSize: '1rem', boxSizing: 'border-box' }}
+                  placeholder="DELETE"
+                />
+              </div>
+            )}
+
+            <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '12px' }}>
+              <button 
+                onClick={() => setDeleteModalOpen(false)}
+                style={{ padding: '8px 16px', background: '#f1f5f9', color: '#475569', border: 'none', borderRadius: '6px', fontWeight: 600, cursor: 'pointer' }}
+              >
+                Cancel
+              </button>
+              <button 
+                onClick={executeBulkDelete}
+                disabled={deletingBulk || (selectedLeadIds.length > 10 && deleteConfirmationText !== 'DELETE')}
+                style={{ 
+                  padding: '8px 16px', 
+                  background: '#ef4444', 
+                  color: 'white', 
+                  border: 'none', 
+                  borderRadius: '6px', 
+                  fontWeight: 600, 
+                  cursor: (deletingBulk || (selectedLeadIds.length > 10 && deleteConfirmationText !== 'DELETE')) ? 'not-allowed' : 'pointer',
+                  opacity: (deletingBulk || (selectedLeadIds.length > 10 && deleteConfirmationText !== 'DELETE')) ? 0.5 : 1,
+                  display: 'flex', alignItems: 'center', gap: '6px'
+                }}
+              >
+                {deletingBulk ? 'Deleting...' : 'Yes, Delete Selected'}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
     </div>
   );
 }
