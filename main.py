@@ -189,7 +189,8 @@ def _save_lead_background(lead: LeadInput, result: dict):
 @app.post("/api/process/single")
 def process_single_lead(lead: LeadInput, background_tasks: BackgroundTasks):
     # Verify reCAPTCHA token (unless bypassed for admin dashboard tools)
-    if lead.recaptcha_token != "admin_bypass":
+    bypass_token = os.getenv("RECAPTCHA_BYPASS_TOKEN")
+    if not bypass_token or lead.recaptcha_token != bypass_token:
         if not lead.recaptcha_token or not verify_recaptcha(lead.recaptcha_token):
             raise HTTPException(status_code=400, detail="reCAPTCHA verification failed")
 
