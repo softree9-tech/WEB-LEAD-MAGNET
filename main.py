@@ -188,8 +188,11 @@ def _save_lead_background(lead: LeadInput, result: dict):
 
 @app.post("/api/process/single")
 def process_single_lead(lead: LeadInput, background_tasks: BackgroundTasks):
-    # Verify reCAPTCHA token (unless bypassed for admin dashboard tools)
-    if lead.recaptcha_token != "admin_bypass":
+    # Verify reCAPTCHA token (unless bypassed for admin dashboard tools via env variable)
+    bypass_token = os.getenv("RECAPTCHA_BYPASS_TOKEN")
+    is_bypassed = bypass_token and lead.recaptcha_token == bypass_token
+
+    if not is_bypassed:
         if not lead.recaptcha_token or not verify_recaptcha(lead.recaptcha_token):
             raise HTTPException(status_code=400, detail="reCAPTCHA verification failed")
 
@@ -1107,7 +1110,8 @@ def api_export_leads(request: Request, date_filter: str = 'All Time', search: st
             headers={"Content-Disposition": f"attachment; filename={filename}"}
         )
     except Exception as e:
-        raise HTTPException(status_code=500, detail=str(e))
+        print(f"Error in api_export_leads: {e}")
+        raise HTTPException(status_code=500, detail="Internal server error occurred during lead operation")
 
 class BulkExportRequest(BaseModel):
     lead_ids: List[int]
@@ -1161,7 +1165,8 @@ def api_export_bulk_leads(request: Request, payload: BulkExportRequest):
             headers={"Content-Disposition": f"attachment; filename={filename}"}
         )
     except Exception as e:
-        raise HTTPException(status_code=500, detail=str(e))
+        print(f"Error in api_export_bulk_leads: {e}")
+        raise HTTPException(status_code=500, detail="Internal server error occurred during lead operation")
 
 class BulkDeleteRequest(BaseModel):
     lead_ids: List[int]
@@ -1177,7 +1182,9 @@ def api_bulk_delete_leads(payload: BulkDeleteRequest):
         for lead_id in payload.lead_ids:
             lead = get_lead_by_id(lead_id)
             if lead and lead.get('pdf_path'):
-                pdf_path = os.path.join(os.path.dirname(__file__), 'data', 'pdfs', lead['pdf_path'])
+                # Secure filename to prevent path traversal
+                safe_filename = os.path.basename(lead['pdf_path'])
+                pdf_path = os.path.join(os.path.dirname(__file__), 'data', 'pdfs', safe_filename)
                 if os.path.exists(pdf_path):
                     try:
                         os.remove(pdf_path)
@@ -1187,12 +1194,15 @@ def api_bulk_delete_leads(payload: BulkDeleteRequest):
         deleted_count = delete_leads(payload.lead_ids)
         return {"deleted_count": deleted_count, "message": f"Successfully deleted {deleted_count} leads"}
     except Exception as e:
-        raise HTTPException(status_code=500, detail=str(e))
+        print(f"Error in api_bulk_delete_leads: {e}")
+        raise HTTPException(status_code=500, detail="Internal server error occurred during lead operation")
 
 @app.get("/api/reports/view/{filename}")
 def api_view_report(filename: str):
     import os
-    pdf_path = os.path.join(os.path.dirname(__file__), 'data', 'pdfs', filename)
+    # Secure filename to prevent path traversal
+    safe_filename = os.path.basename(filename)
+    pdf_path = os.path.join(os.path.dirname(__file__), 'data', 'pdfs', safe_filename)
     if not os.path.exists(pdf_path):
         raise HTTPException(status_code=404, detail="Report Not Available")
     return FileResponse(
@@ -1204,7 +1214,9 @@ def api_view_report(filename: str):
 @app.get("/api/reports/download/{filename}")
 def api_download_report(filename: str):
     import os
-    pdf_path = os.path.join(os.path.dirname(__file__), 'data', 'pdfs', filename)
+    # Secure filename to prevent path traversal
+    safe_filename = os.path.basename(filename)
+    pdf_path = os.path.join(os.path.dirname(__file__), 'data', 'pdfs', safe_filename)
     if not os.path.exists(pdf_path):
         raise HTTPException(status_code=404, detail="Report Not Available")
     return FileResponse(pdf_path, media_type="application/pdf", filename=filename)
@@ -1215,7 +1227,8 @@ def api_get_leads(date_filter: str = 'All Time', search: str = None, source_filt
         leads = get_leads(date_filter, search, source_filter)
         return {"leads": leads}
     except Exception as e:
-        raise HTTPException(status_code=500, detail=str(e))
+        print(f"Error in api_get_leads: {e}")
+        raise HTTPException(status_code=500, detail="Internal server error occurred during lead operation")
 
 @app.get("/api/leads/{lead_id}")
 def api_get_lead_details(lead_id: int):
@@ -1229,7 +1242,8 @@ def api_get_lead_details(lead_id: int):
             lead['json_data'] = json.loads(lead['json_data'])
         return lead
     except Exception as e:
-        raise HTTPException(status_code=500, detail=str(e))
+        print(f"Error in api_get_lead_details: {e}")
+        raise HTTPException(status_code=500, detail="Internal server error occurred during lead operation")
 
 @app.get("/api/leads/download/{lead_id}")
 def api_download_lead_pdf(lead_id: int):
@@ -1239,7 +1253,9 @@ def api_download_lead_pdf(lead_id: int):
             raise HTTPException(status_code=404, detail="PDF not found")
             
         import os
-        pdf_path = os.path.join(os.path.dirname(__file__), 'data', 'pdfs', lead['pdf_path'])
+        # Secure filename to prevent path traversal
+        safe_filename = os.path.basename(lead['pdf_path'])
+        pdf_path = os.path.join(os.path.dirname(__file__), 'data', 'pdfs', safe_filename)
         if not os.path.exists(pdf_path):
             raise HTTPException(status_code=404, detail="PDF file missing on server")
             
@@ -1251,6 +1267,7 @@ def api_download_lead_pdf(lead_id: int):
     except HTTPException:
         raise
     except Exception as e:
-        raise HTTPException(status_code=500, detail=str(e))
+        print(f"Error in api_download_lead_pdf: {e}")
+        raise HTTPException(status_code=500, detail="Internal server error occurred during lead operation")
 
 # To run the app use: uvicorn main:app --reload
