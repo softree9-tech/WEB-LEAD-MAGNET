@@ -19,6 +19,7 @@ import socket
 import ssl
 from datetime import datetime
 import json
+from typing import Union
 
 def check_ssl_certificate(url: str) -> dict:
     if not is_safe_url(url):
@@ -407,7 +408,8 @@ Be honest - if you don't have specific information about them, say so clearly.""
         aeo_result["aeo_raw_response"] = "AEO probe failed."
     return aeo_result
 
-def check_single_link(link: str) -> str:
+def check_single_link(link: str, session: requests.Session = None) -> str:
+    """Validates a single link, optionally using a session for connection pooling."""
     if not is_safe_url(link):
         return ""
     try:
@@ -415,11 +417,14 @@ def check_single_link(link: str) -> str:
             "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36",
             "Accept": "text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,*/*;q=0.8"
         }
-        res = requests.head(link, timeout=10, allow_redirects=True, headers=headers, verify=False)
+
+        caller = session if session else requests
+
+        res = caller.head(link, timeout=10, allow_redirects=True, headers=headers, verify=False)
         
         # If server blocks HEAD requests, fallback to a lightweight streamed GET
         if res.status_code in [403, 405, 401, 301, 302, 999]:
-            res = requests.get(link, timeout=10, allow_redirects=True, headers=headers, stream=True, verify=False)
+            res = caller.get(link, timeout=10, allow_redirects=True, headers=headers, stream=True, verify=False)
             res.raw.close()
             
         # Only explicitly flag pure dead pages to ensure 0 False Positives
@@ -431,8 +436,13 @@ def check_single_link(link: str) -> str:
         return ""
     return ""
 
-def count_broken_links(html: str, base_url: str) -> list:
-    soup = BeautifulSoup(html, "html.parser")
+def count_broken_links(html_or_soup: Union[str, BeautifulSoup], base_url: str) -> dict:
+    """Checks for broken links using connection pooling for performance."""
+    if isinstance(html_or_soup, BeautifulSoup):
+        soup = html_or_soup
+    else:
+        soup = BeautifulSoup(html_or_soup, "html.parser")
+
     raw_links = [a.get('href') for a in soup.find_all('a', href=True)]
     
     valid_links = set()
@@ -449,11 +459,20 @@ def count_broken_links(html: str, base_url: str) -> list:
             
     links_to_test = list(valid_links)[:50]
     broken_list = []
+
     if links_to_test:
-        with concurrent.futures.ThreadPoolExecutor(max_workers=15) as executor:
-            results = executor.map(check_single_link, links_to_test)
-            for dead_link in results:
-                if dead_link: broken_list.append(dead_link)
+        # Use a session for connection pooling to speed up batch requests
+        with requests.Session() as session:
+            # Increase connection pool size to match thread count
+            adapter = requests.adapters.HTTPAdapter(pool_connections=15, pool_maxsize=15)
+            session.mount("http://", adapter)
+            session.mount("https://", adapter)
+
+            with concurrent.futures.ThreadPoolExecutor(max_workers=15) as executor:
+                results = executor.map(lambda l: check_single_link(l, session), links_to_test)
+                for dead_link in results:
+                    if dead_link: broken_list.append(dead_link)
+
     return {"broken_list": broken_list, "total": len(links_to_test)}
 
 def extract_tech_stack(html: str, headers: dict) -> str:
@@ -726,21 +745,24 @@ def website_analyzer_agent(state: AgentState) -> AgentState:
                 response = page.goto(url, wait_until="domcontentloaded", timeout=20000)
                 html = page.content()
                 headers = response.headers if response else {}
+
+                # Parse soup once and reuse
+                soup = BeautifulSoup(html, "html.parser")
+
                 tech_stack = extract_tech_stack(html, headers)
                 last_modified = extract_last_modified(headers, html)
-                link_data = count_broken_links(html, url)
+                link_data = count_broken_links(soup, url)
                 broken_links = link_data["broken_list"]
                 total_links = link_data["total"]
                 
                 analytics_data = check_analytics(html)
                 
-                soup = BeautifulSoup(html, "html.parser")
+                conversion_elements = check_conversion_elements(soup, html)
                 has_lead_capture = check_lead_capture(soup, html)
-                has_cta = check_cta_presence(soup, html)
-                has_newsletter = check_newsletter(soup)
+                has_cta = conversion_elements.get("cta_presence", False)
+                has_newsletter = conversion_elements.get("newsletter_signup", False)
                 image_alt_data = check_image_alt_tags(soup)
                 has_dead_socials = check_social_links(soup)
-                conversion_elements = check_conversion_elements(soup, html)
                 schema_data = check_schema_markup(soup)
                 
                 # Extract SEO Metrics before stripping code
@@ -866,16 +888,20 @@ def website_analyzer_agent(state: AgentState) -> AgentState:
                 fallback_res = requests.get(url, timeout=10, headers={"User-Agent": "Mozilla/5.0"}, verify=False)
                 html = fallback_res.text
                 headers = dict(fallback_res.headers)
+
+                # Parse soup once and reuse
+                soup = BeautifulSoup(html, "html.parser")
+
                 tech_stack = extract_tech_stack(html, headers)
                 last_modified = extract_last_modified(headers, html)
                 analytics_data = check_analytics(html)
-                soup = BeautifulSoup(html, "html.parser")
+
+                conversion_elements = check_conversion_elements(soup, html)
                 has_lead_capture = check_lead_capture(soup, html)
-                has_cta = check_cta_presence(soup, html)
-                has_newsletter = check_newsletter(soup)
+                has_cta = conversion_elements.get("cta_presence", False)
+                has_newsletter = conversion_elements.get("newsletter_signup", False)
                 image_alt_data = check_image_alt_tags(soup)
                 has_dead_socials = check_social_links(soup)
-                conversion_elements = check_conversion_elements(soup, html)
                 schema_data = check_schema_markup(soup)
                 seo_mobile = bool(soup.find("meta", attrs={"name": "viewport"}))
                 seo_meta_desc = bool(soup.find("meta", attrs={"name": "description"}))
