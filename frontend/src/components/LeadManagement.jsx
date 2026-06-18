@@ -1,8 +1,9 @@
 import React, { useState, useEffect } from 'react';
 import axios from 'axios';
-import { Download, Eye, Search, Filter, Calendar, Trash2, X, AlertCircle } from 'lucide-react';
+import { Download, Eye, Search, Filter, Calendar, Trash2, X, AlertCircle, RefreshCw } from 'lucide-react';
 import LeadResults from './LeadResults';
 import { fetchLeads, fetchLeadDetails, deleteBulkLeads } from '../api/api';
+import Toast from './Toast';
 
 export default function LeadManagement() {
   const [leads, setLeads] = useState([]);
@@ -12,6 +13,13 @@ export default function LeadManagement() {
   const [selectedLead, setSelectedLead] = useState(null);
   const [viewingReport, setViewingReport] = useState(false);
   const [exportLoading, setExportLoading] = useState(false);
+  const [toast, setToast] = useState({ show: false, message: '', type: 'success' });
+
+  const showToast = (message, type = 'success') => {
+    setToast({ show: true, message, type });
+  };
+
+  const closeToast = () => setToast(prev => ({ ...prev, show: false }));
   
   // Bulk Management State
   const [selectedLeadIds, setSelectedLeadIds] = useState([]);
@@ -54,7 +62,7 @@ export default function LeadManagement() {
       setViewingReport(true);
     } catch (err) {
       console.error('Failed to fetch report details', err);
-      alert('Failed to load report.');
+      showToast('Failed to load report.', 'error');
     }
   };
 
@@ -65,12 +73,9 @@ export default function LeadManagement() {
 
   const handleExport = async () => {
     if (leads.length === 0) {
-      alert("No leads to export.");
+      showToast("No leads to export.", "error");
       return;
     }
-    
-    const proceed = window.confirm(`Ready to export ${leads.length} leads. Continue?`);
-    if (!proceed) return;
 
     setExportLoading(true);
     try {
@@ -94,9 +99,10 @@ export default function LeadManagement() {
       a.click();
       window.URL.revokeObjectURL(url);
       document.body.removeChild(a);
+      showToast('Export completed successfully', 'success');
     } catch (err) {
       console.error('Export error:', err);
-      alert('Failed to generate export.');
+      showToast('Export failed. Please try again', 'error');
     } finally {
       setExportLoading(false);
     }
@@ -143,9 +149,10 @@ export default function LeadManagement() {
       a.click();
       window.URL.revokeObjectURL(url);
       document.body.removeChild(a);
+      showToast(`${selectedLeadIds.length} reports exported successfully`, 'success');
     } catch (err) {
       console.error('Export error:', err);
-      alert('Failed to generate export.');
+      showToast('Export failed. Please try again', 'error');
     } finally {
       setExportLoading(false);
     }
@@ -160,13 +167,13 @@ export default function LeadManagement() {
     setDeletingBulk(true);
     try {
       const response = await deleteBulkLeads(selectedLeadIds);
-      alert(`Success: ${response.deleted_count} leads deleted.`);
+      showToast(`${response.deleted_count} leads deleted successfully`, 'success');
       setDeleteModalOpen(false);
       setDeleteConfirmationText('');
       setSelectedLeadIds([]);
       loadLeads(); // Refresh list
     } catch (error) {
-      alert('Failed to delete leads. Please try again.');
+      showToast('Failed to delete selected leads', 'error');
     } finally {
       setDeletingBulk(false);
     }
@@ -190,6 +197,13 @@ export default function LeadManagement() {
 
   return (
     <div className="lead-management-container animate-fade-in" style={{ marginTop: '2rem', background: '#fff', padding: '2rem', borderRadius: '12px', boxShadow: '0 4px 20px rgba(0,0,0,0.05)' }}>
+      {toast.show && (
+        <Toast
+          message={toast.message}
+          type={toast.type}
+          onClose={closeToast}
+        />
+      )}
       <h2 style={{ fontSize: '1.5rem', fontWeight: 'bold', marginBottom: '1.5rem', color: '#1e293b' }}>Lead Management</h2>
 
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '1rem', marginBottom: '2rem' }}>
@@ -245,23 +259,23 @@ export default function LeadManagement() {
       <div style={{
         display: 'inline-flex',
         alignItems: 'center',
-        padding: '12px 16px',
+        padding: '12px 20px',
         background: selectedLeadIds.length > 0 ? '#eff6ff' : '#f8fafc',
         border: `1px solid ${selectedLeadIds.length > 0 ? '#bfdbfe' : '#e2e8f0'}`,
         borderRadius: '8px',
         marginBottom: '1rem',
-        gap: '1.5rem',
-        transition: 'all 0.2s ease'
+        transition: 'all 0.2s ease',
+        gap: '1.5rem'
       }}>
         <span style={{ 
           fontWeight: 600, 
           color: selectedLeadIds.length > 0 ? '#1e40af' : '#64748b',
-          fontSize: '0.875rem' 
+          fontSize: '0.9rem' 
         }}>
           {selectedLeadIds.length} Selected
         </span>
-        
-        <div style={{ display: 'flex', gap: '0.75rem' }}>
+          
+        <div style={{ display: 'flex', gap: '1rem', alignItems: 'center' }}>
           <button 
             onClick={handleBulkExport}
             disabled={selectedLeadIds.length === 0 || exportLoading}
@@ -306,6 +320,28 @@ export default function LeadManagement() {
             }}
           >
             <Trash2 size={16} /> Delete Selected
+          </button>
+
+          <button 
+            onClick={loadLeads}
+            style={{
+              padding: '6px',
+              background: 'white',
+              color: '#64748b',
+              border: '1px solid #e2e8f0',
+              borderRadius: '50%',
+              cursor: 'pointer',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              transition: 'all 0.2s',
+              boxShadow: '0 1px 2px rgba(0,0,0,0.05)'
+            }}
+            title="Refresh Leads"
+            onMouseEnter={(e) => { e.currentTarget.style.color = '#1e293b'; e.currentTarget.style.borderColor = '#cbd5e1'; }}
+            onMouseLeave={(e) => { e.currentTarget.style.color = '#64748b'; e.currentTarget.style.borderColor = '#e2e8f0'; }}
+          >
+            <RefreshCw size={16} className={loading ? "animate-spin" : ""} />
           </button>
         </div>
       </div>

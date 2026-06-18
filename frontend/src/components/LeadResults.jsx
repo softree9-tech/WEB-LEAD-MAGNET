@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import '../LeadResults.css';
 import ViewportDashboard from './ViewportDashboard';
+import Toast from './Toast';
 import { ExternalLink, RefreshCw, Download, Monitor, Mail, Lock, FileCode, Check, X, Search, Activity, BarChart3, Settings, ChevronUp, LayoutDashboard, ShieldCheck, FileText, Bot, Target, Smartphone, Copy, TrendingDown, AlertTriangle, Sword, Trophy, Zap, Sparkles } from 'lucide-react';
 
 /**
@@ -369,9 +370,10 @@ Best,
     a.click();
     document.body.removeChild(a);
     window.URL.revokeObjectURL(url);
+    return true;
   } catch (err) {
     console.error('Failed to export Excel report:', err);
-    alert('Failed to generate Excel report. Please try again.');
+    throw err;
   }
 };
 
@@ -972,6 +974,15 @@ function MobileWalkthrough({ lead }) {
 }
 
 export default function LeadResults({ leads, isPublic = false }) {
+  const [toast, setToast] = useState({ show: false, message: '', type: 'success' });
+  
+  const showToast = (message, type = 'success') => {
+    setToast({ show: true, message, type });
+    setTimeout(() => setToast(prev => ({ ...prev, show: false })), 3000);
+  };
+
+  const closeToast = () => setToast(prev => ({ ...prev, show: false }));
+
   if (!leads || leads.length === 0) {
     return (
       <div className="glass-panel animate-fade-in" style={{ padding: '3rem 2rem', textAlign: 'center' }}>
@@ -984,6 +995,14 @@ export default function LeadResults({ leads, isPublic = false }) {
 
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: '2rem' }} className="animate-fade-in">
+      {toast.show && (
+        <Toast
+          message={toast.message}
+          type={toast.type}
+          onClose={closeToast}
+        />
+      )}
+
       {/* Global Batch Export Button */}
       {leads.length > 1 && !isPublic && (
         <div style={{ display: 'flex', justifyContent: 'flex-end', marginBottom: '-1rem' }}>
@@ -996,9 +1015,14 @@ export default function LeadResults({ leads, isPublic = false }) {
               fontWeight: '700',
               boxShadow: '0 4px 20px rgba(6, 182, 212, 0.3)'
             }}
-            onClick={() => {
+            onClick={async () => {
               const filename = `batch_analysis_report_${new Date().getTime()}.xlsx`;
-              exportToExcel(leads, filename, false);
+              try {
+                await exportToExcel(leads, filename, false);
+                showToast('Export completed successfully', 'success');
+              } catch (err) {
+                showToast('Export failed. Please try again', 'error');
+              }
             }}
           >
             <Download size={18} style={{ marginRight: '8px' }} />
@@ -2227,9 +2251,14 @@ Best,
                   <div className="header-actions">
                     <button className="action-btn" onClick={() => window.location.reload()}><RefreshCw size={14} /> Recalculate</button>
                     {true && (
-                      <button className="action-btn primary" onClick={() => {
+                      <button className="action-btn primary" onClick={async () => {
                         const filename = `audit_report_${(lead.website || '').replace(/^https?:\/\//i, '').replace(/[/.]/g, '_')}.xlsx`;
-                        exportToExcel([lead], filename, isPublic);
+                        try {
+                          await exportToExcel([lead], filename, isPublic);
+                          showToast('Export completed successfully', 'success');
+                        } catch (err) {
+                          showToast('Export failed. Please try again', 'error');
+                        }
                       }}><Download size={14} /> {isPublic ? 'Download Audit Report' : 'Export to Excel'}</button>
                     )}
                   </div>

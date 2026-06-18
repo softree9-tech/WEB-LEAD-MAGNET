@@ -38,15 +38,7 @@ def save_lead(name, email, website, source, geo_score, visibility_score, status,
     conn = sqlite3.connect(DB_PATH)
     cursor = conn.cursor()
     
-    # Basic duplicate check for the same website within the last hour
-    cursor.execute('''
-        SELECT id FROM leads 
-        WHERE website = ? AND created_at > datetime('now', '-1 hour')
-    ''', (website,))
-    
-    if cursor.fetchone():
-        conn.close()
-        return None # Duplicate
+    # Removed duplicate check to ensure every successful submission creates a new lead record
 
     cursor.execute('''
         INSERT INTO leads (name, email, website, source, geo_score, visibility_score, status, pdf_path, json_data)
