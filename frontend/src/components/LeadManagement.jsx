@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import axios from 'axios';
-import { Download, Eye, Search, Filter, Calendar, Trash2, X, AlertCircle, RefreshCw } from 'lucide-react';
+import { Download, Eye, Search, Filter, Calendar, Trash2, X, AlertCircle, RefreshCw, ChevronDown } from 'lucide-react';
 import LeadResults from './LeadResults';
 import { fetchLeads, fetchLeadDetails, deleteBulkLeads } from '../api/api';
 import Toast from './Toast';
@@ -9,6 +9,7 @@ export default function LeadManagement() {
   const [leads, setLeads] = useState([]);
   const [loading, setLoading] = useState(true);
   const [dateFilter, setDateFilter] = useState('All Time');
+  const [sourceFilter, setSourceFilter] = useState('All Sources');
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedLead, setSelectedLead] = useState(null);
   const [viewingReport, setViewingReport] = useState(false);
@@ -31,12 +32,12 @@ export default function LeadManagement() {
 
   useEffect(() => {
     loadLeads();
-  }, [dateFilter]);
+  }, [dateFilter, sourceFilter]);
 
   const loadLeads = async () => {
     setLoading(true);
     try {
-      const data = await fetchLeads(dateFilter, searchTerm);
+      const data = await fetchLeads(dateFilter, searchTerm, sourceFilter);
       setLeads(data.leads || []);
     } catch (err) {
       console.error('Failed to load leads', err);
@@ -48,7 +49,9 @@ export default function LeadManagement() {
   useEffect(() => {
     // Clear selection when filters change
     setSelectedLeadIds([]);
-  }, [dateFilter, searchTerm]);
+  }, [dateFilter, searchTerm, sourceFilter]);
+
+  const sourceOptions = ['All Sources', 'GEO Analyzer', 'Public Lead Magnet'];
 
   const handleSearch = (e) => {
     e.preventDefault();
@@ -83,6 +86,9 @@ export default function LeadManagement() {
       const params = new URLSearchParams({ date_filter: dateFilter });
       if (searchTerm) {
         params.append('search', searchTerm);
+      }
+      if (sourceFilter && sourceFilter !== 'All Sources') {
+        params.append('source_filter', sourceFilter);
       }
       
       const response = await fetch(`${baseUrl}/api/leads/export?${params.toString()}`);
@@ -221,7 +227,7 @@ export default function LeadManagement() {
         </div>
       </div>
 
-      <div style={{ display: 'flex', alignItems: 'center', marginBottom: '1.5rem', flexWrap: 'wrap', gap: '0.75rem' }}>
+      <div style={{ display: 'flex', alignItems: 'center', marginBottom: '0.75rem', flexWrap: 'wrap', gap: '0.75rem' }}>
         {filters.map(f => (
           <button
             key={f}
@@ -241,6 +247,137 @@ export default function LeadManagement() {
           </button>
         ))}
         
+        {/* Divider */}
+        <span style={{ width: '1px', height: '24px', background: '#e2e8f0', margin: '0 4px' }} />
+
+        {/* Source Filter Dropdown */}
+        <div style={{ position: 'relative', display: 'inline-flex', alignItems: 'center' }}>
+          <select
+            value={sourceFilter}
+            onChange={(e) => setSourceFilter(e.target.value)}
+            style={{
+              padding: '6px 32px 6px 12px',
+              borderRadius: '20px',
+              border: `1px solid ${sourceFilter !== 'All Sources' ? '#FF6B00' : '#e2e8f0'}`,
+              background: sourceFilter !== 'All Sources' ? '#FFF0E6' : '#fff',
+              color: sourceFilter !== 'All Sources' ? '#FF6B00' : '#64748b',
+              cursor: 'pointer',
+              fontSize: '0.875rem',
+              fontWeight: 600,
+              appearance: 'none',
+              WebkitAppearance: 'none',
+              MozAppearance: 'none',
+              outline: 'none'
+            }}
+          >
+            {sourceOptions.map(s => (
+              <option key={s} value={s}>{s}</option>
+            ))}
+          </select>
+          <ChevronDown size={14} style={{ position: 'absolute', right: '10px', pointerEvents: 'none', color: sourceFilter !== 'All Sources' ? '#FF6B00' : '#64748b' }} />
+        </div>
+      </div>
+
+      {/* Bulk Action Bar + Active Filters — same row */}
+      <div style={{
+        display: 'flex',
+        alignItems: 'center',
+        marginBottom: '1rem',
+        gap: '1rem',
+        flexWrap: 'wrap'
+      }}>
+        {/* Bulk Action Bar */}
+        <div style={{
+          display: 'inline-flex',
+          alignItems: 'center',
+          padding: '10px 18px',
+          background: selectedLeadIds.length > 0 ? '#eff6ff' : '#f8fafc',
+          border: `1px solid ${selectedLeadIds.length > 0 ? '#bfdbfe' : '#e2e8f0'}`,
+          borderRadius: '8px',
+          transition: 'all 0.2s ease',
+          gap: '1.25rem'
+        }}>
+          <span style={{ 
+            fontWeight: 600, 
+            color: selectedLeadIds.length > 0 ? '#1e40af' : '#64748b',
+            fontSize: '0.875rem' 
+          }}>
+            {selectedLeadIds.length} Selected
+          </span>
+            
+          <div style={{ display: 'flex', gap: '0.75rem', alignItems: 'center' }}>
+            <button 
+              onClick={handleBulkExport}
+              disabled={selectedLeadIds.length === 0 || exportLoading}
+              style={{
+                padding: '6px 12px',
+                background: selectedLeadIds.length > 0 ? 'white' : 'transparent',
+                color: selectedLeadIds.length > 0 ? '#1e40af' : '#94a3b8',
+                border: `1px solid ${selectedLeadIds.length > 0 ? '#bfdbfe' : '#e2e8f0'}`,
+                borderRadius: '4px',
+                cursor: (selectedLeadIds.length === 0 || exportLoading) ? 'not-allowed' : 'pointer',
+                display: 'flex',
+                alignItems: 'center',
+                gap: '6px',
+                fontSize: '0.875rem',
+                fontWeight: 500,
+                opacity: (selectedLeadIds.length === 0 || exportLoading) ? 0.6 : 1,
+                transition: 'all 0.2s',
+                boxShadow: selectedLeadIds.length > 0 ? '0 1px 2px rgba(0,0,0,0.05)' : 'none'
+              }}
+            >
+              <Download size={16} /> {exportLoading ? 'Exporting...' : 'Export Selected'}
+            </button>
+            
+            <button 
+              onClick={() => setDeleteModalOpen(true)}
+              disabled={selectedLeadIds.length === 0}
+              style={{
+                padding: '6px 12px',
+                background: selectedLeadIds.length > 0 ? '#ef4444' : 'transparent',
+                color: selectedLeadIds.length > 0 ? 'white' : '#94a3b8',
+                border: `1px solid ${selectedLeadIds.length > 0 ? '#ef4444' : '#e2e8f0'}`,
+                borderRadius: '4px',
+                cursor: selectedLeadIds.length === 0 ? 'not-allowed' : 'pointer',
+                display: 'flex',
+                alignItems: 'center',
+                gap: '6px',
+                fontSize: '0.875rem',
+                fontWeight: 500,
+                opacity: selectedLeadIds.length === 0 ? 0.6 : 1,
+                transition: 'all 0.2s',
+                boxShadow: selectedLeadIds.length > 0 ? '0 1px 2px rgba(239,68,68,0.2)' : 'none'
+              }}
+            >
+              <Trash2 size={16} /> Delete Selected
+            </button>
+
+            <button 
+              onClick={loadLeads}
+              style={{
+                padding: '6px',
+                background: 'white',
+                color: '#64748b',
+                border: '1px solid #e2e8f0',
+                borderRadius: '50%',
+                cursor: 'pointer',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                transition: 'all 0.2s',
+                boxShadow: '0 1px 2px rgba(0,0,0,0.05)'
+              }}
+              title="Refresh Leads"
+              onMouseEnter={(e) => { e.currentTarget.style.color = '#1e293b'; e.currentTarget.style.borderColor = '#cbd5e1'; }}
+              onMouseLeave={(e) => { e.currentTarget.style.color = '#64748b'; e.currentTarget.style.borderColor = '#e2e8f0'; }}
+            >
+              <RefreshCw size={16} className={loading ? "animate-spin" : ""} />
+            </button>
+          </div>
+        </div>
+
+
+
         <form onSubmit={handleSearch} style={{ display: 'flex', gap: '0.5rem', alignItems: 'center', marginLeft: 'auto' }}>
           <input 
             type="text" 
@@ -253,97 +390,6 @@ export default function LeadManagement() {
             <Search size={16} />
           </button>
         </form>
-      </div>
-
-      {/* Top Bulk Action Bar */}
-      <div style={{
-        display: 'inline-flex',
-        alignItems: 'center',
-        padding: '12px 20px',
-        background: selectedLeadIds.length > 0 ? '#eff6ff' : '#f8fafc',
-        border: `1px solid ${selectedLeadIds.length > 0 ? '#bfdbfe' : '#e2e8f0'}`,
-        borderRadius: '8px',
-        marginBottom: '1rem',
-        transition: 'all 0.2s ease',
-        gap: '1.5rem'
-      }}>
-        <span style={{ 
-          fontWeight: 600, 
-          color: selectedLeadIds.length > 0 ? '#1e40af' : '#64748b',
-          fontSize: '0.9rem' 
-        }}>
-          {selectedLeadIds.length} Selected
-        </span>
-          
-        <div style={{ display: 'flex', gap: '1rem', alignItems: 'center' }}>
-          <button 
-            onClick={handleBulkExport}
-            disabled={selectedLeadIds.length === 0 || exportLoading}
-            style={{
-              padding: '6px 12px',
-              background: selectedLeadIds.length > 0 ? 'white' : 'transparent',
-              color: selectedLeadIds.length > 0 ? '#1e40af' : '#94a3b8',
-              border: `1px solid ${selectedLeadIds.length > 0 ? '#bfdbfe' : '#e2e8f0'}`,
-              borderRadius: '4px',
-              cursor: (selectedLeadIds.length === 0 || exportLoading) ? 'not-allowed' : 'pointer',
-              display: 'flex',
-              alignItems: 'center',
-              gap: '6px',
-              fontSize: '0.875rem',
-              fontWeight: 500,
-              opacity: (selectedLeadIds.length === 0 || exportLoading) ? 0.6 : 1,
-              transition: 'all 0.2s',
-              boxShadow: selectedLeadIds.length > 0 ? '0 1px 2px rgba(0,0,0,0.05)' : 'none'
-            }}
-          >
-            <Download size={16} /> {exportLoading ? 'Exporting...' : 'Export Selected'}
-          </button>
-          
-          <button 
-            onClick={() => setDeleteModalOpen(true)}
-            disabled={selectedLeadIds.length === 0}
-            style={{
-              padding: '6px 12px',
-              background: selectedLeadIds.length > 0 ? '#ef4444' : 'transparent',
-              color: selectedLeadIds.length > 0 ? 'white' : '#94a3b8',
-              border: `1px solid ${selectedLeadIds.length > 0 ? '#ef4444' : '#e2e8f0'}`,
-              borderRadius: '4px',
-              cursor: selectedLeadIds.length === 0 ? 'not-allowed' : 'pointer',
-              display: 'flex',
-              alignItems: 'center',
-              gap: '6px',
-              fontSize: '0.875rem',
-              fontWeight: 500,
-              opacity: selectedLeadIds.length === 0 ? 0.6 : 1,
-              transition: 'all 0.2s',
-              boxShadow: selectedLeadIds.length > 0 ? '0 1px 2px rgba(239,68,68,0.2)' : 'none'
-            }}
-          >
-            <Trash2 size={16} /> Delete Selected
-          </button>
-
-          <button 
-            onClick={loadLeads}
-            style={{
-              padding: '6px',
-              background: 'white',
-              color: '#64748b',
-              border: '1px solid #e2e8f0',
-              borderRadius: '50%',
-              cursor: 'pointer',
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-              transition: 'all 0.2s',
-              boxShadow: '0 1px 2px rgba(0,0,0,0.05)'
-            }}
-            title="Refresh Leads"
-            onMouseEnter={(e) => { e.currentTarget.style.color = '#1e293b'; e.currentTarget.style.borderColor = '#cbd5e1'; }}
-            onMouseLeave={(e) => { e.currentTarget.style.color = '#64748b'; e.currentTarget.style.borderColor = '#e2e8f0'; }}
-          >
-            <RefreshCw size={16} className={loading ? "animate-spin" : ""} />
-          </button>
-        </div>
       </div>
 
       <div style={{ overflowX: 'auto' }}>

@@ -1065,9 +1065,9 @@ from fastapi import Request
 from fastapi.responses import FileResponse
 
 @app.get("/api/leads/export")
-def api_export_leads(request: Request, date_filter: str = 'All Time', search: str = None):
+def api_export_leads(request: Request, date_filter: str = 'All Time', search: str = None, source_filter: str = 'All Sources'):
     try:
-        leads = get_leads(date_filter, search)
+        leads = get_leads(date_filter, search, source_filter)
         import pandas as pd
         import io
         import os
@@ -1210,9 +1210,9 @@ def api_download_report(filename: str):
     return FileResponse(pdf_path, media_type="application/pdf", filename=filename)
 
 @app.get("/api/leads")
-def api_get_leads(date_filter: str = 'All Time', search: str = None):
+def api_get_leads(date_filter: str = 'All Time', search: str = None, source_filter: str = 'All Sources'):
     try:
-        leads = get_leads(date_filter, search)
+        leads = get_leads(date_filter, search, source_filter)
         return {"leads": leads}
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))

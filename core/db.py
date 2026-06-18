@@ -50,7 +50,7 @@ def save_lead(name, email, website, source, geo_score, visibility_score, status,
     conn.close()
     return lead_id
 
-def get_leads(date_filter='All Time', search_term=None):
+def get_leads(date_filter='All Time', search_term=None, source_filter='All Sources'):
     conn = sqlite3.connect(DB_PATH)
     conn.row_factory = sqlite3.Row
     cursor = conn.cursor()
@@ -74,6 +74,15 @@ def get_leads(date_filter='All Time', search_term=None):
     if search_term:
         query += " AND (name LIKE ? OR email LIKE ? OR website LIKE ?)"
         params.extend([f'%{search_term}%', f'%{search_term}%', f'%{search_term}%'])
+        
+    if source_filter and source_filter != 'All Sources':
+        if source_filter == 'Public Lead Magnet':
+            query += " AND source != 'GEO Analyzer'"
+        elif source_filter == 'GEO Analyzer':
+            query += " AND source = 'GEO Analyzer'"
+        else:
+            query += " AND source = ?"
+            params.append(source_filter)
         
     query += " ORDER BY created_at DESC"
     

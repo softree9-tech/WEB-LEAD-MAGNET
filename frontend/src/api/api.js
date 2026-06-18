@@ -111,10 +111,10 @@ export const emailGeoReport = async (emailData) => {
   }
 };
 
-export const fetchLeads = async (dateFilter = 'All Time', search = '') => {
+export const fetchLeads = async (dateFilter = 'All Time', search = '', sourceFilter = 'All Sources') => {
   try {
     const response = await axios.get(`${API_ROOT}/leads`, {
-      params: { date_filter: dateFilter, search: search }
+      params: { date_filter: dateFilter, search: search, source_filter: sourceFilter }
     });
     return response.data;
   } catch (error) {
