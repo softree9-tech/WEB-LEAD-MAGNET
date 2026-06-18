@@ -1,8 +1,9 @@
 import socket
-from urllib.parse import urlparse
+from urllib.parse import urlparse, urljoin
 import ipaddress
 import requests
 import re
+from functools import lru_cache
 
 # ─── Parked / Dead Domain Detection Patterns ────────────────────────────────
 _PARKED_PATTERNS = [
@@ -33,10 +34,22 @@ _PARKED_PATTERNS = [
 _PARKED_REGEX = re.compile("|".join(_PARKED_PATTERNS), re.IGNORECASE)
 
 
+@lru_cache(maxsize=1024)
+def _resolve_hostname(hostname: str) -> list:
+    """Resolves a hostname to a list of IP addresses (IPv4 and IPv6)."""
+    try:
+        # getaddrinfo returns a list of 5-tuples: (family, type, proto, canonname, sockaddr)
+        infos = socket.getaddrinfo(hostname, None)
+        return list(set(info[4][0] for info in infos))
+    except Exception:
+        return []
+
+
 def is_safe_url(url: str) -> bool:
     """
     Validates that a URL is safe to request.
     Prevents SSRF by checking for private, loopback, and reserved IP ranges.
+    Supports both IPv4 and IPv6 validation.
     """
     if not url:
         return False
@@ -53,18 +66,29 @@ def is_safe_url(url: str) -> bool:
         if not hostname:
             return False
 
-        # Basic check for common local hostnames
-        if hostname.lower() in ('localhost', '127.0.0.1', '0.0.0.0', '::1'):
+        # 1. Check if hostname itself is a literal IP address
+        try:
+            ip = ipaddress.ip_address(hostname.strip('[]'))
+            if ip.is_private or ip.is_loopback or ip.is_reserved or ip.is_multicast or ip.is_link_local:
+                return False
+        except ValueError:
+            # Not a literal IP, continue to DNS resolution
+            pass
+
+        # 2. Basic check for common local hostnames
+        if hostname.lower() in ('localhost', 'localhost.localdomain'):
             return False
 
-        # Resolve hostname to IP
-        # This provides protection against standard SSRF.
-        # DNS rebinding protection would require pinning the IP for the subsequent request.
-        ip_addr = socket.gethostbyname(hostname)
-        ip = ipaddress.ip_address(ip_addr)
-
-        if ip.is_private or ip.is_loopback or ip.is_reserved or ip.is_multicast or ip.is_link_local:
+        # 3. Resolve hostname and check all associated IPs
+        ip_addrs = _resolve_hostname(hostname)
+        if not ip_addrs:
+            # If it doesn't resolve, we consider it unsafe or invalid
             return False
+
+        for ip_addr in ip_addrs:
+            ip = ipaddress.ip_address(ip_addr)
+            if ip.is_private or ip.is_loopback or ip.is_reserved or ip.is_multicast or ip.is_link_local:
+                return False
 
         return True
     except Exception:
@@ -137,8 +161,35 @@ def validate_website(url: str) -> dict:
             "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36",
             "Accept": "text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8",
         }
-        # Bypassing SSL errors in validation call as well to allow expired cert sites to proceed
-        response = requests.get(url, timeout=10, allow_redirects=True, headers=headers, stream=True, verify=False)
+
+        # Manual Redirect Loop to prevent Redirect-based SSRF
+        current_url = url
+        max_redirects = 5
+        response = None
+
+        for _ in range(max_redirects + 1):
+            # CRITICAL: Validate current URL before EVERY request (initial and redirects)
+            if not is_safe_url(current_url):
+                return {"valid": False, "error": "Invalid domain — unsafe location blocked.", "url": current_url}
+
+            # Bypassing SSL errors to allow expired cert sites to proceed
+            response = requests.get(current_url, timeout=10, allow_redirects=False, headers=headers, stream=True, verify=False)
+
+            if response.status_code in (301, 302, 303, 307, 308):
+                location = response.headers.get('Location')
+                if not location:
+                    break
+
+                # Resolve relative redirects
+                current_url = urljoin(current_url, location)
+
+                response.close()
+                continue
+            else:
+                break
+
+        if not response:
+            return {"valid": False, "error": "Invalid domain — unable to locate website.", "url": url}
 
         # Read a limited amount of body for parked-domain detection (first 50KB)
         body_chunk = ""
