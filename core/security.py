@@ -3,6 +3,7 @@ from urllib.parse import urlparse
 import ipaddress
 import requests
 import re
+from typing import Optional, Any
 
 # ─── Parked / Dead Domain Detection Patterns ────────────────────────────────
 _PARKED_PATTERNS = [
@@ -36,7 +37,8 @@ _PARKED_REGEX = re.compile("|".join(_PARKED_PATTERNS), re.IGNORECASE)
 def is_safe_url(url: str) -> bool:
     """
     Validates that a URL is safe to request.
-    Prevents SSRF by checking for private, loopback, and reserved IP ranges.
+    Prevents SSRF by checking for private, loopback, and reserved IP ranges
+    for ALL resolved IP addresses (IPv4 and IPv6).
     """
     if not url:
         return False
@@ -57,18 +59,56 @@ def is_safe_url(url: str) -> bool:
         if hostname.lower() in ('localhost', '127.0.0.1', '0.0.0.0', '::1'):
             return False
 
-        # Resolve hostname to IP
-        # This provides protection against standard SSRF.
-        # DNS rebinding protection would require pinning the IP for the subsequent request.
-        ip_addr = socket.gethostbyname(hostname)
-        ip = ipaddress.ip_address(ip_addr)
+        # Resolve hostname to ALL associated IPs (IPv4 and IPv6)
+        # This provides protection against dual-stack SSRF bypasses.
+        addr_info = socket.getaddrinfo(hostname, None)
+        for info in addr_info:
+            ip_addr = info[4][0]
+            # Handle IPv6-mapped IPv4 addresses (e.g., ::ffff:127.0.0.1)
+            if ip_addr.startswith('::ffff:'):
+                ip_addr = ip_addr.replace('::ffff:', '')
 
-        if ip.is_private or ip.is_loopback or ip.is_reserved or ip.is_multicast or ip.is_link_local:
-            return False
+            ip = ipaddress.ip_address(ip_addr)
+            if ip.is_private or ip.is_loopback or ip.is_reserved or ip.is_multicast or ip.is_link_local:
+                return False
 
         return True
     except Exception:
         return False
+
+
+def safe_request(method: str, url: str, **kwargs) -> requests.Response:
+    """
+    Performs a safe HTTP request by manually following redirects and validating
+    each hop against is_safe_url. Prevents redirect-based SSRF.
+    """
+    max_redirects = kwargs.pop('max_redirects', 5)
+    # We handle redirects manually
+    kwargs['allow_redirects'] = False
+
+    current_url = url
+    for _ in range(max_redirects + 1):
+        if not is_safe_url(current_url):
+            raise requests.exceptions.RequestException(f"Unsafe URL detected: {current_url}")
+
+        response = requests.request(method, current_url, **kwargs)
+
+        if response.is_redirect:
+            location = response.headers.get('Location')
+            if not location:
+                break
+            current_url = urljoin(current_url, location)
+            continue
+        else:
+            return response
+
+    return response # Return the last redirect response if limit exceeded
+
+
+def urljoin(base: str, url: str) -> str:
+    """Simple urljoin fallback if needed, but we can use urllib.parse.urljoin."""
+    from urllib.parse import urljoin as _urljoin
+    return _urljoin(base, url)
 
 
 def normalize_url(url: str) -> str:
@@ -121,14 +161,8 @@ def validate_website(url: str) -> dict:
     except Exception:
         return {"valid": False, "error": "Invalid domain — unable to locate website.", "url": url}
 
-    # ── Step 2: DNS resolution ──────────────────────────────────────────────
-    try:
-        ip_addr = socket.gethostbyname(hostname)
-        ip = ipaddress.ip_address(ip_addr)
-        if ip.is_private or ip.is_loopback or ip.is_reserved or ip.is_multicast or ip.is_link_local:
-            return {"valid": False, "error": "Invalid domain — unable to locate website.", "url": url}
-    except Exception:
-        # DNS resolution completely fails, or hostname cannot be resolved
+    # ── Step 2: DNS resolution (SSRF Protection) ────────────────────────────
+    if not is_safe_url(url):
         return {"valid": False, "error": "Invalid domain — unable to locate website.", "url": url}
 
     # ── Step 3 & 4: HTTP accessibility + status code (Non-blocking Warnings) ─
@@ -138,7 +172,8 @@ def validate_website(url: str) -> dict:
             "Accept": "text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8",
         }
         # Bypassing SSL errors in validation call as well to allow expired cert sites to proceed
-        response = requests.get(url, timeout=10, allow_redirects=True, headers=headers, stream=True, verify=False)
+        # Using safe_request to prevent redirect-based SSRF
+        response = safe_request("GET", url, timeout=10, headers=headers, stream=True, verify=False)
 
         # Read a limited amount of body for parked-domain detection (first 50KB)
         body_chunk = ""
@@ -192,6 +227,9 @@ def validate_website(url: str) -> dict:
         }
     except Exception as e:
         # Any other connection/request issue (e.g. connection refused)
+        if "Unsafe URL detected" in str(e):
+             return {"valid": False, "error": "Invalid domain — unable to locate website.", "url": url}
+
         return {
             "valid": True,
             "warning": "Website Accessible With Technical Issues",
@@ -201,4 +239,3 @@ def validate_website(url: str) -> dict:
 
     # ── All checks passed ───────────────────────────────────────────────────
     return {"valid": True, "error": None, "url": url}
-

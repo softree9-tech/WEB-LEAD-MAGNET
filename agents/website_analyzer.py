@@ -14,7 +14,7 @@ from langchain_openai import ChatOpenAI
 from langchain_core.messages import HumanMessage, SystemMessage
 from core.models import WebsiteAnalyzerOutput
 from core.state import AgentState
-from core.security import is_safe_url
+from core.security import is_safe_url, safe_request
 import socket
 import ssl
 from datetime import datetime
@@ -415,11 +415,12 @@ def check_single_link(link: str) -> str:
             "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36",
             "Accept": "text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,*/*;q=0.8"
         }
-        res = requests.head(link, timeout=10, allow_redirects=True, headers=headers, verify=False)
+        # Use safe_request to prevent redirect-based SSRF during link checking
+        res = safe_request("HEAD", link, timeout=10, headers=headers, verify=False)
         
         # If server blocks HEAD requests, fallback to a lightweight streamed GET
         if res.status_code in [403, 405, 401, 301, 302, 999]:
-            res = requests.get(link, timeout=10, allow_redirects=True, headers=headers, stream=True, verify=False)
+            res = safe_request("GET", link, timeout=10, headers=headers, stream=True, verify=False)
             res.raw.close()
             
         # Only explicitly flag pure dead pages to ensure 0 False Positives
@@ -863,7 +864,8 @@ def website_analyzer_agent(state: AgentState) -> AgentState:
             error_msg = str(e)
             # Fallback: attempt plain HTTP scrape to get at least HTML meta data
             try:
-                fallback_res = requests.get(url, timeout=10, headers={"User-Agent": "Mozilla/5.0"}, verify=False)
+                # Use safe_request to prevent SSRF in fallback path
+                fallback_res = safe_request("GET", url, timeout=10, headers={"User-Agent": "Mozilla/5.0"}, verify=False)
                 html = fallback_res.text
                 headers = dict(fallback_res.headers)
                 tech_stack = extract_tech_stack(html, headers)
@@ -919,7 +921,8 @@ def website_analyzer_agent(state: AgentState) -> AgentState:
         mobile_performance = pagespeed_data["mobile_performance"]
         if load_time == 0.0:
             try:
-                fast_res = requests.get(url, timeout=10, verify=False)
+                # Use safe_request for timing fallback
+                fast_res = safe_request("GET", url, timeout=10, verify=False)
                 load_time = round(fast_res.elapsed.total_seconds(), 2)
             except Exception:
                 load_time = 2.5
