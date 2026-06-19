@@ -764,7 +764,7 @@ function MobileWalkthrough({ lead }) {
     })
   };
 
-  const respMetrics = calculateMobileResponsivenessScore(lead);
+  const respMetrics = React.useMemo(() => calculateMobileResponsivenessScore(lead), [lead]);
   const uxRatingClass = (lead.mobile_ux_rating || 'Average').toLowerCase();
   const convRiskClass = (lead.mobile_conversion_risk || 'Moderate').toLowerCase();
 
