@@ -975,6 +975,14 @@ function MobileWalkthrough({ lead }) {
 
 export default function LeadResults({ leads, isPublic = false }) {
   const [toast, setToast] = useState({ show: false, message: '', type: 'success' });
+  const [copiedIndex, setCopiedIndex] = useState(null);
+
+  useEffect(() => {
+    if (copiedIndex !== null) {
+      const timer = setTimeout(() => setCopiedIndex(null), 2000);
+      return () => clearTimeout(timer);
+    }
+  }, [copiedIndex]);
   
   const showToast = (message, type = 'success') => {
     setToast({ show: true, message, type });
@@ -2329,12 +2337,25 @@ Best,
                     <h2 style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
                       <Mail color="var(--accent-color)" size={20} /> Personalized AI Outreach Email
                     </h2>
-                    <button className="action-btn" onClick={(e) => {
-                      navigator.clipboard.writeText(emailBody);
-                      e.currentTarget.innerHTML = '<span style="color:#10b981;display:flex;align-items:center;gap:0.5rem;"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="20 6 9 17 4 12"></polyline></svg> Copied!</span>';
-                      setTimeout(() => e.target.innerHTML = '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg> Copy to Clipboard', 2000);
-                    }}>
-                      <Copy size={14} /> Copy to Clipboard
+                    <button
+                      className="action-btn"
+                      aria-live="polite"
+                      onClick={() => {
+                        navigator.clipboard.writeText(emailBody);
+                        setCopiedIndex(index);
+                      }}
+                    >
+                      {copiedIndex === index ? (
+                        <>
+                          <Check size={14} color="#10b981" />
+                          <span style={{ color: '#10b981' }}>Copied!</span>
+                        </>
+                      ) : (
+                        <>
+                          <Copy size={14} />
+                          <span>Copy to Clipboard</span>
+                        </>
+                      )}
                     </button>
                   </div>
                   <div style={{ position: 'relative' }}>
