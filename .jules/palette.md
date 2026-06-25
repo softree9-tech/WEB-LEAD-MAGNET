@@ -3,3 +3,7 @@
 ## 2025-05-14 - Sidebar Accessibility and Semantic Buttons
 **Learning:** The dashboard sidebar used icon-only elements with `onClick` handlers but without semantic `<button>` tags, making them inaccessible to keyboard users and screen readers. Additionally, toggle buttons lacked `aria-pressed` state, and some icon/label pairings were misleading (e.g., using a Logout icon for "Return to Top").
 **Action:** Wrap icon-only interactive elements in `<button>` with `aria-label` and `title`. Add `aria-pressed` to toggle buttons. Replace misleading icons with more appropriate ones (e.g., `ChevronUp` for scroll-to-top). Use a shared CSS class (`nav-btn-reset`) for consistent button styling resets.
+
+## 2025-06-25 - Idiomatic Copy Feedback and aria-live
+**Learning:** Imperative DOM manipulation (e.g., `innerHTML`) in React components for transient feedback (like 'Copied!') is fragile and can lead to sync issues. Using React state for such transitions allows for cleaner conditional rendering and easier integration with accessibility attributes like `aria-live`.
+**Action:** Replace imperative `innerHTML` updates with React state (e.g., `copiedIndex`) and `useEffect` for timeouts. Use `aria-live="polite"` on elements that update their content dynamically to ensure screen reader users are notified of the change.
