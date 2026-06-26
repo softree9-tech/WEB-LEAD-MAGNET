@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import '../LeadResults.css';
 import ViewportDashboard from './ViewportDashboard';
@@ -764,7 +764,7 @@ function MobileWalkthrough({ lead }) {
     })
   };
 
-  const respMetrics = calculateMobileResponsivenessScore(lead);
+  const respMetrics = useMemo(() => calculateMobileResponsivenessScore(lead), [lead]);
   const uxRatingClass = (lead.mobile_ux_rating || 'Average').toLowerCase();
   const convRiskClass = (lead.mobile_conversion_risk || 'Moderate').toLowerCase();
 
