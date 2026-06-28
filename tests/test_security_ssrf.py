@@ -1,7 +1,10 @@
 import sys
 import os
+import requests
+import requests_mock
+import pytest
 sys.path.append(os.getcwd())
-from core.security import is_safe_url
+from core.security import is_safe_url, safe_requests_get
 
 def test_safe_urls():
     safe_urls = [
@@ -27,6 +30,22 @@ def test_unsafe_urls():
     ]
     for url in unsafe_urls:
         assert is_safe_url(url) is False, f"URL should be unsafe: {url}"
+
+def test_ssrf_redirect_protection():
+    """Verifies that safe_requests_get blocks redirects to unsafe internal IPs."""
+    url = "http://public-site.com/redirect"
+    with requests_mock.Mocker() as m:
+        # Mock a redirect to an internal IP
+        m.get(url, status_code=302, headers={'Location': 'http://127.0.0.1/admin'})
+        m.get('http://127.0.0.1/admin', text='sensitive data')
+
+        with pytest.raises(requests.exceptions.RequestException) as excinfo:
+            safe_requests_get(url, timeout=1)
+        assert "Unsafe URL blocked" in str(excinfo.value)
+
+def test_ipv6_mapped_ipv4_protection():
+    """Verifies that IPv4-mapped IPv6 addresses for loopback are blocked."""
+    assert is_safe_url("http://[::ffff:127.0.0.1]") is False
 
 if __name__ == "__main__":
     try:
