@@ -14,7 +14,7 @@ from langchain_openai import ChatOpenAI
 from langchain_core.messages import HumanMessage, SystemMessage
 from core.models import WebsiteAnalyzerOutput
 from core.state import AgentState
-from core.security import is_safe_url
+from core.security import is_safe_url, safe_requests_get
 import socket
 import ssl
 from datetime import datetime
@@ -32,6 +32,8 @@ def check_ssl_certificate(url: str) -> dict:
         
         context = ssl.create_default_context()
         try:
+            # check_ssl_certificate is only called if is_safe_url(url) is True.
+            # Here we specifically check the hostname.
             redirect_test = requests.get(f"http://{hostname}", timeout=5, allow_redirects=False)
             https_enforced = redirect_test.status_code in [301, 302, 307, 308] and redirect_test.headers.get('Location', '').startswith('https://')
         except Exception:
@@ -289,6 +291,8 @@ def _run_lighthouse(url: str, strategy: str, categories: list) -> dict:
         api_url = f"https://www.googleapis.com/pagespeedonline/v5/runPagespeed?url={url}&strategy={strategy}&{cat_params}"
         if api_key:
             api_url += f"&key={api_key}"
+        # This is a Google API call, safe from SSRF directly as target is google.com.
+        # But we still check is_safe_url for the 'url' parameter passed to the API.
         res = requests.get(api_url, timeout=60)
         if res.status_code == 200:
             return res.json().get('lighthouseResult', {})
@@ -415,13 +419,9 @@ def check_single_link(link: str) -> str:
             "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36",
             "Accept": "text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,*/*;q=0.8"
         }
-        res = requests.head(link, timeout=10, allow_redirects=True, headers=headers, verify=False)
+        # Use safe_requests_get to follow redirects securely and check each hop
+        res = safe_requests_get(link, timeout=10, headers=headers, verify=False)
         
-        # If server blocks HEAD requests, fallback to a lightweight streamed GET
-        if res.status_code in [403, 405, 401, 301, 302, 999]:
-            res = requests.get(link, timeout=10, allow_redirects=True, headers=headers, stream=True, verify=False)
-            res.raw.close()
-            
         # Only explicitly flag pure dead pages to ensure 0 False Positives
         if res.status_code == 404 or res.status_code >= 500:
             return link
@@ -863,7 +863,7 @@ def website_analyzer_agent(state: AgentState) -> AgentState:
             error_msg = str(e)
             # Fallback: attempt plain HTTP scrape to get at least HTML meta data
             try:
-                fallback_res = requests.get(url, timeout=10, headers={"User-Agent": "Mozilla/5.0"}, verify=False)
+                fallback_res = safe_requests_get(url, timeout=10, headers={"User-Agent": "Mozilla/5.0"}, verify=False)
                 html = fallback_res.text
                 headers = dict(fallback_res.headers)
                 tech_stack = extract_tech_stack(html, headers)
@@ -919,7 +919,7 @@ def website_analyzer_agent(state: AgentState) -> AgentState:
         mobile_performance = pagespeed_data["mobile_performance"]
         if load_time == 0.0:
             try:
-                fast_res = requests.get(url, timeout=10, verify=False)
+                fast_res = safe_requests_get(url, timeout=10, verify=False)
                 load_time = round(fast_res.elapsed.total_seconds(), 2)
             except Exception:
                 load_time = 2.5
