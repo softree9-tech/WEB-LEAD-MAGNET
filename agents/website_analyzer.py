@@ -3,6 +3,7 @@ import base64
 import time
 import re
 import requests
+from requests.adapters import HTTPAdapter
 import urllib3
 urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
 import concurrent.futures
@@ -364,7 +365,7 @@ def verify_aeo_visibility(company_name: str, url: str) -> dict:
     aeo_result = {"aeo_recognized": False, "aeo_confidence": "low", "aeo_raw_response": ""}
     try:
         probe_llm = ChatOpenAI(
-            model="gpt-4.1-mini", 
+            model="gpt-4o-mini",
             temperature=0, 
             max_tokens=300,
             api_key=os.environ.get("OPENAI_API_KEY")
@@ -407,7 +408,7 @@ Be honest - if you don't have specific information about them, say so clearly.""
         aeo_result["aeo_raw_response"] = "AEO probe failed."
     return aeo_result
 
-def check_single_link(link: str) -> str:
+def check_single_link(link: str, session: requests.Session = None) -> str:
     if not is_safe_url(link):
         return ""
     try:
@@ -415,11 +416,12 @@ def check_single_link(link: str) -> str:
             "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36",
             "Accept": "text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,*/*;q=0.8"
         }
-        res = requests.head(link, timeout=10, allow_redirects=True, headers=headers, verify=False)
+        client = session if session else requests
+        res = client.head(link, timeout=10, allow_redirects=True, headers=headers, verify=False)
         
         # If server blocks HEAD requests, fallback to a lightweight streamed GET
         if res.status_code in [403, 405, 401, 301, 302, 999]:
-            res = requests.get(link, timeout=10, allow_redirects=True, headers=headers, stream=True, verify=False)
+            res = client.get(link, timeout=10, allow_redirects=True, headers=headers, stream=True, verify=False)
             res.raw.close()
             
         # Only explicitly flag pure dead pages to ensure 0 False Positives
@@ -431,8 +433,9 @@ def check_single_link(link: str) -> str:
         return ""
     return ""
 
-def count_broken_links(html: str, base_url: str) -> list:
-    soup = BeautifulSoup(html, "html.parser")
+def count_broken_links(html: str, base_url: str, soup: BeautifulSoup = None) -> list:
+    if soup is None:
+        soup = BeautifulSoup(html, "html.parser")
     raw_links = [a.get('href') for a in soup.find_all('a', href=True)]
     
     valid_links = set()
@@ -450,14 +453,23 @@ def count_broken_links(html: str, base_url: str) -> list:
     links_to_test = list(valid_links)[:50]
     broken_list = []
     if links_to_test:
-        with concurrent.futures.ThreadPoolExecutor(max_workers=15) as executor:
-            results = executor.map(check_single_link, links_to_test)
-            for dead_link in results:
-                if dead_link: broken_list.append(dead_link)
+        # Optimization: Use a session with connection pooling for parallel link checks
+        with requests.Session() as session:
+            adapter = HTTPAdapter(pool_connections=15, pool_maxsize=15)
+            session.mount("http://", adapter)
+            session.mount("https://", adapter)
+
+            with concurrent.futures.ThreadPoolExecutor(max_workers=15) as executor:
+                # Pass the session to each worker
+                futures = [executor.submit(check_single_link, link, session=session) for link in links_to_test]
+                for future in concurrent.futures.as_completed(futures):
+                    dead_link = future.result()
+                    if dead_link: broken_list.append(dead_link)
     return {"broken_list": broken_list, "total": len(links_to_test)}
 
-def extract_tech_stack(html: str, headers: dict) -> str:
-    html_lower = html.lower()
+def extract_tech_stack(html: str, headers: dict, html_lower: str = None) -> str:
+    if html_lower is None:
+        html_lower = html.lower()
     stack = []
     
     if 'wp-content' in html_lower or 'wordpress' in html_lower: stack.append('WordPress')
@@ -496,8 +508,9 @@ def extract_tech_stack(html: str, headers: dict) -> str:
     
     return ", ".join(stack[:3]) if stack else "Custom HTML / Native"
 
-def check_analytics(html: str) -> dict:
-    html_lower = html.lower()
+def check_analytics(html: str, html_lower: str = None) -> dict:
+    if html_lower is None:
+        html_lower = html.lower()
     
     # LinkedIn Detection: icon, profile link, social anchor tag, or tracking script
     linkedin_present = any(x in html_lower for x in [
@@ -524,7 +537,7 @@ def check_analytics(html: str) -> dict:
         "linkedin_present": linkedin_present
     }
 
-def check_lead_capture(soup: BeautifulSoup, html: str = "") -> bool:
+def check_lead_capture(soup: BeautifulSoup, html: str = "", html_lower: str = None) -> bool:
     """Check for contact forms, mailto/tel links, chat widgets, and popup/modal forms."""
     forms = soup.find_all("form")
     mailtos = soup.find_all("a", href=lambda href: href and href.startswith("mailto:"))
@@ -534,7 +547,8 @@ def check_lead_capture(soup: BeautifulSoup, html: str = "") -> bool:
         return True
     
     # Check for popup/modal form triggers and chat widgets in the raw HTML
-    html_lower = html.lower() if html else ""
+    if html_lower is None:
+        html_lower = html.lower() if html else ""
     popup_signals = [
         "contact-form", "contact_form", "contactform",
         "popup-form", "modal-form", "dialog",
@@ -559,7 +573,7 @@ def check_lead_capture(soup: BeautifulSoup, html: str = "") -> bool:
     
     return False
 
-def check_cta_presence(soup: BeautifulSoup, html: str = "") -> bool:
+def check_cta_presence(soup: BeautifulSoup, html: str = "", html_lower: str = None) -> bool:
     """Technical check for the presence of CTA buttons/links on the page."""
     cta_keywords = [
         "get started", "sign up", "start free", "try free", "buy now",
@@ -583,9 +597,10 @@ def check_cta_presence(soup: BeautifulSoup, html: str = "") -> bool:
     
     return False
 
-def check_conversion_elements(soup: BeautifulSoup, html: str = "") -> dict:
+def check_conversion_elements(soup: BeautifulSoup, html: str = "", html_lower: str = None) -> dict:
     """Detailed check for specific conversion elements."""
-    html_lower = html.lower() if html else ""
+    if html_lower is None:
+        html_lower = html.lower() if html else ""
     
     # 1. Contact Form
     has_form = bool(soup.find_all("form"))
@@ -616,7 +631,7 @@ def check_conversion_elements(soup: BeautifulSoup, html: str = "") -> dict:
     has_popup = any(signal in html_lower for signal in popup_signals)
     
     # 7. CTA Presence
-    has_cta = check_cta_presence(soup, html)
+    has_cta = check_cta_presence(soup, html, html_lower=html_lower)
     
     elements = {
         "cta_presence": has_cta,
@@ -724,41 +739,8 @@ def website_analyzer_agent(state: AgentState) -> AgentState:
                 page.set_extra_http_headers({"User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64)"})
                 
                 response = page.goto(url, wait_until="domcontentloaded", timeout=20000)
-                html = page.content()
-                headers = response.headers if response else {}
-                tech_stack = extract_tech_stack(html, headers)
-                last_modified = extract_last_modified(headers, html)
-                link_data = count_broken_links(html, url)
-                broken_links = link_data["broken_list"]
-                total_links = link_data["total"]
                 
-                analytics_data = check_analytics(html)
-                
-                soup = BeautifulSoup(html, "html.parser")
-                has_lead_capture = check_lead_capture(soup, html)
-                has_cta = check_cta_presence(soup, html)
-                has_newsletter = check_newsletter(soup)
-                image_alt_data = check_image_alt_tags(soup)
-                has_dead_socials = check_social_links(soup)
-                conversion_elements = check_conversion_elements(soup, html)
-                schema_data = check_schema_markup(soup)
-                
-                # Extract SEO Metrics before stripping code
-                seo_mobile = bool(soup.find("meta", attrs={"name": "viewport"}))
-                seo_meta_desc = bool(soup.find("meta", attrs={"name": "description"}))
-                seo_h1 = bool(soup.find("h1"))
-                seo_title = bool(soup.find("title"))
-                seo_canonical = bool(soup.find("link", attrs={"rel": "canonical"}))
-                seo_og = bool(soup.find("meta", attrs={"property": "og:title"}))
-                
-                # Check for duplicate meta tags
-                has_duplicate_meta = len(soup.find_all("title")) > 1 or len(soup.find_all("meta", attrs={"name": "description"})) > 1
-                
-                # Clean for LLM
-                for script in soup(["script", "style", "nav", "footer"]):
-                    script.extract()
-                text_content = soup.get_text(separator=' ', strip=True)
-                
+                # 1. Capture visual data while browser is active
                 # Full-page desktop screenshot
                 screenshot_bytes = page.screenshot(type="jpeg", quality=60, full_page=True)
                 b64_image = base64.b64encode(screenshot_bytes).decode('utf-8')
@@ -855,9 +837,49 @@ def website_analyzer_agent(state: AgentState) -> AgentState:
                         "text": "Mobile Home Screen",
                         "b64_image": b64_image_mobile
                     })
+
+                # 2. Capture raw content and headers
+                html = page.content()
+                headers = response.headers if response else {}
                 
+                # 3. Close browser immediately to free resources
                 browser.close()
-                text_content = f"--- RAW TEXT CONTENT ---\n{text_content}"
+
+                # ─── Python-based analysis continues after browser is closed ───
+                html_lower = html.lower()
+                soup = BeautifulSoup(html, "html.parser")
+
+                tech_stack = extract_tech_stack(html, headers, html_lower=html_lower)
+                last_modified = extract_last_modified(headers, html)
+                link_data = count_broken_links(html, url, soup=soup)
+                broken_links = link_data["broken_list"]
+                total_links = link_data["total"]
+
+                analytics_data = check_analytics(html, html_lower=html_lower)
+
+                has_lead_capture = check_lead_capture(soup, html, html_lower=html_lower)
+                image_alt_data = check_image_alt_tags(soup)
+                has_dead_socials = check_social_links(soup)
+                conversion_elements = check_conversion_elements(soup, html, html_lower=html_lower)
+                has_cta = conversion_elements.get("cta_presence", False)
+                has_newsletter = conversion_elements.get("newsletter_signup", False)
+                schema_data = check_schema_markup(soup)
+
+                # Extract SEO Metrics before stripping code
+                seo_mobile = bool(soup.find("meta", attrs={"name": "viewport"}))
+                seo_meta_desc = bool(soup.find("meta", attrs={"name": "description"}))
+                seo_h1 = bool(soup.find("h1"))
+                seo_title = bool(soup.find("title"))
+                seo_canonical = bool(soup.find("link", attrs={"rel": "canonical"}))
+                seo_og = bool(soup.find("meta", attrs={"property": "og:title"}))
+
+                # Check for duplicate meta tags
+                has_duplicate_meta = len(soup.find_all("title")) > 1 or len(soup.find_all("meta", attrs={"name": "description"})) > 1
+
+                # Clean for LLM
+                for script in soup(["script", "style", "nav", "footer"]):
+                    script.extract()
+                text_content = f"--- RAW TEXT CONTENT ---\n{soup.get_text(separator=' ', strip=True)}"
         except Exception as e:
             print(f"Browser scrape failed for {url}: {e}")
             error_msg = str(e)
@@ -866,16 +888,18 @@ def website_analyzer_agent(state: AgentState) -> AgentState:
                 fallback_res = requests.get(url, timeout=10, headers={"User-Agent": "Mozilla/5.0"}, verify=False)
                 html = fallback_res.text
                 headers = dict(fallback_res.headers)
-                tech_stack = extract_tech_stack(html, headers)
-                last_modified = extract_last_modified(headers, html)
-                analytics_data = check_analytics(html)
+                html_lower = html.lower()
                 soup = BeautifulSoup(html, "html.parser")
-                has_lead_capture = check_lead_capture(soup, html)
-                has_cta = check_cta_presence(soup, html)
-                has_newsletter = check_newsletter(soup)
+
+                tech_stack = extract_tech_stack(html, headers, html_lower=html_lower)
+                last_modified = extract_last_modified(headers, html)
+                analytics_data = check_analytics(html, html_lower=html_lower)
+                has_lead_capture = check_lead_capture(soup, html, html_lower=html_lower)
                 image_alt_data = check_image_alt_tags(soup)
                 has_dead_socials = check_social_links(soup)
-                conversion_elements = check_conversion_elements(soup, html)
+                conversion_elements = check_conversion_elements(soup, html, html_lower=html_lower)
+                has_cta = conversion_elements.get("cta_presence", False)
+                has_newsletter = conversion_elements.get("newsletter_signup", False)
                 schema_data = check_schema_markup(soup)
                 seo_mobile = bool(soup.find("meta", attrs={"name": "viewport"}))
                 seo_meta_desc = bool(soup.find("meta", attrs={"name": "description"}))
@@ -928,7 +952,7 @@ def website_analyzer_agent(state: AgentState) -> AgentState:
 
 
     llm = ChatOpenAI(
-        model="gpt-4.1-mini", 
+        model="gpt-4o-mini",
         temperature=0,
         api_key=os.environ.get("OPENAI_API_KEY")
     )
