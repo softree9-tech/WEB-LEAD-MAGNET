@@ -282,7 +282,7 @@ async def _process_one_lead(initial_state: dict, label: str, apollo_fields: dict
         except Exception as e:
             print(f"❌ Error processing {label}: {e}")
             # Return a COMPLETE fallback structure so the frontend never crashes
-            return _build_error_fallback(initial_state.get("raw_website", label), str(e), apollo_fields=apollo_fields)
+            return _build_error_fallback(initial_state.get("raw_website", label), "Analysis failed due to a processing error.", apollo_fields=apollo_fields)
 
 
 def _build_error_fallback(website: str, error_detail: str = "", apollo_fields: dict = None, technical_warning: str = None) -> dict:
@@ -685,7 +685,7 @@ async def process_csv(file: UploadFile = File(...)):
                 except Exception as e:
                     print(f"--- Error processing one lead in stream: {e} ---")
                     # One failed lead should never crash the entire batch
-                    fallback = _build_error_fallback("unknown", str(e))
+                    fallback = _build_error_fallback("unknown", "Analysis failed due to a processing error.")
                     yield json.dumps(fallback) + "\n"
 
         return StreamingResponse(stream_results(), media_type="application/x-ndjson")
@@ -1107,7 +1107,7 @@ def api_export_leads(request: Request, date_filter: str = 'All Time', search: st
             headers={"Content-Disposition": f"attachment; filename={filename}"}
         )
     except Exception as e:
-        raise HTTPException(status_code=500, detail=str(e))
+        raise HTTPException(status_code=500, detail="Internal server error")
 
 class BulkExportRequest(BaseModel):
     lead_ids: List[int]
@@ -1161,7 +1161,7 @@ def api_export_bulk_leads(request: Request, payload: BulkExportRequest):
             headers={"Content-Disposition": f"attachment; filename={filename}"}
         )
     except Exception as e:
-        raise HTTPException(status_code=500, detail=str(e))
+        raise HTTPException(status_code=500, detail="Internal server error")
 
 class BulkDeleteRequest(BaseModel):
     lead_ids: List[int]
@@ -1177,7 +1177,9 @@ def api_bulk_delete_leads(payload: BulkDeleteRequest):
         for lead_id in payload.lead_ids:
             lead = get_lead_by_id(lead_id)
             if lead and lead.get('pdf_path'):
-                pdf_path = os.path.join(os.path.dirname(__file__), 'data', 'pdfs', lead['pdf_path'])
+                # Sanitize filename to prevent path traversal
+                safe_filename = os.path.basename(lead['pdf_path'])
+                pdf_path = os.path.join(os.path.dirname(__file__), 'data', 'pdfs', safe_filename)
                 if os.path.exists(pdf_path):
                     try:
                         os.remove(pdf_path)
@@ -1187,27 +1189,31 @@ def api_bulk_delete_leads(payload: BulkDeleteRequest):
         deleted_count = delete_leads(payload.lead_ids)
         return {"deleted_count": deleted_count, "message": f"Successfully deleted {deleted_count} leads"}
     except Exception as e:
-        raise HTTPException(status_code=500, detail=str(e))
+        raise HTTPException(status_code=500, detail="Internal server error")
 
 @app.get("/api/reports/view/{filename}")
 def api_view_report(filename: str):
     import os
-    pdf_path = os.path.join(os.path.dirname(__file__), 'data', 'pdfs', filename)
+    # Sanitize filename to prevent path traversal
+    safe_filename = os.path.basename(filename)
+    pdf_path = os.path.join(os.path.dirname(__file__), 'data', 'pdfs', safe_filename)
     if not os.path.exists(pdf_path):
         raise HTTPException(status_code=404, detail="Report Not Available")
     return FileResponse(
         pdf_path, 
         media_type="application/pdf", 
-        headers={"Content-Disposition": f"inline; filename=\"{filename}\""}
+        headers={"Content-Disposition": f"inline; filename=\"{safe_filename}\""}
     )
 
 @app.get("/api/reports/download/{filename}")
 def api_download_report(filename: str):
     import os
-    pdf_path = os.path.join(os.path.dirname(__file__), 'data', 'pdfs', filename)
+    # Sanitize filename to prevent path traversal
+    safe_filename = os.path.basename(filename)
+    pdf_path = os.path.join(os.path.dirname(__file__), 'data', 'pdfs', safe_filename)
     if not os.path.exists(pdf_path):
         raise HTTPException(status_code=404, detail="Report Not Available")
-    return FileResponse(pdf_path, media_type="application/pdf", filename=filename)
+    return FileResponse(pdf_path, media_type="application/pdf", filename=safe_filename)
 
 @app.get("/api/leads")
 def api_get_leads(date_filter: str = 'All Time', search: str = None, source_filter: str = 'All Sources'):
@@ -1215,7 +1221,7 @@ def api_get_leads(date_filter: str = 'All Time', search: str = None, source_filt
         leads = get_leads(date_filter, search, source_filter)
         return {"leads": leads}
     except Exception as e:
-        raise HTTPException(status_code=500, detail=str(e))
+        raise HTTPException(status_code=500, detail="Internal server error")
 
 @app.get("/api/leads/{lead_id}")
 def api_get_lead_details(lead_id: int):
@@ -1229,7 +1235,7 @@ def api_get_lead_details(lead_id: int):
             lead['json_data'] = json.loads(lead['json_data'])
         return lead
     except Exception as e:
-        raise HTTPException(status_code=500, detail=str(e))
+        raise HTTPException(status_code=500, detail="Internal server error")
 
 @app.get("/api/leads/download/{lead_id}")
 def api_download_lead_pdf(lead_id: int):
@@ -1239,18 +1245,21 @@ def api_download_lead_pdf(lead_id: int):
             raise HTTPException(status_code=404, detail="PDF not found")
             
         import os
-        pdf_path = os.path.join(os.path.dirname(__file__), 'data', 'pdfs', lead['pdf_path'])
+        # Sanitize filename to prevent path traversal
+        safe_filename = os.path.basename(lead['pdf_path'])
+        pdf_path = os.path.join(os.path.dirname(__file__), 'data', 'pdfs', safe_filename)
         if not os.path.exists(pdf_path):
             raise HTTPException(status_code=404, detail="PDF file missing on server")
             
-        return StreamingResponse(
-            open(pdf_path, "rb"),
+        # Use FileResponse for efficiency and proper header handling
+        return FileResponse(
+            pdf_path,
             media_type="application/pdf",
-            headers={"Content-Disposition": f"attachment; filename={lead['pdf_path']}"}
+            filename=safe_filename
         )
     except HTTPException:
         raise
     except Exception as e:
-        raise HTTPException(status_code=500, detail=str(e))
+        raise HTTPException(status_code=500, detail="Internal server error")
 
 # To run the app use: uvicorn main:app --reload
