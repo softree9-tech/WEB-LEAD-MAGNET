@@ -1,5 +1,5 @@
 import socket
-from urllib.parse import urlparse
+from urllib.parse import urlparse, urljoin
 import ipaddress
 import requests
 import re
@@ -57,18 +57,44 @@ def is_safe_url(url: str) -> bool:
         if hostname.lower() in ('localhost', '127.0.0.1', '0.0.0.0', '::1'):
             return False
 
-        # Resolve hostname to IP
-        # This provides protection against standard SSRF.
-        # DNS rebinding protection would require pinning the IP for the subsequent request.
-        ip_addr = socket.gethostbyname(hostname)
-        ip = ipaddress.ip_address(ip_addr)
-
-        if ip.is_private or ip.is_loopback or ip.is_reserved or ip.is_multicast or ip.is_link_local:
-            return False
+        # Resolve hostname to all associated IPs to prevent dual-stack bypasses
+        for res in socket.getaddrinfo(hostname, None):
+            ip_addr = res[4][0]
+            if '%' in ip_addr:
+                ip_addr = ip_addr.split('%')[0]
+            ip = ipaddress.ip_address(ip_addr)
+            if ip.is_private or ip.is_loopback or ip.is_reserved or ip.is_multicast or ip.is_link_local:
+                return False
 
         return True
     except Exception:
         return False
+
+
+def safe_requests_get(url: str, **kwargs):
+    """
+    Safely performs a GET request by manually following redirects and
+    validating each hop against is_safe_url to prevent SSRF via redirect chains.
+    """
+    max_redirects = kwargs.pop('max_redirects', 5)
+    # Force allow_redirects to False so we can validate each hop manually
+    kwargs['allow_redirects'] = False
+
+    current_url = url
+    for _ in range(max_redirects + 1):
+        if not is_safe_url(current_url):
+            raise requests.exceptions.RequestException(f"Unsafe URL detected: {current_url}")
+
+        response = requests.get(current_url, **kwargs)
+
+        if response.is_redirect and 'Location' in response.headers:
+            if kwargs.get('stream'):
+                response.close()
+            current_url = urljoin(current_url, response.headers['Location'])
+        else:
+            return response
+
+    raise requests.exceptions.TooManyRedirects(f"Exceeded maximum of {max_redirects} redirects")
 
 
 def normalize_url(url: str) -> str:
@@ -123,10 +149,14 @@ def validate_website(url: str) -> dict:
 
     # ── Step 2: DNS resolution ──────────────────────────────────────────────
     try:
-        ip_addr = socket.gethostbyname(hostname)
-        ip = ipaddress.ip_address(ip_addr)
-        if ip.is_private or ip.is_loopback or ip.is_reserved or ip.is_multicast or ip.is_link_local:
-            return {"valid": False, "error": "Invalid domain — unable to locate website.", "url": url}
+        # Use getaddrinfo to check all associated IPs
+        for res in socket.getaddrinfo(hostname, None):
+            ip_addr = res[4][0]
+            if '%' in ip_addr:
+                ip_addr = ip_addr.split('%')[0]
+            ip = ipaddress.ip_address(ip_addr)
+            if ip.is_private or ip.is_loopback or ip.is_reserved or ip.is_multicast or ip.is_link_local:
+                return {"valid": False, "error": "Invalid domain — unable to locate website.", "url": url}
     except Exception:
         # DNS resolution completely fails, or hostname cannot be resolved
         return {"valid": False, "error": "Invalid domain — unable to locate website.", "url": url}
@@ -137,8 +167,9 @@ def validate_website(url: str) -> dict:
             "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36",
             "Accept": "text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8",
         }
+        # Use safe_requests_get to prevent SSRF through redirect chains
         # Bypassing SSL errors in validation call as well to allow expired cert sites to proceed
-        response = requests.get(url, timeout=10, allow_redirects=True, headers=headers, stream=True, verify=False)
+        response = safe_requests_get(url, timeout=10, headers=headers, stream=True, verify=False)
 
         # Read a limited amount of body for parked-domain detection (first 50KB)
         body_chunk = ""
