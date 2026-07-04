@@ -287,9 +287,17 @@ export default function Navigation({ blogCategories = [], caseStudyCategories = 
                 className="relative group"
                 onMouseEnter={() => openMenu(item.label)}
                 onMouseLeave={scheduleCloseMenu}
+                onFocus={() => openMenu(item.label)}
+                onBlur={(e) => {
+                  if (!e.currentTarget.contains(e.relatedTarget)) {
+                    scheduleCloseMenu();
+                  }
+                }}
               >
                 <a
                   href={item.url || "#"}
+                  aria-haspopup="true"
+                  aria-expanded={open === item.label}
                   className="group relative inline-flex items-center gap-1.5 px-4 py-2 text-sm font-medium text-gray-600 rounded-lg transition-all duration-200 hover:text-orange-600 hover:bg-orange-50/50"
                 >
                   {item.label}
