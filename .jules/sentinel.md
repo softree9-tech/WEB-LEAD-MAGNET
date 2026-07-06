@@ -1,4 +1,4 @@
-## 2025-05-14 - SSRF Protection with IP Validation
-**Vulnerability:** Server-Side Request Forgery (SSRF) via user-provided URLs in website analysis and lead processing endpoints.
-**Learning:** Standard URL validation that only checks for the presence of a protocol or basic hostname patterns is insufficient. Attackers can use decimal IP representations, custom hostnames pointing to internal IPs, or IPv6 loopback addresses to bypass simple blacklists.
-**Prevention:** Implement a robust validation function that resolves hostnames to IP addresses and checks them against private, loopback, and reserved ranges (RFC 1918, etc.). Note: Standard `socket.gethostbyname` resolution followed by a request is still technically vulnerable to DNS rebinding (TOCTOU) if the TTL is low; for high-security environments, the resolved IP should be pinned for the actual request.
+## 2025-05-15 - Path Traversal Protection with os.path.basename
+**Vulnerability:** Path traversal in report-serving and deletion endpoints allowed unauthorized access to files outside the intended `data/pdfs` directory.
+**Learning:** Joining user-supplied strings directly into file paths with `os.path.join` is insecure even if the framework performs some normalization. Linux handles `../../` payloads by resolving them to parent directories, which can expose sensitive application files like `main.py` or `.env`.
+**Prevention:** Always sanitize filenames using `os.path.basename()` before joining them with a directory path. This strips all directory components and ensures the resulting path remains within the target directory.

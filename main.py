@@ -1652,7 +1652,9 @@ def api_bulk_delete_leads(payload: BulkDeleteRequest):
         for lead_id in payload.lead_ids:
             lead = get_lead_by_id(lead_id)
             if lead and lead.get('pdf_path'):
-                pdf_path = os.path.join(os.path.dirname(__file__), 'data', 'pdfs', lead['pdf_path'])
+                # Sanitize filename to prevent path traversal
+                filename = os.path.basename(lead['pdf_path'])
+                pdf_path = os.path.join(os.path.dirname(__file__), 'data', 'pdfs', filename)
                 if os.path.exists(pdf_path):
                     try:
                         os.remove(pdf_path)
@@ -1667,6 +1669,8 @@ def api_bulk_delete_leads(payload: BulkDeleteRequest):
 @app.get("/api/reports/view/{filename}")
 def api_view_report(filename: str):
     import os
+    # Sanitize filename to prevent path traversal
+    filename = os.path.basename(filename)
     pdf_path = os.path.join(os.path.dirname(__file__), 'data', 'pdfs', filename)
     if not os.path.exists(pdf_path):
         raise HTTPException(status_code=404, detail="Report Not Available")
@@ -1679,6 +1683,8 @@ def api_view_report(filename: str):
 @app.get("/api/reports/download/{filename}")
 def api_download_report(filename: str):
     import os
+    # Sanitize filename to prevent path traversal
+    filename = os.path.basename(filename)
     pdf_path = os.path.join(os.path.dirname(__file__), 'data', 'pdfs', filename)
     if not os.path.exists(pdf_path):
         raise HTTPException(status_code=404, detail="Report Not Available")
@@ -1714,7 +1720,9 @@ def api_download_lead_pdf(lead_id: int):
             raise HTTPException(status_code=404, detail="PDF not found")
             
         import os
-        pdf_path = os.path.join(os.path.dirname(__file__), 'data', 'pdfs', lead['pdf_path'])
+        # Sanitize filename to prevent path traversal
+        filename = os.path.basename(lead['pdf_path'])
+        pdf_path = os.path.join(os.path.dirname(__file__), 'data', 'pdfs', filename)
         if not os.path.exists(pdf_path):
             raise HTTPException(status_code=404, detail="PDF file missing on server")
             
