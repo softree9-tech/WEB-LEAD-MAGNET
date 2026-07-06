@@ -272,7 +272,7 @@ export default function Navigation({ blogCategories = [], caseStudyCategories = 
                 <a
                   key={item.label}
                   href={item.url || "#"}
-                  className="group relative px-4 py-2 text-sm font-medium text-gray-600 rounded-lg transition-all duration-200 hover:text-gray-900 hover:bg-gray-100/50"
+                  className="group relative px-4 py-2 text-sm font-medium text-gray-600 rounded-lg transition-all duration-200 hover:text-gray-900 hover:bg-gray-100/50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-orange-500/20"
                 >
                   {item.label}
                 </a>
@@ -287,10 +287,18 @@ export default function Navigation({ blogCategories = [], caseStudyCategories = 
                 className="relative group"
                 onMouseEnter={() => openMenu(item.label)}
                 onMouseLeave={scheduleCloseMenu}
+                onFocus={() => openMenu(item.label)}
+                onBlur={(e) => {
+                  if (!e.currentTarget.contains(e.relatedTarget)) {
+                    scheduleCloseMenu();
+                  }
+                }}
               >
                 <a
                   href={item.url || "#"}
-                  className="group relative inline-flex items-center gap-1.5 px-4 py-2 text-sm font-medium text-gray-600 rounded-lg transition-all duration-200 hover:text-orange-600 hover:bg-orange-50/50"
+                  aria-haspopup="true"
+                  aria-expanded={open === item.label}
+                  className="group relative inline-flex items-center gap-1.5 px-4 py-2 text-sm font-medium text-gray-600 rounded-lg transition-all duration-200 hover:text-orange-600 hover:bg-orange-50/50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-orange-500/20"
                 >
                   {item.label}
                   <ChevronDown
@@ -323,7 +331,7 @@ export default function Navigation({ blogCategories = [], caseStudyCategories = 
                                 {item.label === "Case Studies" ? "Customer stories organized by solution area." : item.label === "Blog" ? "Practical notes on platforms, AI, and software delivery." : "Microsoft, data, AI, and product engineering — one delivery standard."}
                               </p>
                             </div>
-                            <a href={item.url} className="relative z-10 text-white font-medium text-[14px] hover:text-white/80 flex items-center gap-1.5 transition-colors mt-8">
+                            <a href={item.url} className="relative z-10 text-white font-medium text-[14px] hover:text-white/80 flex items-center gap-1.5 transition-colors mt-8 focus-visible:outline-none focus-visible:underline">
                               {item.label === "Case Studies" ? "All case studies" : item.label === "Blog" ? "All articles" : "All services"} <ArrowRight size={16} className="-rotate-45" />
                             </a>
                           </div>
@@ -346,7 +354,7 @@ export default function Navigation({ blogCategories = [], caseStudyCategories = 
                                         {group.links.map((link) => {
                                           const Icon = link.icon;
                                           return (
-                                            <a key={link.label} href={link.url} className="group/link flex gap-3 transition-colors">
+                                            <a key={link.label} href={link.url} className="group/link flex gap-3 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-orange-500/10 rounded-lg p-1 -m-1">
                                               <div className="shrink-0 mt-0.5 text-gray-400 group-hover/link:text-gray-900 transition-colors">
                                                 {Icon && <Icon size={16} strokeWidth={1.5} />}
                                               </div>
@@ -369,7 +377,7 @@ export default function Navigation({ blogCategories = [], caseStudyCategories = 
                               <p className="text-[13px] text-gray-600">
                                 Book a discovery call
                               </p>
-                              <a href="https://www.softreetechnology.com/contact" className="text-[13px] text-gray-500 hover:text-gray-900 flex items-center gap-1.5 transition-colors group/f">
+                              <a href="https://www.softreetechnology.com/contact" className="text-[13px] text-gray-500 hover:text-gray-900 flex items-center gap-1.5 transition-colors group/f focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-orange-500/20 rounded-md px-1 -mx-1">
                                 Get a quote <ArrowRight size={14} className="group-hover/f:translate-x-0.5 transition-transform" />
                               </a>
                             </div>
