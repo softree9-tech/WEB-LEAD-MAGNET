@@ -57,7 +57,9 @@ app = FastAPI(
 _frontend_url = os.getenv("FRONTEND_URL", "")
 _allowed_origins = [
     "http://localhost:5173",   # Vite dev server
+    "http://127.0.0.1:5173",   # Vite dev server (IP)
     "http://localhost:4173",   # Vite preview
+    "http://127.0.0.1:4173",   # Vite preview (IP)
     "https://web-lead-magnet-seven.vercel.app",# Vercel production
     "https://www.softreetechnology.com",
     "https://softreetechnology.com",   
@@ -565,7 +567,7 @@ async def process_battle(payload: BattleInput):
         Identify the winner for each category and provide an overall AI verdict.
         """
         
-        battle_card = structured_llm.invoke(prompt)
+        battle_card = await structured_llm.ainvoke(prompt)
         
         # Return combined result
         # We attach the battle data to the primary result so the frontend knows it's a battle mode result
@@ -770,7 +772,7 @@ async def process_competitor(payload: BattleInput, background_tasks: BackgroundT
         Output MUST strictly match the schema.
         """
         
-        gap_report = structured_llm.invoke(prompt)
+        gap_report = await structured_llm.ainvoke(prompt)
         
         # ── Strip base64 images from raw data before sending to frontend ──
         def _strip_images(data: dict) -> dict:
