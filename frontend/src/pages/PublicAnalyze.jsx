@@ -943,6 +943,16 @@ export default function PublicAnalyze() {
 
             </div>
 
+            <div style={{ maxWidth: '1200px', margin: '48px auto 0', background: '#FFF7F2', borderLeft: '4px solid #FF6B00', borderRadius: '12px', padding: '24px', boxShadow: '0 4px 14px rgba(0,0,0,0.03)' }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '8px' }}>
+                <AlertTriangle size={20} color="#FF6B00" />
+                <div style={{ margin: 0, fontSize: '1.1rem', fontWeight: 700, color: '#0A0F3C' }}>Important Disclosure</div>
+              </div>
+              <div style={{ margin: 0, color: '#5F6475', fontSize: '0.95rem', lineHeight: 1.6 }}>
+                This AI Performance Intelligence Report is generated using publicly available information from your website. The analysis is intended to provide high-level conversion insights, website observations, and strategic improvement opportunities. It is not a comprehensive business, financial, legal, cybersecurity, compliance, or technical audit. Recommendations are generated using AI-assisted analysis and should be reviewed before making business decisions.
+              </div>
+            </div>
+
           </div>
         </section>
 

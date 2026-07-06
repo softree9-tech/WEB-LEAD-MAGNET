@@ -1429,6 +1429,7 @@ Finally, analyze the TRUST DECAY & CREDIBILITY:
     # Format the payload directly for the React frontend Lead Magnet report
     output_row = {
         "website": url if url else state.get("raw_website", ""),
+        "text_content": text_content[:30000] if text_content else "",
         "final_score": result_dict.get("score", 0),
         "design": result_dict.get("design", ""),
         "cta": result_dict.get("cta", ""),

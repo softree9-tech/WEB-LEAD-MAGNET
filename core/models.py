@@ -144,3 +144,144 @@ class BattleCardResult(BaseModel):
     overall_winner: str = Field(description="'Primary', 'Competitor', or 'Tie'")
     ai_verdict: str = Field(description="Executive AI verdict. Example: 'Competitor has stronger conversion architecture and clearer CTA positioning, likely resulting in better lead generation performance.'")
 
+
+class CompanyOverviewComparison(BaseModel):
+    primary_name: str = Field(default="")
+    competitor_name: str = Field(default="")
+    primary_website: str = Field(default="")
+    competitor_website: str = Field(default="")
+    primary_size: str = Field(default="Unknown")
+    competitor_size: str = Field(default="Unknown")
+    primary_hq: str = Field(default="Unknown")
+    competitor_hq: str = Field(default="Unknown")
+    primary_years: str = Field(default="Unknown")
+    competitor_years: str = Field(default="Unknown")
+    primary_target_markets: List[str] = Field(default_factory=list)
+    competitor_target_markets: List[str] = Field(default_factory=list)
+    missing_information: List[str] = Field(default_factory=list, description="AI identification of missing company information.")
+
+class ServicePortfolioComparison(BaseModel):
+    primary_services: List[str] = Field(default_factory=list, description="Services offered, e.g., SharePoint, Power Platform, Copilot, etc.")
+    competitor_services: List[str] = Field(default_factory=list)
+    missing_services: List[str] = Field(default_factory=list)
+    competitive_advantages: List[str] = Field(default_factory=list, description="Where primary or competitor has a distinct service advantage.")
+    recommended_services: List[str] = Field(default_factory=list, description="Recommendations for new service launches.")
+    executive_insight: str = Field(default="", description="Executive observation on service coverage and enterprise positioning.")
+
+class IndustryFocusComparison(BaseModel):
+    shared_industries: List[str] = Field(default_factory=list, description="Industries both target.")
+    competitor_exclusive_industries: List[str] = Field(default_factory=list, description="Industries competitor targets but you don't.")
+    suggested_expansion_industries: List[str] = Field(default_factory=list, description="Suggested industries for expansion.")
+    executive_insight: str = Field(default="", description="Executive observation on industry penetration.")
+
+class WebsiteComparison(BaseModel):
+    primary_ui_ux: str = Field(default="Unknown")
+    competitor_ui_ux: str = Field(default="Unknown")
+    primary_speed: str = Field(default="Unknown")
+    competitor_speed: str = Field(default="Unknown")
+    primary_mobile: str = Field(default="Unknown")
+    competitor_mobile: str = Field(default="Unknown")
+    primary_accessibility: str = Field(default="Unknown")
+    competitor_accessibility: str = Field(default="Unknown")
+    primary_cta: str = Field(default="Unknown")
+    competitor_cta: str = Field(default="Unknown")
+    business_impact_insight: str = Field(default="", description="Business insight explaining the impact of website performance and UX on conversions.")
+
+class TrustCredibilityComparison(BaseModel):
+    primary_certifications: List[str] = Field(default_factory=list, description="e.g., ISO, Microsoft Partner")
+    competitor_certifications: List[str] = Field(default_factory=list)
+    primary_awards: List[str] = Field(default_factory=list)
+    competitor_awards: List[str] = Field(default_factory=list)
+    primary_reviews: str = Field(default="Unknown")
+    competitor_reviews: str = Field(default="Unknown")
+    primary_team_size: str = Field(default="Unknown")
+    competitor_team_size: str = Field(default="Unknown")
+    strengths: List[str] = Field(default_factory=list)
+    weaknesses: List[str] = Field(default_factory=list)
+    business_impact: str = Field(default="", description="How trust signals are affecting buyer confidence.")
+    recommendation: str = Field(default="", description="Recommendation for improving trust.")
+
+class CaseStudyComparison(BaseModel):
+    primary_case_studies: int = Field(default=0)
+    competitor_case_studies: int = Field(default=0)
+    primary_outcomes_roi: str = Field(default="Unknown", description="Level of business outcomes, ROI, and Before/After results presented.")
+    competitor_outcomes_roi: str = Field(default="Unknown")
+    executive_observation: str = Field(default="", description="Executive observation comparing case study depth. Example: 'Competitor has multiple Manufacturing case studies...'")
+    recommendation: str = Field(default="")
+
+class SeoAiVisibilityComparison(BaseModel):
+    primary_chatgpt: str = Field(default="Unknown")
+    competitor_chatgpt: str = Field(default="Unknown")
+    primary_gemini: str = Field(default="Unknown")
+    competitor_gemini: str = Field(default="Unknown")
+    primary_claude: str = Field(default="Unknown")
+    competitor_claude: str = Field(default="Unknown")
+    primary_perplexity: str = Field(default="Unknown")
+    competitor_perplexity: str = Field(default="Unknown")
+    primary_llm_readiness: str = Field(default="Unknown")
+    competitor_llm_readiness: str = Field(default="Unknown")
+    primary_schema_structured_data: str = Field(default="Unknown")
+    competitor_schema_structured_data: str = Field(default="Unknown")
+    winner: str = Field(default="Unknown", description="Who performs better overall in SEO/AI.")
+    why: str = Field(default="", description="Why the winner performs better.")
+    business_impact: str = Field(default="")
+    improvement_actions: List[str] = Field(default_factory=list)
+
+class LeadGenerationComparison(BaseModel):
+    primary_lead_magnets: List[str] = Field(default_factory=list, description="e.g., Free Tools, Assessments, Calculators")
+    competitor_lead_magnets: List[str] = Field(default_factory=list)
+    primary_demo_booking: bool = Field(default=False)
+    competitor_demo_booking: bool = Field(default=False)
+    primary_live_chat: bool = Field(default=False)
+    competitor_live_chat: bool = Field(default=False)
+    lead_capture_strength_comparison: str = Field(default="", description="Comparison of lead capture strength and buyer journey.")
+    recommendations: List[str] = Field(default_factory=list)
+
+class ContentStrategyComparison(BaseModel):
+    primary_content_types: List[str] = Field(default_factory=list, description="Blogs, Whitepapers, Webinars, etc.")
+    competitor_content_types: List[str] = Field(default_factory=list)
+    content_depth_comparison: str = Field(default="", description="Comparison of content depth, freshness, authority, and business value.")
+    recommendations: List[str] = Field(default_factory=list)
+
+class CompetitorScore(BaseModel):
+    website: int = Field(default=0, description="Website & UX - 15%")
+    services: int = Field(default=0, description="Service Portfolio - 18%")
+    trust: int = Field(default=0, description="Trust & Credibility - 13%")
+    seo: int = Field(default=0, description="SEO & GEO - 10%")
+    lead_gen: int = Field(default=0, description="Lead Generation - 12%")
+    content: int = Field(default=0, description="Content Strategy - 8%")
+    ai_visibility: int = Field(default=0, description="AI Visibility (Part of SEO module)")
+    industry_focus_score: int = Field(default=0, description="Industry Focus - 7%")
+    case_studies_score: int = Field(default=0, description="Case Studies - 8%")
+    company_overview_score: int = Field(default=0, description="Company Overview - 7%")
+    ai_recommendations_quality_score: int = Field(default=0, description="AI Recommendations Quality - 2%")
+    overall_score: int = Field(default=0, description="Weighted average overall score.")
+
+class AiRecommendations(BaseModel):
+    primary_scores: CompetitorScore
+    competitor_scores: CompetitorScore
+    business_readiness: str = Field(default="", description="Business Readiness assessment.")
+    competitive_position: str = Field(default="", description="Competitive Position assessment.")
+    winner: str = Field(default="Unknown", description="Overall Winner.")
+    gap_score: int = Field(default=0, description="Gap Score difference.")
+    executive_insight_paragraph: str = Field(default="", description="A compelling executive insight paragraph (2-3 sentences) on the strategic landscape, similar to 'AI search platforms are rapidly replacing traditional search...'")
+    top_strategic_recommendation: str = Field(default="", description="The single most important strategic recommendation.")
+    top_business_impact: str = Field(default="", description="The business impact of the top recommendation (e.g., 'High Lead Volume').")
+    top_expected_roi: str = Field(default="", description="The expected ROI of the top recommendation (e.g., '300%+ over 12 mo', '2x Pipeline Growth').")
+    top_implementation_effort: str = Field(default="", description="The implementation effort of the top recommendation (e.g., 'Moderate Effort', 'High Effort').")
+    executive_recommendations: List[str] = Field(default_factory=list, description="List of recommendations. Each recommendation string MUST include Priority, Expected Business Impact, Implementation Difficulty, and Estimated ROI inline (e.g., 'Action [Priority: High, Impact: High...]').")
+    overall_advantage: str = Field(default="", description="Executive observations instead of describing metrics. High level business narrative. Example: 'Your competitor demonstrates stronger enterprise positioning...'")
+    business_impact: str = Field(default="", description="Overall business impact level.")
+    priority: str = Field(default="", description="Overall priority.")
+
+class CompetitorGapReportResult(BaseModel):
+    company_overview: CompanyOverviewComparison
+    service_portfolio: ServicePortfolioComparison
+    industry_focus: IndustryFocusComparison
+    website_comparison: WebsiteComparison
+    trust_credibility: TrustCredibilityComparison
+    case_study_analysis: CaseStudyComparison
+    seo_ai_visibility: SeoAiVisibilityComparison
+    lead_generation: LeadGenerationComparison
+    content_strategy: ContentStrategyComparison
+    ai_recommendations: AiRecommendations

@@ -77,9 +77,11 @@ def get_leads(date_filter='All Time', search_term=None, source_filter='All Sourc
         
     if source_filter and source_filter != 'All Sources':
         if source_filter == 'Public Lead Magnet':
-            query += " AND source != 'GEO Analyzer'"
+            query += " AND source NOT IN ('GEO Analyzer', 'Competitor')"
         elif source_filter == 'GEO Analyzer':
             query += " AND source = 'GEO Analyzer'"
+        elif source_filter == 'Competitor':
+            query += " AND source = 'Competitor'"
         else:
             query += " AND source = ?"
             params.append(source_filter)

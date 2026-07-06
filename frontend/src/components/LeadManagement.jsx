@@ -4,6 +4,7 @@ import { Download, Eye, Search, Filter, Calendar, Trash2, X, AlertCircle, Refres
 import LeadResults from './LeadResults';
 import { fetchLeads, fetchLeadDetails, deleteBulkLeads } from '../api/api';
 import Toast from './Toast';
+import CompetitorDashboard from './competitor/CompetitorDashboard';
 
 export default function LeadManagement() {
   const [leads, setLeads] = useState([]);
@@ -12,6 +13,7 @@ export default function LeadManagement() {
   const [sourceFilter, setSourceFilter] = useState('All Sources');
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedLead, setSelectedLead] = useState(null);
+  const [selectedLeadRecord, setSelectedLeadRecord] = useState(null);
   const [viewingReport, setViewingReport] = useState(false);
   const [exportLoading, setExportLoading] = useState(false);
   const [toast, setToast] = useState({ show: false, message: '', type: 'success' });
@@ -51,7 +53,7 @@ export default function LeadManagement() {
     setSelectedLeadIds([]);
   }, [dateFilter, searchTerm, sourceFilter]);
 
-  const sourceOptions = ['All Sources', 'GEO Analyzer', 'Public Lead Magnet'];
+  const sourceOptions = ['All Sources', 'Competitor', 'GEO Analyzer', 'Public Lead Magnet'];
 
   const handleSearch = (e) => {
     e.preventDefault();
@@ -61,7 +63,13 @@ export default function LeadManagement() {
   const handleViewReport = async (id) => {
     try {
       const details = await fetchLeadDetails(id);
-      setSelectedLead(details.json_data);
+      setSelectedLeadRecord(details);
+      
+      let parsedData = details.json_data;
+      if (typeof parsedData === 'string') {
+        try { parsedData = JSON.parse(parsedData); } catch(e){}
+      }
+      setSelectedLead(parsedData);
       setViewingReport(true);
     } catch (err) {
       console.error('Failed to fetch report details', err);
@@ -185,13 +193,25 @@ export default function LeadManagement() {
     }
   };
 
-  if (viewingReport && selectedLead) {
+  if (viewingReport && selectedLead && selectedLeadRecord) {
+    const isCompetitor = selectedLeadRecord.source === 'Competitor' || selectedLead.gap_report;
     return (
       <div className="lead-management-container">
-        <button onClick={() => setViewingReport(false)} style={{ marginBottom: '20px', cursor: 'pointer', padding: '8px 16px', background: '#FF6B00', color: 'white', border: 'none', borderRadius: '4px' }}>
-          &larr; Back to Leads
-        </button>
-        <LeadResults leads={[selectedLead]} />
+        {!isCompetitor && (
+          <button onClick={() => setViewingReport(false)} style={{ marginBottom: '20px', cursor: 'pointer', padding: '8px 16px', background: '#FF6B00', color: 'white', border: 'none', borderRadius: '4px' }}>
+            &larr; Back to Leads
+          </button>
+        )}
+        {isCompetitor ? (
+          <CompetitorDashboard 
+            data={selectedLead} 
+            userName={selectedLeadRecord.name} 
+            userEmail={selectedLeadRecord.email} 
+            onReset={() => setViewingReport(false)} 
+          />
+        ) : (
+          <LeadResults leads={[selectedLead]} />
+        )}
       </div>
     );
   }
@@ -199,7 +219,8 @@ export default function LeadManagement() {
   // Analytics Cards
   const totalLeads = leads.length;
   const geoLeads = leads.filter(l => l.source === 'GEO Analyzer').length;
-  const publicLeads = leads.filter(l => l.source !== 'GEO Analyzer').length;
+  const competitorLeads = leads.filter(l => l.source === 'Competitor').length;
+  const publicLeads = leads.filter(l => l.source !== 'GEO Analyzer' && l.source !== 'Competitor').length;
 
   return (
     <div className="lead-management-container animate-fade-in" style={{ marginTop: '2rem', background: '#fff', padding: '2rem', borderRadius: '12px', boxShadow: '0 4px 20px rgba(0,0,0,0.05)' }}>
@@ -220,6 +241,10 @@ export default function LeadManagement() {
         <div style={{ padding: '1.5rem', background: '#f8fafc', borderRadius: '8px', border: '1px solid #e2e8f0' }}>
           <div style={{ color: '#64748b', fontSize: '0.875rem', fontWeight: 600 }}>GEO Leads</div>
           <div style={{ fontSize: '2rem', fontWeight: 700, color: '#1e293b' }}>{geoLeads}</div>
+        </div>
+        <div style={{ padding: '1.5rem', background: '#f8fafc', borderRadius: '8px', border: '1px solid #e2e8f0' }}>
+          <div style={{ color: '#64748b', fontSize: '0.875rem', fontWeight: 600 }}>Competitor Leads</div>
+          <div style={{ fontSize: '2rem', fontWeight: 700, color: '#1e293b' }}>{competitorLeads}</div>
         </div>
         <div style={{ padding: '1.5rem', background: '#f8fafc', borderRadius: '8px', border: '1px solid #e2e8f0' }}>
           <div style={{ color: '#64748b', fontSize: '0.875rem', fontWeight: 600 }}>Public Leads</div>
@@ -443,8 +468,8 @@ export default function LeadManagement() {
                 <td style={{ padding: '12px 16px' }}>
                   <span style={{ 
                     padding: '4px 8px', borderRadius: '12px', fontSize: '0.75rem', fontWeight: 600,
-                    background: lead.source === 'GEO Analyzer' ? '#ecfdf5' : '#eff6ff',
-                    color: lead.source === 'GEO Analyzer' ? '#059669' : '#2563eb'
+                    background: lead.source === 'GEO Analyzer' ? '#ecfdf5' : lead.source === 'Competitor' ? '#fff7ed' : '#eff6ff',
+                    color: lead.source === 'GEO Analyzer' ? '#059669' : lead.source === 'Competitor' ? '#c2410c' : '#2563eb'
                   }}>
                     {lead.source}
                   </span>

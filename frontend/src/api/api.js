@@ -111,6 +111,29 @@ export const emailGeoReport = async (emailData) => {
   }
 };
 
+export const emailCompetitorReport = async (emailData) => {
+  try {
+    console.log(
+      "[Competitor Email Report] Using API URL:",
+      `${API_ROOT}/competitor/email-report`,
+    );
+    console.log("[Competitor Email Report] Payload:", emailData);
+    const response = await axios.post(
+      `${API_ROOT}/competitor/email-report`,
+      emailData,
+      {
+        timeout: 30000,
+      },
+    );
+    console.log("[Competitor Email Report] Success:", response.data);
+    return response.data;
+  } catch (error) {
+    const errorText = error.response?.data || error.message;
+    console.error("[Competitor Email Report] Backend Error:", errorText);
+    throw error;
+  }
+};
+
 export const fetchLeads = async (dateFilter = 'All Time', search = '', sourceFilter = 'All Sources') => {
   try {
     const response = await axios.get(`${API_ROOT}/leads`, {

@@ -8,7 +8,7 @@ import GeoHeroForm from '../components/geo/GeoHeroForm';
 import GeoLoadingState from '../components/geo/GeoLoadingState';
 import GeoResultsDashboard from '../components/geo/GeoResultsDashboard';
 import { GeoReportSection, GeoHowItWorks, GeoFeaturesGrid, GeoWhyMatters } from '../components/geo/GeoSections';
-import { GeoFAQ, GeoCTA } from '../components/geo/GeoFooterSections';
+import { GeoFAQ } from '../components/geo/GeoFooterSections';
 import StickyFooter from '../components/StickyFooter';
 import LightContactSection from '../components/LightContactSection';
 import '../geo.css';
@@ -232,7 +232,6 @@ export default function GeoLanding() {
           <GeoHowItWorks />
           <GeoFeaturesGrid />
           <GeoWhyMatters />
-          <GeoCTA onScrollToHero={scrollToHero} />
           <GeoFAQ />
         </>
       )}

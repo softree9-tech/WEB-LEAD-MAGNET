@@ -5,6 +5,7 @@ import CSVUpload from './components/CSVUpload';
 import LeadResults from './components/LeadResults';
 import PublicAnalyze from './pages/PublicAnalyze';
 import GeoLanding from './pages/GeoLanding';
+import CompetitorLanding from './pages/CompetitorLanding';
 import LeadManagement from './components/LeadManagement';
 import './App.css';
 
@@ -80,6 +81,7 @@ function App() {
       <Routes>
         <Route path="/" element={<PublicAnalyze />} />
         <Route path="/geo" element={<GeoLanding />} />
+        <Route path="/competitor" element={<CompetitorLanding />} />
         <Route path="/analyzer" element={<Dashboard />} />
         <Route path="/analyzer/" element={<Dashboard />} />
       </Routes>

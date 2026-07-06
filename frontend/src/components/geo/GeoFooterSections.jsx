@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { motion } from 'framer-motion';
-import { ChevronDown } from 'lucide-react';
+import { ChevronDown, AlertTriangle } from 'lucide-react';
 
 const fadeUp = { hidden: { opacity: 0, y: 30 }, visible: (i) => ({ opacity: 1, y: 0, transition: { delay: i * 0.08, duration: 0.5 } }) };
 
@@ -63,39 +63,15 @@ export function GeoFAQ() {
           ))}
         </div>
       </div>
-    </section>
-  );
-}
-
-/* ── CTA Section ─────────────────────────────────────────────── */
-export function GeoCTA({ onScrollToHero }) {
-  return (
-    <section className="relative py-28 px-6 overflow-hidden">
-      {/* Ambient glows */}
-      <div className="geo-ambient-glow w-[500px] h-[500px] bg-orange-500/4 top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 absolute" />
-      <div className="geo-ambient-glow w-72 h-72 bg-orange-500/2 bottom-0 left-20 absolute" />
-
-      <div className="max-w-3xl mx-auto relative z-10 text-center">
-        <motion.div initial={{ opacity: 0, y: 30 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }} transition={{ duration: 0.6 }}>
-          <p className="text-orange-500 text-sm font-semibold uppercase tracking-widest mb-4">Get Started</p>
-          <h2 className="text-3xl md:text-5xl font-extrabold text-text-primary mb-5 leading-tight">
-            Get Your Free AI Visibility Assessment
-          </h2>
-          <p className="text-text-secondary text-base md:text-lg leading-relaxed mb-10 max-w-xl mx-auto">
-            Enter your website and email to receive your detailed GEO audit report with actionable recommendations.
-          </p>
-          <motion.button
-            whileHover={{ scale: 1.04 }}
-            whileTap={{ scale: 0.97 }}
-            onClick={onScrollToHero}
-            className="geo-cta-btn px-10 py-4 text-lg font-bold inline-flex items-center gap-3"
-          >
-            <span className="w-2.5 h-2.5 rounded-full bg-white/70 animate-pulse" />
-            Start Free GEO Audit
-          </motion.button>
-          <p className="text-text-muted text-xs mt-5">No credit card required • Results in under 60 seconds</p>
-        </motion.div>
-      </div>
+      <motion.div initial="hidden" whileInView="visible" viewport={{ once: true }} custom={3} variants={fadeUp} style={{ maxWidth: '1200px', margin: '48px auto 0', background: '#FFF7F2', borderLeft: '4px solid #FF6B00', borderRadius: '12px', padding: '24px', boxShadow: '0 4px 14px rgba(0,0,0,0.03)', position: 'relative', zIndex: 10 }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '8px' }}>
+          <AlertTriangle size={20} color="#FF6B00" />
+          <div style={{ margin: 0, fontSize: '1.1rem', fontWeight: 700, color: '#0A0F3C' }}>Important Disclosure</div>
+        </div>
+        <div style={{ margin: 0, color: '#5F6475', fontSize: '0.95rem', lineHeight: 1.6 }}>
+          This GEO Assessment is generated using publicly available information from your website. The analysis is intended to provide high-level insights into your AI search visibility, entity recognition, and citation readiness. It is not a comprehensive business, financial, legal, cybersecurity, compliance, or technical audit. Recommendations are generated using AI-assisted analysis and should be reviewed before making business decisions.
+        </div>
+      </motion.div>
     </section>
   );
 }
