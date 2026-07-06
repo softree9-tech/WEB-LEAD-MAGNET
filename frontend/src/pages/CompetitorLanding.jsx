@@ -209,9 +209,9 @@ function CompetitorForm({ onSubmit, loading, error }) {
           <CreditCard size={18} color="#FF6B00" />
           <span style={{ fontSize: '0.9rem', color: '#5F6475', fontWeight: 500 }}>No credit card</span>
         </div>
-        <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
           <FileText size={18} color="#FF6B00" />
-          <span style={{ fontSize: '0.9rem', color: '#5F6475', fontWeight: 500 }}>PDF delivered instantly</span>
+          <span style={{ fontSize: '0.9rem', color: '#5F6475', fontWeight: 500 }}>Email full report</span>
         </div>
       </div>
     </div>
