@@ -1654,7 +1654,9 @@ def api_bulk_delete_leads(payload: BulkDeleteRequest):
         for lead_id in payload.lead_ids:
             lead = get_lead_by_id(lead_id)
             if lead and lead.get('pdf_path'):
-                pdf_path = os.path.join(os.path.dirname(__file__), 'data', 'pdfs', lead['pdf_path'])
+                # SECURITY: Sanitize filename to prevent path traversal
+                safe_filename = os.path.basename(lead['pdf_path'])
+                pdf_path = os.path.join(os.path.dirname(__file__), 'data', 'pdfs', safe_filename)
                 if os.path.exists(pdf_path):
                     try:
                         os.remove(pdf_path)
@@ -1669,22 +1671,26 @@ def api_bulk_delete_leads(payload: BulkDeleteRequest):
 @app.get("/api/reports/view/{filename}")
 def api_view_report(filename: str):
     import os
-    pdf_path = os.path.join(os.path.dirname(__file__), 'data', 'pdfs', filename)
+    # SECURITY: Sanitize filename to prevent path traversal
+    safe_filename = os.path.basename(filename)
+    pdf_path = os.path.join(os.path.dirname(__file__), 'data', 'pdfs', safe_filename)
     if not os.path.exists(pdf_path):
         raise HTTPException(status_code=404, detail="Report Not Available")
     return FileResponse(
         pdf_path, 
         media_type="application/pdf", 
-        headers={"Content-Disposition": f"inline; filename=\"{filename}\""}
+        headers={"Content-Disposition": f"inline; filename=\"{safe_filename}\""}
     )
 
 @app.get("/api/reports/download/{filename}")
 def api_download_report(filename: str):
     import os
-    pdf_path = os.path.join(os.path.dirname(__file__), 'data', 'pdfs', filename)
+    # SECURITY: Sanitize filename to prevent path traversal
+    safe_filename = os.path.basename(filename)
+    pdf_path = os.path.join(os.path.dirname(__file__), 'data', 'pdfs', safe_filename)
     if not os.path.exists(pdf_path):
         raise HTTPException(status_code=404, detail="Report Not Available")
-    return FileResponse(pdf_path, media_type="application/pdf", filename=filename)
+    return FileResponse(pdf_path, media_type="application/pdf", filename=safe_filename)
 
 @app.get("/api/leads")
 def api_get_leads(date_filter: str = 'All Time', search: str = None, source_filter: str = 'All Sources'):
@@ -1716,14 +1722,17 @@ def api_download_lead_pdf(lead_id: int):
             raise HTTPException(status_code=404, detail="PDF not found")
             
         import os
-        pdf_path = os.path.join(os.path.dirname(__file__), 'data', 'pdfs', lead['pdf_path'])
+        # SECURITY: Sanitize filename to prevent path traversal
+        safe_filename = os.path.basename(lead['pdf_path'])
+        pdf_path = os.path.join(os.path.dirname(__file__), 'data', 'pdfs', safe_filename)
         if not os.path.exists(pdf_path):
             raise HTTPException(status_code=404, detail="PDF file missing on server")
             
-        return StreamingResponse(
-            open(pdf_path, "rb"),
+        # Using FileResponse is preferred over StreamingResponse for static files
+        return FileResponse(
+            pdf_path,
             media_type="application/pdf",
-            headers={"Content-Disposition": f"attachment; filename={lead['pdf_path']}"}
+            filename=safe_filename
         )
     except HTTPException:
         raise
