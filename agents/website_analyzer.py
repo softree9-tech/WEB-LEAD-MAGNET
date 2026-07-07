@@ -246,7 +246,8 @@ def check_schema_markup(soup: BeautifulSoup) -> dict:
         
     return results
 
-def check_newsletter(soup) -> bool:
+def check_newsletter(soup: BeautifulSoup) -> bool:
+    """Optimized: reuse pre-computed BeautifulSoup object."""
     forms = soup.find_all("form")
 
     keywords = [
@@ -364,7 +365,7 @@ def verify_aeo_visibility(company_name: str, url: str) -> dict:
     aeo_result = {"aeo_recognized": False, "aeo_confidence": "low", "aeo_raw_response": ""}
     try:
         probe_llm = ChatOpenAI(
-            model="gpt-4.1-mini", 
+            model="gpt-4o-mini",
             temperature=0, 
             max_tokens=300,
             api_key=os.environ.get("OPENAI_API_KEY")
@@ -431,8 +432,8 @@ def check_single_link(link: str) -> str:
         return ""
     return ""
 
-def count_broken_links(html: str, base_url: str) -> list:
-    soup = BeautifulSoup(html, "html.parser")
+def count_broken_links(soup: BeautifulSoup, base_url: str) -> dict:
+    """Optimized: reuse pre-computed BeautifulSoup object."""
     raw_links = [a.get('href') for a in soup.find_all('a', href=True)]
     
     valid_links = set()
@@ -456,8 +457,8 @@ def count_broken_links(html: str, base_url: str) -> list:
                 if dead_link: broken_list.append(dead_link)
     return {"broken_list": broken_list, "total": len(links_to_test)}
 
-def extract_tech_stack(html: str, headers: dict) -> str:
-    html_lower = html.lower()
+def extract_tech_stack(html_lower: str, headers: dict) -> str:
+    """Optimized: reuse pre-computed html_lower string."""
     stack = []
     
     if 'wp-content' in html_lower or 'wordpress' in html_lower: stack.append('WordPress')
@@ -496,8 +497,8 @@ def extract_tech_stack(html: str, headers: dict) -> str:
     
     return ", ".join(stack[:3]) if stack else "Custom HTML / Native"
 
-def check_analytics(html: str) -> dict:
-    html_lower = html.lower()
+def check_analytics(html_lower: str) -> dict:
+    """Optimized: reuse pre-computed html_lower string."""
     
     # LinkedIn Detection: icon, profile link, social anchor tag, or tracking script
     linkedin_present = any(x in html_lower for x in [
@@ -524,8 +525,8 @@ def check_analytics(html: str) -> dict:
         "linkedin_present": linkedin_present
     }
 
-def check_lead_capture(soup: BeautifulSoup, html: str = "") -> bool:
-    """Check for contact forms, mailto/tel links, chat widgets, and popup/modal forms."""
+def check_lead_capture(soup: BeautifulSoup, html_lower: str = "") -> bool:
+    """Optimized: reuse pre-computed BeautifulSoup and html_lower."""
     forms = soup.find_all("form")
     mailtos = soup.find_all("a", href=lambda href: href and href.startswith("mailto:"))
     tels = soup.find_all("a", href=lambda href: href and ("tel:" in href))
@@ -534,7 +535,6 @@ def check_lead_capture(soup: BeautifulSoup, html: str = "") -> bool:
         return True
     
     # Check for popup/modal form triggers and chat widgets in the raw HTML
-    html_lower = html.lower() if html else ""
     popup_signals = [
         "contact-form", "contact_form", "contactform",
         "popup-form", "modal-form", "dialog",
@@ -559,8 +559,8 @@ def check_lead_capture(soup: BeautifulSoup, html: str = "") -> bool:
     
     return False
 
-def check_cta_presence(soup: BeautifulSoup, html: str = "") -> bool:
-    """Technical check for the presence of CTA buttons/links on the page."""
+def check_cta_presence(soup: BeautifulSoup, html_lower: str = "") -> bool:
+    """Optimized: reuse pre-computed BeautifulSoup and html_lower."""
     cta_keywords = [
         "get started", "sign up", "start free", "try free", "buy now",
         "learn more", "contact us", "request demo", "book a demo",
@@ -583,9 +583,8 @@ def check_cta_presence(soup: BeautifulSoup, html: str = "") -> bool:
     
     return False
 
-def check_conversion_elements(soup: BeautifulSoup, html: str = "") -> dict:
-    """Detailed check for specific conversion elements."""
-    html_lower = html.lower() if html else ""
+def check_conversion_elements(soup: BeautifulSoup, html_lower: str = "") -> dict:
+    """Optimized: reuse pre-computed BeautifulSoup and html_lower."""
     
     # 1. Contact Form
     has_form = bool(soup.find_all("form"))
@@ -616,7 +615,7 @@ def check_conversion_elements(soup: BeautifulSoup, html: str = "") -> dict:
     has_popup = any(signal in html_lower for signal in popup_signals)
     
     # 7. CTA Presence
-    has_cta = check_cta_presence(soup, html)
+    has_cta = check_cta_presence(soup, html_lower)
     
     elements = {
         "cta_presence": has_cta,
@@ -725,22 +724,24 @@ def website_analyzer_agent(state: AgentState) -> AgentState:
                 
                 response = page.goto(url, wait_until="domcontentloaded", timeout=20000)
                 html = page.content()
+                html_lower = html.lower()
                 headers = response.headers if response else {}
-                tech_stack = extract_tech_stack(html, headers)
+                soup = BeautifulSoup(html, "html.parser")
+
+                tech_stack = extract_tech_stack(html_lower, headers)
                 last_modified = extract_last_modified(headers, html)
-                link_data = count_broken_links(html, url)
+                link_data = count_broken_links(soup, url)
                 broken_links = link_data["broken_list"]
                 total_links = link_data["total"]
                 
-                analytics_data = check_analytics(html)
+                analytics_data = check_analytics(html_lower)
                 
-                soup = BeautifulSoup(html, "html.parser")
-                has_lead_capture = check_lead_capture(soup, html)
-                has_cta = check_cta_presence(soup, html)
+                has_lead_capture = check_lead_capture(soup, html_lower)
+                has_cta = check_cta_presence(soup, html_lower)
                 has_newsletter = check_newsletter(soup)
                 image_alt_data = check_image_alt_tags(soup)
                 has_dead_socials = check_social_links(soup)
-                conversion_elements = check_conversion_elements(soup, html)
+                conversion_elements = check_conversion_elements(soup, html_lower)
                 schema_data = check_schema_markup(soup)
                 
                 # Extract SEO Metrics before stripping code
@@ -865,17 +866,19 @@ def website_analyzer_agent(state: AgentState) -> AgentState:
             try:
                 fallback_res = requests.get(url, timeout=10, headers={"User-Agent": "Mozilla/5.0"}, verify=False)
                 html = fallback_res.text
+                html_lower = html.lower()
                 headers = dict(fallback_res.headers)
-                tech_stack = extract_tech_stack(html, headers)
-                last_modified = extract_last_modified(headers, html)
-                analytics_data = check_analytics(html)
                 soup = BeautifulSoup(html, "html.parser")
-                has_lead_capture = check_lead_capture(soup, html)
-                has_cta = check_cta_presence(soup, html)
+
+                tech_stack = extract_tech_stack(html_lower, headers)
+                last_modified = extract_last_modified(headers, html)
+                analytics_data = check_analytics(html_lower)
+                has_lead_capture = check_lead_capture(soup, html_lower)
+                has_cta = check_cta_presence(soup, html_lower)
                 has_newsletter = check_newsletter(soup)
                 image_alt_data = check_image_alt_tags(soup)
                 has_dead_socials = check_social_links(soup)
-                conversion_elements = check_conversion_elements(soup, html)
+                conversion_elements = check_conversion_elements(soup, html_lower)
                 schema_data = check_schema_markup(soup)
                 seo_mobile = bool(soup.find("meta", attrs={"name": "viewport"}))
                 seo_meta_desc = bool(soup.find("meta", attrs={"name": "description"}))
@@ -928,7 +931,7 @@ def website_analyzer_agent(state: AgentState) -> AgentState:
 
 
     llm = ChatOpenAI(
-        model="gpt-4.1-mini", 
+        model="gpt-4o-mini",
         temperature=0,
         api_key=os.environ.get("OPENAI_API_KEY")
     )

@@ -548,7 +548,7 @@ async def process_battle(payload: BattleInput):
         
         # Generate the Battle Card Comparison using AI
         llm = ChatOpenAI(
-            model="gpt-4.1-mini", 
+            model="gpt-4o-mini",
             temperature=0,
             api_key=os.environ.get("OPENAI_API_KEY")
         )
