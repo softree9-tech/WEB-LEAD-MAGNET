@@ -322,11 +322,14 @@ export default function LeadManagement() {
           transition: 'all 0.2s ease',
           gap: '1.25rem'
         }}>
-          <span style={{ 
-            fontWeight: 600, 
-            color: selectedLeadIds.length > 0 ? '#1e40af' : '#64748b',
-            fontSize: '0.875rem' 
-          }}>
+          <span
+            aria-live="polite"
+            style={{
+              fontWeight: 600,
+              color: selectedLeadIds.length > 0 ? '#1e40af' : '#64748b',
+              fontSize: '0.875rem'
+            }}
+          >
             {selectedLeadIds.length} Selected
           </span>
             
@@ -379,6 +382,7 @@ export default function LeadManagement() {
 
             <button 
               onClick={loadLeads}
+              aria-label="Refresh Leads"
               style={{
                 padding: '6px',
                 background: 'white',
@@ -424,6 +428,7 @@ export default function LeadManagement() {
               <th style={{ padding: '12px 16px', width: '40px' }}>
                 <input 
                   type="checkbox" 
+                  aria-label="Select all leads"
                   checked={selectedLeadIds.length === leads.length && leads.length > 0}
                   onChange={handleSelectAll}
                   style={{ cursor: 'pointer', width: '16px', height: '16px', accentColor: '#FF6B00' }}
@@ -447,6 +452,7 @@ export default function LeadManagement() {
                 <td style={{ padding: '12px 16px' }}>
                   <input 
                     type="checkbox" 
+                    aria-label={`Select lead ${lead.name || 'Unknown'}`}
                     checked={selectedLeadIds.includes(lead.id)}
                     onChange={() => handleSelectLead(lead.id)}
                     style={{ cursor: 'pointer', width: '16px', height: '16px', accentColor: '#FF6B00' }}
@@ -479,11 +485,21 @@ export default function LeadManagement() {
                 </td>
                 <td style={{ padding: '12px 16px' }}>
                   <div style={{ display: 'flex', gap: '8px' }}>
-                    <button onClick={() => handleViewReport(lead.id)} style={{ padding: '6px', cursor: 'pointer', background: '#f1f5f9', border: '1px solid #e2e8f0', borderRadius: '4px', color: '#475569' }} title="View Report">
+                    <button
+                      onClick={() => handleViewReport(lead.id)}
+                      aria-label="View Report"
+                      style={{ padding: '6px', cursor: 'pointer', background: '#f1f5f9', border: '1px solid #e2e8f0', borderRadius: '4px', color: '#475569' }}
+                      title="View Report"
+                    >
                       <Eye size={16} />
                     </button>
                     {lead.pdf_path && (
-                      <button onClick={() => handleDownload(lead.id)} style={{ padding: '6px', cursor: 'pointer', background: '#FFF0E6', border: '1px solid #FFD1B3', borderRadius: '4px', color: '#FF6B00' }} title="Download PDF">
+                      <button
+                        onClick={() => handleDownload(lead.id)}
+                        aria-label="Download PDF"
+                        style={{ padding: '6px', cursor: 'pointer', background: '#FFF0E6', border: '1px solid #FFD1B3', borderRadius: '4px', color: '#FF6B00' }}
+                        title="Download PDF"
+                      >
                         <Download size={16} />
                       </button>
                     )}
@@ -511,7 +527,11 @@ export default function LeadManagement() {
               <h3 style={{ margin: 0, color: '#1e293b', fontSize: '1.25rem', display: 'flex', alignItems: 'center', gap: '10px' }}>
                 <AlertCircle color="#ef4444" /> Confirm Deletion
               </h3>
-              <button onClick={() => setDeleteModalOpen(false)} style={{ background: 'transparent', border: 'none', cursor: 'pointer', color: '#64748b' }}>
+              <button
+                onClick={() => setDeleteModalOpen(false)}
+                aria-label="Close modal"
+                style={{ background: 'transparent', border: 'none', cursor: 'pointer', color: '#64748b' }}
+              >
                 <X size={20} />
               </button>
             </div>
