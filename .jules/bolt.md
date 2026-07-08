@@ -1,0 +1,3 @@
+## 2025-05-15 - [BeautifulSoup and HTML normalization optimization]
+**Learning:** Reusing the `BeautifulSoup` instance and pre-computing the `html.lower()` string significantly reduces CPU overhead when multiple analysis functions are called sequentially. Additionally, implementing `requests.Session` with connection pooling in threaded environments prevents the overhead of repeated TCP/SSL handshakes.
+**Action:** Always pass pre-computed `soup` and `html_lower` objects to helper functions instead of re-parsing or re-normalizing. Use `requests.Session` with `HTTPAdapter` for high-concurrency link checking.
