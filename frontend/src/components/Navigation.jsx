@@ -287,6 +287,12 @@ export default function Navigation({ blogCategories = [], caseStudyCategories = 
                 className="relative group"
                 onMouseEnter={() => openMenu(item.label)}
                 onMouseLeave={scheduleCloseMenu}
+                onFocus={() => openMenu(item.label)}
+                onBlur={(e) => {
+                  if (!e.currentTarget.contains(e.relatedTarget)) {
+                    scheduleCloseMenu();
+                  }
+                }}
               >
                 <a
                   href={item.url || "#"}
