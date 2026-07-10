@@ -855,7 +855,8 @@ export default function HealthcareLanding() {
     }, 600); 
 
     try {
-      const response = await fetch("http://localhost:8000/api/process/healthcare-assessment", {
+      const baseUrl = import.meta.env.VITE_API_URL || import.meta.env.VITE_API_BASE_URL || "http://localhost:8000";
+      const response = await fetch(`${baseUrl}/api/process/healthcare-assessment`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
