@@ -164,10 +164,15 @@ def _save_lead_background(lead: LeadInput, result: dict):
     from datetime import datetime
     import os
     import json
+    import traceback
     from core.report_generator import generate_pdf_report
     from core.geo_report_generator import generate_geo_pdf_report, compute_geo_scores
     
     source = lead.source or "Public Lead Magnet"
+    if source == 'Healthcare AI Assessment':
+        print(f"🏥 Healthcare save started for {lead.website}")
+        print(f"📁 Database path: {os.path.join(os.path.dirname(os.path.dirname(__file__)), 'data', 'leads.db')} (approximate)")
+        
     if source == 'Competitor':
         domain = result.get("primary_website", "domain").replace("https://", "").replace("http://", "").replace("www.", "").split("/")[0]
     else:
@@ -226,17 +231,29 @@ def _save_lead_background(lead: LeadInput, result: dict):
         visibility_score = seo_score
         geo_score = seo_score
         
-    save_lead(
-        name=lead.name,
-        email=lead.email,
-        website=lead.website,
-        source=source,
-        geo_score=geo_score,
-        visibility_score=visibility_score,
-        status="Complete",
-        pdf_path=pdf_filename,
-        json_data=json.dumps(result)
-    )
+    from core.db import save_lead
+    try:
+        lead_id = save_lead(
+            name=lead.name,
+            email=lead.email,
+            website=lead.website,
+            source=source,
+            geo_score=geo_score,
+            visibility_score=visibility_score,
+            status="Complete",
+            pdf_path=pdf_filename,
+            json_data=json.dumps(result)
+        )
+        if source == 'Healthcare AI Assessment':
+            print(f"✅ Healthcare lead inserted successfully! ID: {lead_id}")
+        return lead_id
+    except Exception as e:
+        if source == 'Healthcare AI Assessment':
+            print(f"❌ Healthcare save failed with Exception: {e}")
+            with open("healthcare_save_error.txt", "w") as f:
+                f.write(f"Exception: {e}\n")
+                traceback.print_exc(file=f)
+        raise
 
 @app.post("/api/process/single")
 def process_single_lead(lead: LeadInput, background_tasks: BackgroundTasks):
