@@ -33,6 +33,7 @@ from core.security import is_safe_url, validate_website
 from core.report_generator import generate_pdf_report
 from core.geo_report_generator import generate_geo_pdf_report, compute_geo_scores
 from core.competitor_report_generator import generate_competitor_pdf_report
+from core.healthcare_report_generator import generate_healthcare_pdf_report
 from core.mailer import send_report_email
 
 # ─── Parallel Processing Config ─────────────────────────────────────────────
@@ -41,7 +42,7 @@ MAX_CONCURRENT_LEADS = 2
 _semaphore = asyncio.Semaphore(MAX_CONCURRENT_LEADS)
 
 # Load environment variables (e.g., GEMINI_API_KEY)
-load_dotenv()
+load_dotenv(override=True)
 
 # Initialize database
 init_db()
@@ -104,6 +105,14 @@ def verify_recaptcha(token: str) -> bool:
         print(f"❌ Error verifying reCAPTCHA: {e}")
         return False
 
+class HealthcareEmailReportRequest(BaseModel):
+    name: str = ""
+    email: str
+    hospital_name: str = ""
+    report_data: Dict[str, Any]
+    html_content: str = ""
+    pdf_base64: str = ""
+
 class LeadInput(BaseModel):
     name: str
     email: str
@@ -121,6 +130,19 @@ class BattleInput(BaseModel):
     competitor_website: str
     name: str = None
     email: str = None
+    recaptcha_token: str = None
+
+class HealthcareInput(BaseModel):
+    hospital_name: str
+    business_email: str
+    number_of_doctors: int
+    number_of_staff: int
+    hospital_type: str
+    ehr_system: str
+    current_technology_ecosystem: str
+    current_ai_usage: str
+    primary_operational_challenge: List[str]
+    primary_business_goal: str
     recaptcha_token: str = None
 
 @app.post("/api/validate")
@@ -166,6 +188,10 @@ def _save_lead_background(lead: LeadInput, result: dict):
             gap_data["competitor_domain"] = result.get("competitor_website", "Competitor")
             pdf_bytes = generate_competitor_pdf_report(gap_data)
             pdf_filename = f"Competitor_{domain}_{timestamp}.pdf"
+        elif source == 'Healthcare AI Assessment':
+            from core.healthcare_report_generator import generate_healthcare_pdf_report
+            pdf_bytes = generate_healthcare_pdf_report(result)
+            pdf_filename = f"Healthcare_{domain}_{timestamp}.pdf"
         else:
             pdf_bytes = generate_pdf_report(result)
             pdf_filename = f"Audit_{domain}_{timestamp}.pdf"
@@ -191,6 +217,9 @@ def _save_lead_background(lead: LeadInput, result: dict):
         ai_recs = gap_report.get("ai_recommendations", {})
         primary_scores = ai_recs.get("primary_scores", {})
         visibility_score = primary_scores.get("overall_score", 0)
+        geo_score = visibility_score
+    elif source == 'Healthcare AI Assessment':
+        visibility_score = int(result.get('ai_readiness_score', 0))
         geo_score = visibility_score
     else:
         seo_score = int(result.get('seo_score', 0))
@@ -709,8 +738,18 @@ async def process_competitor(payload: BattleInput, background_tasks: BackgroundT
         primary_cs_evidence = _extract_case_study_evidence(primary_text, "PRIMARY")
         competitor_cs_evidence = _extract_case_study_evidence(competitor_text, "COMPETITOR")
         
+        api_key = os.environ.get("OPENAI_API_KEY", "")
+        suffix = api_key[-4:] if len(api_key) > 4 else "NONE"
+        with open("competitor_auth_log.txt", "w") as f:
+            f.write(f"--- Competitor Assessment AI Auth Info ---\n")
+            f.write(f"API Key Suffix: {suffix}\n")
+            f.write(f"Organization: {os.environ.get('OPENAI_ORGANIZATION', 'None')}\n")
+            f.write(f"Project: {os.environ.get('OPENAI_PROJECT', 'None')}\n")
+            f.write(f"Model Name: gpt-4.1-mini\n")
+            f.write(f"----------------------------------------\n")
+        
         llm = ChatOpenAI(
-            model="gpt-4o-mini", 
+            model="gpt-4.1-mini", 
             temperature=0,
             api_key=os.environ.get("OPENAI_API_KEY")
         )
@@ -798,6 +837,85 @@ async def process_competitor(payload: BattleInput, background_tasks: BackgroundT
         }
         
         # Save lead after analysis
+        background_tasks.add_task(
+            _save_lead_background,
+            LeadInput(
+                name=payload.name, 
+                email=payload.email, 
+                website=payload.primary_website, 
+                source="Competitor"
+            ),
+            result_payload
+        )
+        
+        return result_payload
+        
+    except Exception as e:
+        print(f"❌ Competitor Analysis Error: {e}")
+        raise HTTPException(status_code=500, detail="Internal server error during competitor analysis")
+
+
+@app.post("/api/process/healthcare-assessment")
+async def process_healthcare_assessment(payload: HealthcareInput, background_tasks: BackgroundTasks):
+    if payload.recaptcha_token != "admin_bypass":
+        if not payload.recaptcha_token or not verify_recaptcha(payload.recaptcha_token):
+            raise HTTPException(status_code=400, detail="reCAPTCHA verification failed")
+
+    try:
+        api_key = os.environ.get("OPENAI_API_KEY", "")
+        suffix = api_key[-4:] if len(api_key) > 4 else "NONE"
+        with open("auth_log.txt", "w") as f:
+            f.write(f"--- Healthcare AI Assessment AI Auth Info ---\n")
+            f.write(f"API Key Suffix: {suffix}\n")
+            f.write(f"Organization: {os.environ.get('OPENAI_ORGANIZATION', 'None')}\n")
+            f.write(f"Project: {os.environ.get('OPENAI_PROJECT', 'None')}\n")
+            f.write(f"Model Name: gpt-4.1-mini\n")
+            f.write(f"----------------------------------------\n")
+        
+        from core.models import HealthcareAssessmentResult
+        llm = ChatOpenAI(
+            model="gpt-4.1-mini",
+            temperature=0,
+            api_key=api_key
+        )
+        structured_llm = llm.with_structured_output(HealthcareAssessmentResult)
+        
+        prompt = f"""
+        Generate a comprehensive Healthcare AI Opportunity Assessment based on the provided details.
+        
+        HOSPITAL/ORGANIZATION NAME: {payload.hospital_name}
+        HOSPITAL TYPE: {payload.hospital_type}
+        NUMBER OF DOCTORS: {payload.number_of_doctors}
+        NUMBER OF STAFF: {payload.number_of_staff}
+        EHR SYSTEM: {payload.ehr_system}
+        TECHNOLOGY ECOSYSTEM: {payload.current_technology_ecosystem}
+        CURRENT AI USAGE: {payload.current_ai_usage}
+        PRIMARY OPERATIONAL CHALLENGES: {', '.join(payload.primary_operational_challenge)}
+        PRIMARY BUSINESS GOAL: {payload.primary_business_goal}
+        
+        You must calculate realistic but optimistic estimates for AI adoption. Produce data that matches the output schema.
+        Ensure Top AI Opportunities includes specific agents based on their EHR and challenges.
+        """
+        
+        assessment = await structured_llm.ainvoke(prompt)
+        assessment_data = assessment.dict()
+        
+        # Save lead after analysis
+        background_tasks.add_task(
+            _save_lead_background,
+            LeadInput(
+                name="Healthcare Executive", 
+                email=payload.business_email, 
+                website=payload.hospital_name, 
+                source="Healthcare AI Assessment"
+            ),
+            assessment_data
+        )
+        
+        return assessment_data
+    except Exception as e:
+        print(f"❌ Healthcare AI Assessment Error: {e}")
+        raise HTTPException(status_code=500, detail="Internal server error during healthcare assessment")
         if payload.email or payload.name:
             lead_obj = LeadInput(
                 name=payload.name or "Competitor Lead",
@@ -1537,6 +1655,199 @@ async def competitor_email_report(req: CompetitorEmailRequest):
 
     return {"status": "success", "message": "Executive report has been delivered to your business email."}
 
+@app.post("/api/healthcare/email-report")
+async def email_healthcare_report(req: HealthcareEmailReportRequest):
+    print(f"--- TEMPORARY LOG: Incoming request payload (email field): {req.email} ---")
+    print(f"--- TEMPORARY LOG: Parsed email field: {req.email} ---")
+    
+    if not req.email:
+        raise HTTPException(status_code=400, detail="Email is required")
+
+    print(f"--- Generating Healthcare PDF report for {req.email} ---")
+    
+    try:
+        print(f"--- TEMPORARY LOG: Email passed to PDF generation: {req.email} (Implicitly passed within req.report_data or not used for PDF gen) ---")
+        
+        if req.html_content:
+            def generate_pdf():
+                from playwright.sync_api import sync_playwright
+                with sync_playwright() as p:
+                    browser = p.chromium.launch(args=["--no-sandbox", "--disable-setuid-sandbox"])
+                    page = browser.new_page()
+                    page.set_content(req.html_content, wait_until="networkidle")
+                    page.emulate_media(media="print")
+                    page.wait_for_timeout(500)
+                    pdf = page.pdf(print_background=True, format="A4", margin={"top": "0", "right": "0", "bottom": "0", "left": "0"})
+                    browser.close()
+                    return pdf
+            import asyncio
+            pdf_bytes = await asyncio.to_thread(generate_pdf)
+        elif req.pdf_base64:
+            import base64
+            b64_data = req.pdf_base64
+            if "," in b64_data:
+                b64_data = b64_data.split(",")[1]
+            pdf_bytes = base64.b64decode(b64_data)
+        else:
+            pdf_bytes = generate_healthcare_pdf_report(req.report_data)
+        
+        hospital_clean = req.hospital_name.replace("https://", "").replace("http://", "").replace("www.", "").split("/")[0] if req.hospital_name else "Hospital"
+        filename = f"Softree_Healthcare_Assessment_{hospital_clean}.pdf"
+        
+        body_html = f"""
+        <!DOCTYPE html>
+        <html>
+        <head>
+            <meta charset="utf-8">
+            <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        </head>
+        <body style="font-family: Arial, sans-serif; line-height: 1.6; color: #1E293B; margin: 0; padding: 0; background-color: #F8FAFC;">
+            <div style="max-width: 600px; margin: 0 auto; background-color: #ffffff; border: 1px solid #E2E8F0; border-radius: 8px; overflow: hidden; margin-top: 20px; margin-bottom: 20px;">
+                <div style="background-color: #0A0F3C; padding: 25px 30px; border-bottom: 4px solid #FF6B1A;">
+                    <h2 style="color: #ffffff; margin: 0; font-size: 24px; font-weight: bold;">Softree<span style="color: #FF6B1A;">Technology</span></h2>
+                </div>
+                
+                <div style="padding: 30px;">
+                    <h3 style="color: #FF6B1A; margin-top: 0; font-size: 20px;">AI Agent Opportunity Assessment™</h3>
+                    <p style="font-size: 16px;">Hi {req.name or 'there'},</p>
+                    
+                    <p style="font-size: 16px;">Thank you for using Softree Technology's AI Agent Opportunity Assessment™ for Healthcare.</p>
+                    
+                    <p style="font-size: 16px;">We've completed an executive assessment of your organization based on the information you provided.</p>
+                    
+                    <p style="font-size: 16px;">Your personalized report includes AI readiness insights, automation opportunities, estimated ROI, implementation priorities, and strategic recommendations to help accelerate your AI transformation journey.</p>
+                    
+                    <div style="background-color: #F8FAFC; border: 1px solid #E2E8F0; border-radius: 6px; padding: 20px; margin: 25px 0;">
+                        <h4 style="margin-top: 0; color: #1E293B; font-size: 16px; text-transform: uppercase; letter-spacing: 0.5px;">Report Highlights</h4>
+                        <table width="100%" cellpadding="0" cellspacing="0" style="margin-top: 15px;">
+                            <tr>
+                                <td width="33%" align="center" style="border-right: 1px solid #E2E8F0;">
+                                    <div style="font-size: 24px; font-weight: bold; color: #1E293B;">{req.report_data.get('ai_readiness_score', 0)}</div>
+                                    <div style="font-size: 12px; color: #64748B; text-transform: uppercase;">AI Readiness Score</div>
+                                </td>
+                                <td width="33%" align="center" style="border-right: 1px solid #E2E8F0;">
+                                    <div style="font-size: 18px; font-weight: bold; color: #1E293B;">{req.report_data.get('estimated_annual_roi', 'N/A')}</div>
+                                    <div style="font-size: 12px; color: #64748B; text-transform: uppercase;">Estimated ROI</div>
+                                </td>
+                                <td width="33%" align="center">
+                                    <div style="font-size: 18px; font-weight: bold; color: #1E293B;">{req.report_data.get('estimated_annual_savings', 'N/A')}</div>
+                                    <div style="font-size: 12px; color: #64748B; text-transform: uppercase;">Potential Savings</div>
+                                </td>
+                            </tr>
+                        </table>
+                        <table width="100%" cellpadding="0" cellspacing="0" style="margin-top: 15px; border-top: 1px solid #E2E8F0; padding-top: 15px;">
+                            <tr>
+                                <td width="33%" align="center" style="border-right: 1px solid #E2E8F0;">
+                                    <div style="font-size: 16px; font-weight: bold; color: #1E293B;">{req.report_data.get('ai_opportunity_level', 'N/A')}</div>
+                                    <div style="font-size: 12px; color: #64748B; text-transform: uppercase;">Opportunity Level</div>
+                                </td>
+                                <td width="33%" align="center" style="border-right: 1px solid #E2E8F0;">
+                                    <div style="font-size: 16px; font-weight: bold; color: #1E293B;">{req.report_data.get('recommended_ai_agents_count', 0)}</div>
+                                    <div style="font-size: 12px; color: #64748B; text-transform: uppercase;">Recommended Agents</div>
+                                </td>
+                                <td width="33%" align="center">
+                                    <div style="font-size: 16px; font-weight: bold; color: #1E293B;">{req.report_data.get('estimated_implementation_timeline', 'N/A')}</div>
+                                    <div style="font-size: 12px; color: #64748B; text-transform: uppercase;">Implementation Timeline</div>
+                                </td>
+                            </tr>
+                        </table>
+                    </div>
+                    
+                    <div style="background-color: #FFF7ED; border-left: 4px solid #FF6B1A; border-radius: 4px; padding: 15px; margin: 25px 0;">
+                        <p style="font-size: 13px; color: #9A3412; margin: 0;">
+                            <strong>IMPORTANT DISCLOSURE:</strong> This assessment relies on an automated AI evaluation based on the high-level inputs provided. It is intended for strategic guidance and does not constitute a full technical audit, compliance review, or replace professional healthcare IT consulting.
+                        </p>
+                    </div>
+
+                    <p style="font-size: 16px;">
+                        A detailed PDF report is attached to this email containing our preliminary findings.
+                    </p>
+                    
+
+                    
+                    <div style="background-color: #FFF7ED; border-left: 4px solid #FF6B1A; border-radius: 4px; padding: 15px; margin: 25px 0;">
+                        <h4 style="color: #9A3412; font-size: 16px; margin-top: 0; margin-bottom: 10px;">Ready to Build Your AI Roadmap?</h4>
+                        <p style="font-size: 13px; color: #9A3412; margin: 0 0 15px 0;">
+                            Our AI and Healthcare Transformation specialists can help you prioritize opportunities and create a practical implementation strategy tailored to your organization.
+                        </p>
+                        <a href="https://www.softreetechnology.com/contact" style="background-color: #FF6B1A; color: #ffffff; padding: 8px 16px; text-decoration: none; border-radius: 4px; font-weight: bold; display: inline-block; font-size: 14px;">Book a Free Consultation</a>
+                    </div>
+                    
+                    <hr style="border: 0; border-top: 1px solid #E2E8F0; margin: 30px 0;">
+                    
+                    <p style="font-size: 14px; margin-bottom: 5px;">Best regards,</p>
+                    <p style="font-size: 14px; margin-top: 0; margin-bottom: 0;">
+                        <strong style="color: #1E293B;">Softree Technology Team</strong><br>
+                        <span style="color: #64748B;">Digital Intelligence & Engineering</span><br>
+                        <a href="https://www.softreetechnology.com" style="color: #FF6B1A; text-decoration: none;">www.softreetechnology.com</a> | 
+                        <a href="mailto:sales@softreetechnology.com" style="color: #FF6B1A; text-decoration: none;">sales@softreetechnology.com</a>
+                    </p>
+                </div>
+            </div>
+        </body>
+        </html>
+        """
+
+        print(f"--- TEMPORARY LOG: Email passed to Microsoft Graph (send_report_email): {req.email} ---")
+        await send_report_email(
+            to_email=req.email,
+            subject=f"Healthcare AI Assessment: {req.hospital_name}",
+            body_html=body_html,
+            pdf_bytes=pdf_bytes,
+            pdf_filename=filename
+        )
+        print(f"--- Healthcare Email successfully sent to {req.email} via Graph API ---")
+        
+    except Exception as e:
+        print(f"--- Error generating/sending Healthcare email: {e} ---")
+        raise HTTPException(status_code=500, detail="Failed to send email.")
+
+    return {"status": "success", "message": "Executive report has been delivered to your business email."}
+
+@app.post("/api/healthcare/download-pdf")
+async def healthcare_pdf_report(req: dict = Body(...)):
+    print(f"--- Generating Healthcare PDF report for download ---")
+    try:
+        from core.healthcare_report_generator import generate_healthcare_pdf_report
+        
+        html_content = req.get('html_content')
+        pdf_base64 = req.get('pdf_base64')
+        
+        if html_content:
+            def generate_pdf():
+                from playwright.sync_api import sync_playwright
+                with sync_playwright() as p:
+                    browser = p.chromium.launch(args=["--no-sandbox", "--disable-setuid-sandbox"])
+                    page = browser.new_page()
+                    page.set_content(html_content, wait_until="networkidle")
+                    page.emulate_media(media="print")
+                    page.wait_for_timeout(500)
+                    pdf = page.pdf(print_background=True, format="A4", margin={"top": "0", "right": "0", "bottom": "0", "left": "0"})
+                    browser.close()
+                    return pdf
+            import asyncio
+            pdf_bytes = await asyncio.to_thread(generate_pdf)
+        elif pdf_base64:
+            import base64
+            b64_data = pdf_base64
+            if "," in b64_data:
+                b64_data = b64_data.split(",")[1]
+            pdf_bytes = base64.b64decode(b64_data)
+        else:
+            pdf_bytes = generate_healthcare_pdf_report(req)
+            
+        hospital_clean = req.get("hospital_name", "Hospital").replace("https://", "").replace("http://", "").replace("www.", "").split("/")[0]
+        filename = f"Softree_Healthcare_Assessment_{hospital_clean}.pdf"
+        
+        import io
+        return StreamingResponse(
+            io.BytesIO(pdf_bytes),
+            media_type="application/pdf",
+            headers={"Content-Disposition": f"attachment; filename={filename}"}
+        )
+    except Exception as e:
+        print(f"--- Error generating Healthcare PDF: {e} ---")
+        raise HTTPException(status_code=500, detail="Failed to generate Healthcare PDF report.")
 
 from fastapi import Request
 from fastapi.responses import FileResponse

@@ -285,3 +285,47 @@ class CompetitorGapReportResult(BaseModel):
     lead_generation: LeadGenerationComparison
     content_strategy: ContentStrategyComparison
     ai_recommendations: AiRecommendations
+
+
+class TopAiOpportunity(BaseModel):
+    department: str = Field(description="Department name, e.g., 'Patient Scheduling'")
+    recommended_agent: str = Field(description="Recommended AI agent, e.g., 'AI Appointment Assistant'")
+    priority: str = Field(description="Priority (High, Medium, Low)")
+    business_impact: str = Field(description="Business Impact (High, Medium, Low)")
+
+class DepartmentScore(BaseModel):
+    name: str = Field(description="Department name (e.g., 'Finance', 'Clinical')")
+    score: int = Field(description="Opportunity score (0-100)")
+
+class RoadmapPhase(BaseModel):
+    phase: str = Field(description="Phase identifier (e.g., 'Phase 1')")
+    title: str = Field(description="Phase title (e.g., 'Quick Wins')")
+    desc: str = Field(description="Phase description")
+
+class HealthcareAssessmentResult(BaseModel):
+    ai_readiness_score: int = Field(description="AI Readiness Score (0-100)")
+    ai_opportunity_level: str = Field(description="Opportunity Level (e.g., 'High', 'Moderate')")
+    estimated_annual_roi: str = Field(description="Estimated Annual ROI (e.g., '$1.8M', '$500K')")
+    potential_annual_cost_savings: str = Field(description="Potential Annual Cost Savings (e.g., '$650K')")
+    recommended_ai_agents_count: int = Field(description="Number of Recommended AI Agents")
+    estimated_implementation_timeline: str = Field(description="Implementation Timeline (e.g., '4–6 Months')")
+    
+    top_ai_opportunities: List[TopAiOpportunity] = Field(description="List of top 5 AI opportunities")
+    
+    readiness_people: int = Field(description="People readiness score (0-100)")
+    readiness_processes: int = Field(description="Processes readiness score (0-100)")
+    readiness_technology: int = Field(description="Technology readiness score (0-100)")
+    readiness_data: int = Field(description="Data readiness score (0-100)")
+    readiness_governance: int = Field(default=70, description="Governance readiness score (0-100)")
+    readiness_security: int = Field(default=85, description="Security readiness score (0-100)")
+    
+    department_scores: List[DepartmentScore] = Field(default_factory=list, description="List of 5 department opportunity scores")
+    implementation_roadmap: List[RoadmapPhase] = Field(default_factory=list, description="List of 3 implementation phases")
+    
+    estimated_annual_savings: str = Field(description="Estimated Annual Savings (e.g., '$1.8M')")
+    estimated_hours_saved: str = Field(description="Estimated Hours Saved (e.g., '18,500 Hours')")
+    operational_efficiency_gain: str = Field(description="Operational Efficiency Gain (e.g., '35%')")
+    patient_satisfaction_improvement: str = Field(description="Patient Satisfaction Improvement (e.g., '42%')")
+    
+    executive_summary: str = Field(description="Executive Summary paragraph (4-5 lines)")
+    priority_focus_areas: List[str] = Field(description="List of 3 priority focus areas")

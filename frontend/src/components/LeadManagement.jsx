@@ -53,7 +53,7 @@ export default function LeadManagement() {
     setSelectedLeadIds([]);
   }, [dateFilter, searchTerm, sourceFilter]);
 
-  const sourceOptions = ['All Sources', 'Competitor', 'GEO Analyzer', 'Public Lead Magnet'];
+  const sourceOptions = ['All Sources', 'Healthcare AI Assessment', 'Competitor', 'GEO Analyzer', 'Public Lead Magnet'];
 
   const handleSearch = (e) => {
     e.preventDefault();
@@ -218,9 +218,10 @@ export default function LeadManagement() {
 
   // Analytics Cards
   const totalLeads = leads.length;
+  const healthcareLeads = leads.filter(l => l.source === 'Healthcare AI Assessment').length;
   const geoLeads = leads.filter(l => l.source === 'GEO Analyzer').length;
   const competitorLeads = leads.filter(l => l.source === 'Competitor').length;
-  const publicLeads = leads.filter(l => l.source !== 'GEO Analyzer' && l.source !== 'Competitor').length;
+  const publicLeads = leads.filter(l => l.source !== 'GEO Analyzer' && l.source !== 'Competitor' && l.source !== 'Healthcare AI Assessment').length;
 
   return (
     <div className="lead-management-container animate-fade-in" style={{ marginTop: '2rem', background: '#fff', padding: '2rem', borderRadius: '12px', boxShadow: '0 4px 20px rgba(0,0,0,0.05)' }}>
@@ -237,6 +238,10 @@ export default function LeadManagement() {
         <div style={{ padding: '1.5rem', background: '#f8fafc', borderRadius: '8px', border: '1px solid #e2e8f0' }}>
           <div style={{ color: '#64748b', fontSize: '0.875rem', fontWeight: 600 }}>Total Leads</div>
           <div style={{ fontSize: '2rem', fontWeight: 700, color: '#1e293b' }}>{totalLeads}</div>
+        </div>
+        <div style={{ padding: '1.5rem', background: '#f8fafc', borderRadius: '8px', border: '1px solid #e2e8f0' }}>
+          <div style={{ color: '#64748b', fontSize: '0.875rem', fontWeight: 600 }}>Healthcare AI Assessment</div>
+          <div style={{ fontSize: '2rem', fontWeight: 700, color: '#1e293b' }}>{healthcareLeads}</div>
         </div>
         <div style={{ padding: '1.5rem', background: '#f8fafc', borderRadius: '8px', border: '1px solid #e2e8f0' }}>
           <div style={{ color: '#64748b', fontSize: '0.875rem', fontWeight: 600 }}>GEO Leads</div>
@@ -468,8 +473,8 @@ export default function LeadManagement() {
                 <td style={{ padding: '12px 16px' }}>
                   <span style={{ 
                     padding: '4px 8px', borderRadius: '12px', fontSize: '0.75rem', fontWeight: 600,
-                    background: lead.source === 'GEO Analyzer' ? '#ecfdf5' : lead.source === 'Competitor' ? '#fff7ed' : '#eff6ff',
-                    color: lead.source === 'GEO Analyzer' ? '#059669' : lead.source === 'Competitor' ? '#c2410c' : '#2563eb'
+                    background: lead.source === 'Healthcare AI Assessment' ? '#f3e8ff' : lead.source === 'GEO Analyzer' ? '#ecfdf5' : lead.source === 'Competitor' ? '#fff7ed' : '#eff6ff',
+                    color: lead.source === 'Healthcare AI Assessment' ? '#7e22ce' : lead.source === 'GEO Analyzer' ? '#059669' : lead.source === 'Competitor' ? '#c2410c' : '#2563eb'
                   }}>
                     {lead.source}
                   </span>

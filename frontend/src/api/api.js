@@ -134,6 +134,39 @@ export const emailCompetitorReport = async (emailData) => {
   }
 };
 
+export const emailHealthcareReport = async (emailData) => {
+  try {
+    const response = await axios.post(
+      `${API_ROOT}/healthcare/email-report`,
+      emailData,
+      {
+        timeout: 30000,
+      },
+    );
+    return response.data;
+  } catch (error) {
+    console.error("[Healthcare Email Report] Backend Error:", error);
+    throw error;
+  }
+};
+
+export const downloadHealthcarePdf = async (reportData) => {
+  try {
+    const response = await axios.post(
+      `${API_ROOT}/healthcare/download-pdf`,
+      reportData,
+      {
+        responseType: 'blob',
+        timeout: 30000,
+      }
+    );
+    return response.data;
+  } catch (error) {
+    console.error("[Healthcare PDF Download] Backend Error:", error);
+    throw error;
+  }
+};
+
 export const fetchLeads = async (dateFilter = 'All Time', search = '', sourceFilter = 'All Sources') => {
   try {
     const response = await axios.get(`${API_ROOT}/leads`, {

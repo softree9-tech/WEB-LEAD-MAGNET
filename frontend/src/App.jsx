@@ -6,6 +6,7 @@ import LeadResults from './components/LeadResults';
 import PublicAnalyze from './pages/PublicAnalyze';
 import GeoLanding from './pages/GeoLanding';
 import CompetitorLanding from './pages/CompetitorLanding';
+import HealthcareLanding from './pages/HealthcareLanding';
 import LeadManagement from './components/LeadManagement';
 import './App.css';
 
@@ -82,6 +83,7 @@ function App() {
         <Route path="/" element={<PublicAnalyze />} />
         <Route path="/geo" element={<GeoLanding />} />
         <Route path="/competitor" element={<CompetitorLanding />} />
+        <Route path="/healthcare-ai" element={<HealthcareLanding />} />
         <Route path="/analyzer" element={<Dashboard />} />
         <Route path="/analyzer/" element={<Dashboard />} />
       </Routes>
